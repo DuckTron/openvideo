@@ -478,7 +478,7 @@ export class Compositor extends EventEmitter<{
         }
         progress = timestamp / maxTime;
 
-        const { audios, mainSprDone } = await renderSprites.render(timestamp);
+        const { audios, mainSprDone, hasVideo } = await renderSprites.render(timestamp);
         if (mainSprDone) {
           exit();
           await onEnded();
@@ -491,10 +491,16 @@ export class Compositor extends EventEmitter<{
         // A microtask yield is sufficient and avoids the ~16.6ms workerTimer
         // overhead that sleep(0) would incur.
         if (this.hasVideoTrack) {
-          await Promise.resolve();
+          if (timestamp === 0) {
+            // For the first frame, we need a full macrotask yield to ensure the GPU
+            // has compiled shaders and completed the first draw call.
+            await new Promise((resolve) => setTimeout(resolve, 50));
+          } else {
+            await Promise.resolve();
+          }
         }
 
-        await encodeFrame(timestamp, audios, true);
+        await encodeFrame(timestamp, audios, hasVideo);
 
         timestamp += timeSlice;
 
