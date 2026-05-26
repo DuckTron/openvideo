@@ -212,12 +212,3 @@ export interface IScaleState {
   segments: number;
   index: number;
 }
-
-/**
- * IRenderer - Platform-agnostic rendering contract.
- */
-export interface IRenderer {
-  init(project: IProject): Promise<void>;
-  render(time: number): void;
-  dispose(): void;
-}

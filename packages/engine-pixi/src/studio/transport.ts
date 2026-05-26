@@ -124,6 +124,15 @@ export class Transport {
 
       const relativeTime = (this.currentTime - clip.display.from) / 1e6;
       if (this.isPlaybackCapable(clip)) {
+        const seekTime = this.currentTime;
+        // Register a settle callback: when seeked fires and this is still
+        // the most recent seek, re-upload the texture and re-render.
+        const videoEl = element as HTMLVideoElement;
+        (videoEl as any).__pendingRender = () => {
+          if (this.currentTime !== seekTime) return; // stale seek, skip
+          this.studio.updateFrame(seekTime);
+        };
+
         await clip.seek(element, relativeTime);
       }
     }

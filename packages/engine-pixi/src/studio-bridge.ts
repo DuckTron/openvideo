@@ -34,6 +34,7 @@ export class StudioBridge {
         // If we ARE playing, the studio's own loop is already updating time,
         // but we still want to allow external seeks (scrubbing) to take precedence.
         if (!this.studio.isPlaying) {
+          console.log("Seeking studio to", time);
           await this.studio.transport.seek(time);
         }
       } finally {

@@ -613,27 +613,17 @@ export class Video extends BaseClip implements IPlaybackCapable {
     const trimmedTime = timeSeconds + this.trim.from / 1e6;
     video.pause();
     video.currentTime = trimmedTime;
-
-    // Wait for seek to complete
-    return new Promise<void>((resolve) => {
-      if (Math.abs(video.currentTime - timeSeconds) < 0.01) {
-        resolve();
-        return;
-      }
-
-      const onSeeked = () => {
-        video.removeEventListener("seeked", onSeeked);
-        resolve();
-      };
-
-      video.addEventListener("seeked", onSeeked, { once: true });
-
-      // Timeout after 500ms
-      setTimeout(() => {
-        video.removeEventListener("seeked", onSeeked);
-        resolve();
-      }, 500);
-    });
+    // Fire-and-forget: return immediately so the caller can render with
+    // whatever frame is currently available (real-time scrubbing).
+    // Register a one-shot seeked listener that re-renders once the browser
+    // has decoded the target frame, giving eventual correctness.
+    video.addEventListener(
+      "seeked",
+      () => {
+        (video as any).__pendingRender?.();
+      },
+      { once: true },
+    );
   }
 
   syncPlayback(

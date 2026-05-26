@@ -21,7 +21,6 @@ export type {
   IFlip,
   ClipType,
   IScaleState,
-  IRenderer,
 } from "./types";
 export {
   createProjectStore,
