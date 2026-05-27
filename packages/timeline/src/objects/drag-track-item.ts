@@ -73,7 +73,7 @@ class PreviewTrackItem extends Rect {
 
   public drawTextIdentity(ctx: CanvasRenderingContext2D) {
     // Set font and text properties
-    ctx.font = "600 12px 'Geist variable'";
+    ctx.font = "600 12px 'geist-regular'";
     ctx.textAlign = "left";
 
     // Measure text widths
