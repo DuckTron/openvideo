@@ -228,21 +228,26 @@ export class Transformer extends Container {
     mainSprite = findMainSprite(container);
 
     if (mainSprite) {
-      const b = mainSprite.getLocalBounds();
-      // We want the bounds of the sprite relative to the Root container (container)
-      // but WITHOUT any animation transforms applied.
-      // Since our new structure is Root -> AnimationContainer -> MainSprite,
-      // and Root.pivot is (0,0), and AnimationContainer.pivot is (0,0),
-      // the "Stable" position of MainSprite relative to Root is just its local position
-      // as if AnimationContainer had identity transform.
+      const rawBounds = mainSprite.getLocalBounds();
+
+      // If the clip uses animation padding (oversized texture for slide/zoom room),
+      // the texture is larger than the logical clip bounds by 2*pad on each axis.
+      // Shrink the bounds back to the logical size so the wireframe/handles stay correct.
+      // Read from the container itself (mirrored there by PixiSpriteRenderer) so this
+      // works correctly for both single and multi-selection without needing opts.clip.
+      const animPad: number = (container as any).renderTexturePadding ?? 0;
+      const b: { x: number; y: number; width: number; height: number } =
+        animPad > 0
+          ? new Rectangle(
+              -(rawBounds.width - animPad * 2) / 2,
+              -(rawBounds.height - animPad * 2) / 2,
+              rawBounds.width - animPad * 2,
+              rawBounds.height - animPad * 2,
+            )
+          : rawBounds;
 
       const t = mainSprite.localTransform.clone();
 
-      // If the parent is AnimationContainer, we ignore the parent's transform
-      // to get the "Reference" position.
-      // Actually, in our case, MainSprite's localTransform is already relative to AnimationContainer.
-      // And we want it relative to Root.
-      // If we assume AnimationContainer is at (0,0) in reference state:
       const p1 = t.apply(new Point(b.x, b.y));
       const p2 = t.apply(new Point(b.x + b.width, b.y));
       const p3 = t.apply(new Point(b.x + b.width, b.y + b.height));

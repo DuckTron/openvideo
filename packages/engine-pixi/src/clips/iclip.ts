@@ -91,6 +91,14 @@ export interface IClip<T extends BaseSpriteEvents = BaseSpriteEvents> extends Om
   readonly meta: IClipMeta;
 
   /**
+   * When set, the clip's RenderTexture is larger than its logical bounds by this many pixels
+   * on each side (top, right, bottom, left). This provides transparent overflow room so that
+   * animations (e.g. slide, zoom) can move content outside the clip boundary without clipping.
+   * Selection handles, hit areas, and position sync all use the logical bounds, not the texture size.
+   */
+  renderTexturePadding?: number;
+
+  /**
    * Clone and return a new clip
    */
   clone: () => Promise<this>;

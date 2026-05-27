@@ -909,16 +909,34 @@ export class Text extends BaseClip<ITextEvents> {
       this.pixiTextContainer.addChild(graphics);
     }
 
+    // Add transparent padding around the texture so animation transforms (slide, zoom)
+    // have room to move without hard-clipping at the clip boundary.
+    // The clip bounding box / selection handles are unaffected — they use _width/_height
+    // which remain the logical (unpadded) content dimensions.
+    const ANIM_PAD = 300;
+    const paddedWidth = containerWidth + ANIM_PAD * 2;
+    const paddedHeight = containerHeight + ANIM_PAD * 2;
+
+    // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
+    if (this.pixiTextContainer) {
+      this.pixiTextContainer.x = ANIM_PAD;
+      this.pixiTextContainer.y = ANIM_PAD;
+    }
+
     // Reuse or resize render texture efficiently
     if (this.renderTexture) {
       this.renderTexture.destroy();
     }
     this.renderTexture = RenderTexture.create({
-      width: containerWidth,
-      height: containerHeight,
+      width: paddedWidth,
+      height: paddedHeight,
     });
 
-    // Update clip dimensions
+    // Store the padding so PixiSpriteRenderer can compensate the sprite anchor offset
+    this.renderTexturePadding = ANIM_PAD;
+
+    // Update clip dimensions — these are the LOGICAL (unpadded) dimensions used for
+    // selection handles, layout, and transforms. Do NOT use paddedWidth/Height here.
     this._meta.width = containerWidth;
     this._meta.height = containerHeight;
 
