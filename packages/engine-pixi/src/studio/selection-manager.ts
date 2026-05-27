@@ -244,6 +244,19 @@ export class SelectionManager {
   }
 
   /**
+   * Update root.hitArea to match logical clip dimensions.
+   * Must be called after clip.width/height change (e.g. after text reflow or resize).
+   */
+  public refreshClipHitArea(clip: IClip): void {
+    const renderer = this.studio.spriteRenderers.get(clip);
+    if (renderer == null) return;
+    const root = renderer.getRoot();
+    if (root == null) return;
+    // root is centered at (0,0), so hitArea is a centred rectangle
+    root.hitArea = new Rectangle(-clip.width / 2, -clip.height / 2, clip.width, clip.height);
+  }
+
+  /**
    * Setup sprite interactivity for click selection
    */
   public setupSpriteInteractivity(clip: IClip): void {
@@ -259,6 +272,11 @@ export class SelectionManager {
     // Make sprite interactive
     root.eventMode = "static";
     root.cursor = "pointer";
+
+    // Set hitArea to logical clip dimensions so Pixi's event system
+    // doesn't use the padded texture bounds for hit detection.
+    // root is centered (pivot at 0,0), so hitArea is centred too.
+    this.refreshClipHitArea(clip);
 
     // Add click handler that selects the topmost clip at the click position
     root.on("pointerdown", (e) => {
@@ -309,14 +327,14 @@ export class SelectionManager {
       if (!root || !root.visible) continue;
 
       const localPoint = root.toLocal(globalPoint);
-      const localBounds = root.getLocalBounds();
 
-      if (
-        localPoint.x >= localBounds.minX &&
-        localPoint.x <= localBounds.maxX &&
-        localPoint.y >= localBounds.minY &&
-        localPoint.y <= localBounds.maxY
-      ) {
+      // Use logical clip dimensions for hit testing.
+      // root.getLocalBounds() includes the animation padding (oversized texture),
+      // which causes false positives in the transparent padding area.
+      const hw = clip.width / 2;
+      const hh = clip.height / 2;
+
+      if (localPoint.x >= -hw && localPoint.x <= hw && localPoint.y >= -hh && localPoint.y <= hh) {
         // This clip contains the point, check if it has higher zIndex
         if (clip.zIndex > highestZIndex) {
           highestZIndex = clip.zIndex;
@@ -548,8 +566,9 @@ export class SelectionManager {
           const sprite = renderer.getSprite();
           if (!root || !sprite || !sprite.texture) continue;
 
-          const textureWidth = sprite.texture.width;
-          const textureHeight = sprite.texture.height;
+          const animPadC: number = clip.renderTexturePadding ?? 0;
+          const textureWidth = sprite.texture.width - animPadC * 2;
+          const textureHeight = sprite.texture.height - animPadC * 2;
           const newWidth = Math.abs(root.scale.x * sprite.scale.x) * textureWidth;
           const newHeight = Math.abs(root.scale.y * sprite.scale.y) * textureHeight;
 
@@ -650,10 +669,12 @@ export class SelectionManager {
 
         // Sync clip position based on root position
         // Since root pivot is centered, clip.left = root.x - clip.width / 2
-        // We use Math.abs because width/height might be negative if flipped (though usually handled via scale)
-        const logicalWidth = Math.abs(root.scale.x * sprite.scale.x) * sprite.texture.width;
-        const logicalHeight = Math.abs(root.scale.y * sprite.scale.y) * sprite.texture.height;
-
+        // Subtract animation padding from texture dimensions to get true logical clip size.
+        const animPad: number = clip.renderTexturePadding ?? 0;
+        const logicalTexW = sprite.texture.width - animPad * 2;
+        const logicalTexH = sprite.texture.height - animPad * 2;
+        const logicalWidth = Math.abs(root.scale.x * sprite.scale.x) * logicalTexW;
+        const logicalHeight = Math.abs(root.scale.y * sprite.scale.y) * logicalTexH;
         clip.left = root.x - logicalWidth / 2;
         clip.top = root.y - logicalHeight / 2;
       }
@@ -682,7 +703,8 @@ export class SelectionManager {
           const preservedLeft = clip.left;
           const preservedTop = clip.top;
           const preservedWidth = clip.width;
-          const textureWidth = sprite.texture.width;
+          const animPadT: number = clip.renderTexturePadding ?? 0;
+          const textureWidth = sprite.texture.width - animPadT * 2;
           const newWidth = currentScaleX * textureWidth;
 
           await clip.updateStyle({
@@ -707,6 +729,7 @@ export class SelectionManager {
             root.y = clip.top + clip.height / 2;
 
             this.activeTransformer.updateBounds();
+            this.refreshClipHitArea(clip);
           }
         }
       } finally {
@@ -726,9 +749,9 @@ export class SelectionManager {
       const sprite = renderer.getSprite();
       if (root == null || sprite == null || sprite.texture == null) continue;
 
-      const textureWidth = sprite.texture.width;
-      const textureHeight = sprite.texture.height;
-
+      const animPadS: number = clip.renderTexturePadding ?? 0;
+      const textureWidth = sprite.texture.width - animPadS * 2;
+      const textureHeight = sprite.texture.height - animPadS * 2;
       const newWidth = Math.abs(root.scale.x * sprite.scale.x) * textureWidth;
       const newHeight = Math.abs(root.scale.y * sprite.scale.y) * textureHeight;
 
@@ -775,7 +798,8 @@ export class SelectionManager {
         if (newTexture) {
           await renderer.updateFrame(newTexture);
           clip.width = finalNewWidth;
-          clip.height = newTexture.height;
+          const reflowAnimPad: number = clip.renderTexturePadding ?? 0;
+          clip.height = newTexture.height - reflowAnimPad * 2;
           this.textClipResizedWidth = null;
 
           clip.left = newRootX - clip.width / 2;
@@ -807,6 +831,7 @@ export class SelectionManager {
       if (renderer != null) {
         renderer.updateTransforms();
       }
+      this.refreshClipHitArea(clip);
     }
   }
 
@@ -817,8 +842,9 @@ export class SelectionManager {
       const root = renderer.getRoot();
       const sprite = renderer.getSprite();
       if (root != null && sprite != null && sprite.texture != null) {
-        const textureWidth = sprite.texture.width;
-        const textureHeight = sprite.texture.height;
+        const animPad: number = clip.renderTexturePadding ?? 0;
+        const textureWidth = sprite.texture.width - animPad * 2;
+        const textureHeight = sprite.texture.height - animPad * 2;
 
         const newWidth = Math.abs(root.scale.x * sprite.scale.x) * textureWidth;
         const newHeight = Math.abs(root.scale.y * sprite.scale.y) * textureHeight;

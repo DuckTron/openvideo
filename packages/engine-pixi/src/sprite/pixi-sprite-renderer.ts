@@ -232,6 +232,8 @@ export class PixiSpriteRenderer {
 
     // 1. Root container stays at the stable "Anchor" position
     // This ensures the wireframe/transformer remains stationary during animation
+    // Mirror renderTexturePadding onto the root so Transformer can read it per-container.
+    (this.root as any).renderTexturePadding = this.sprite.renderTexturePadding ?? 0;
     this.root.x = center.x;
     this.root.y = center.y;
     this.root.angle = (flip?.x || flip?.y ? -1 : 1) * angle;
@@ -264,10 +266,29 @@ export class PixiSpriteRenderer {
     const textureHeight = this.pixiSprite.texture?.height ?? 1;
 
     const isCaption = (this.sprite as any).type === "Caption";
+    const isText = (this.sprite as any).type === "Text";
+
+    // When the clip has animation padding (oversized texture for slide/zoom room),
+    // the texture is rendered at scale=1. The content is centred inside the padded texture,
+    // so at rest it aligns exactly with the clip bounding box. When an animation offsets
+    // animationContainer, the transparent padding comes into view (no hard clip).
+    // Caption clips always use scale=1 (positioned by absolute coords).
+    const animPad: number = this.sprite.renderTexturePadding ?? 0;
 
     // Base scale to fit texture into clip dimensions
-    const baseScaleX = !isCaption && width && width !== 0 ? Math.abs(width) / textureWidth : 1;
-    const baseScaleY = !isCaption && height && height !== 0 ? Math.abs(height) / textureHeight : 1;
+    // Text/Caption clips with padding use scale=1; other clips scale to fit their bounds.
+    const baseScaleX =
+      isCaption || isText || animPad > 0
+        ? 1
+        : width && width !== 0
+          ? Math.abs(width) / textureWidth
+          : 1;
+    const baseScaleY =
+      isCaption || isText || animPad > 0
+        ? 1
+        : height && height !== 0
+          ? Math.abs(height) / textureHeight
+          : 1;
 
     if (isMirrored) {
       // Create mirror container if it doesn't exist

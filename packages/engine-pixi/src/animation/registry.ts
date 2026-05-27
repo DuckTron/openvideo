@@ -1,4 +1,5 @@
 import { KeyframeAnimation } from "./keyframe-animation";
+import { GsapAnimation } from "./gsap-animation";
 import { AnimationOptions, IAnimation, KeyframeData } from "./types";
 
 export type AnimationFactory = (options: AnimationOptions, params?: any) => IAnimation;
@@ -11,6 +12,9 @@ class AnimationRegistry {
       "keyframes",
       (options, params: KeyframeData) => new KeyframeAnimation(params, options),
     );
+    const staggerFactory: AnimationFactory = (options, params) =>
+      new GsapAnimation(params, options, "stagger");
+    this.register("stagger", staggerFactory);
   }
 
   register(name: string, factory: AnimationFactory) {

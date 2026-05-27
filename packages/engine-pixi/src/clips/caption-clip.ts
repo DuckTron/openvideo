@@ -1367,24 +1367,40 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
         this.pixiTextContainer.addChildAt(bgGraphics, 0);
       }
 
-      // Reuse or recreate RenderTexture with container dimensions
+      // Add transparent padding around the texture so animation transforms (slide, zoom)
+      // have room to move without hard-clipping at the clip boundary.
+      // The clip bounding box / selection handles are unaffected — they use _width/_height.
+      const ANIM_PAD = 300;
+      const paddedWidth = containerWidth + ANIM_PAD * 2;
+      const paddedHeight = containerHeight + ANIM_PAD * 2;
+
+      // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
+      if (this.pixiTextContainer) {
+        this.pixiTextContainer.x = ANIM_PAD;
+        this.pixiTextContainer.y = ANIM_PAD;
+      }
+
+      // Reuse or recreate RenderTexture with padded dimensions
       if (this.renderTexture) {
         if (
-          Math.abs(this.renderTexture.width - containerWidth) > 0.5 ||
-          Math.abs(this.renderTexture.height - containerHeight) > 0.5
+          Math.abs(this.renderTexture.width - paddedWidth) > 0.5 ||
+          Math.abs(this.renderTexture.height - paddedHeight) > 0.5
         ) {
           this.renderTexture.destroy();
           this.renderTexture = RenderTexture.create({
-            width: containerWidth,
-            height: containerHeight,
+            width: paddedWidth,
+            height: paddedHeight,
           });
         }
       } else {
         this.renderTexture = RenderTexture.create({
-          width: containerWidth,
-          height: containerHeight,
+          width: paddedWidth,
+          height: paddedHeight,
         });
       }
+
+      // Store for PixiSpriteRenderer anchor compensation
+      this.renderTexturePadding = ANIM_PAD;
 
       // Apply active states before rendering to avoid flicker during editing
       this.updateState(this._lastTickTime);

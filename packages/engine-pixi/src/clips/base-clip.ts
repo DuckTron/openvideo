@@ -61,6 +61,12 @@ export abstract class BaseClip<T extends BaseSpriteEvents = BaseSpriteEvents>
    */
   transition?: ITransitionInfo;
 
+  /**
+   * When set, the clip's RenderTexture is larger than its logical bounds by this many pixels
+   * on each side. Provides overflow room for animations (slide, zoom) without visual clipping.
+   */
+  renderTexturePadding?: number;
+
   abstract tick(time: number): Promise<{
     video?: VideoFrame | ImageBitmap | null;
     audio?: Float32Array[];
