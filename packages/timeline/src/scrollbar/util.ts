@@ -76,6 +76,14 @@ type MouseWheelOptions = {
   onZoom?: (zoom: number) => void;
 } & Partial<SizeProps>;
 
+// Track scroll direction lock for trackpad gestures
+let scrollLock: "x" | "y" | null = null;
+let lastScrollTime = 0;
+const SCROLL_LOCK_TIMEOUT = 150;
+const DIRECTION_THRESHOLD = 8;
+let accX = 0,
+  accY = 0;
+
 export const makeMouseWheel =
   (canvas: Timeline, options: MouseWheelOptions = {}) =>
   (wheelEvent: TPointerEventInfo<WheelEvent>) => {
@@ -118,12 +126,37 @@ export const makeMouseWheel =
     }
 
     const vpt = canvas.viewportTransform.slice(0) as TMat2D;
+    const now = Date.now();
 
     if (e.shiftKey) {
       vpt[4] -= e.deltaY;
     } else {
-      vpt[4] -= e.deltaX;
-      vpt[5] -= e.deltaY;
+      // Check if scroll lock expired
+      if (now - lastScrollTime > SCROLL_LOCK_TIMEOUT) {
+        scrollLock = null;
+        accX = accY = 0;
+      }
+
+      // Determine dominant direction if not locked
+      if (!scrollLock) {
+        accX += e.deltaX;
+        accY += e.deltaY;
+
+        // Only decide direction after accumulating enough movement
+        if (Math.abs(accX) > DIRECTION_THRESHOLD || Math.abs(accY) > DIRECTION_THRESHOLD) {
+          scrollLock = Math.abs(accX) > Math.abs(accY) ? "x" : "y";
+          accX = accY = 0;
+        }
+      }
+
+      // Apply scroll only in locked direction
+      if (scrollLock === "x") {
+        vpt[4] -= e.deltaX;
+      } else if (scrollLock === "y") {
+        vpt[5] -= e.deltaY;
+      }
+
+      lastScrollTime = now;
     }
 
     const limitedVpt = limitViewport(

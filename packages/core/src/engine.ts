@@ -105,12 +105,10 @@ export class Core extends EventEmitter {
       const addOptions: AddClipOptions =
         typeof options === "string" ? { trackId: options } : options || {};
 
-      console.log({ addOptions });
-
       const fullClip = await this.clip.prepare(payload, {
         objectFit: addOptions.objectFit,
       });
-      console.log("ADDING CLIP NOWWWWWWW", fullClip, addOptions);
+
       this.execute({
         id: nanoid(),
         type: "clip.add",

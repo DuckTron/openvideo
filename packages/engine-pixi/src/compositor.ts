@@ -180,6 +180,9 @@ export class Compositor extends EventEmitter<{
 
   private hasVideoTrack: boolean;
 
+  // Original project dimensions from JSON (for scaling clips to export dimensions)
+  private jsonDimensions: { width: number; height: number } = { width: 0, height: 0 };
+
   /**
    * Create a compositor instance based on configuration
    * @param opts ICompositorOpts
@@ -477,11 +480,19 @@ export class Compositor extends EventEmitter<{
       // Check if any sprites actually have video capabilities
       const hasVideoSprites = this.sprites.some((sprite) => sprite.width > 0 && sprite.height > 0);
 
+      // Calculate scale from original project dimensions to export dimensions
+      const jsonWidth = this.jsonDimensions.width || this.opts.width || 1920;
+      const jsonHeight = this.jsonDimensions.height || this.opts.height || 1080;
+      const scaleX = this.opts.width > 0 ? this.opts.width / jsonWidth : 1;
+      const scaleY = this.opts.height > 0 ? this.opts.height / jsonHeight : 1;
+
       renderSprites = createSpritesRender({
         pixiApp: this.pixiApp,
         backgroundColor,
         sprites: this.sprites,
         aborter,
+        scaleX,
+        scaleY,
       });
       const encodeFrame = createAVEncoder({
         muxer,
@@ -643,11 +654,30 @@ export class Compositor extends EventEmitter<{
 
     // Update settings if provided, but never overwrite options that were
     // explicitly passed to the constructor (e.g. user-chosen export settings).
+    let dimensionsChanged = false;
     if (json.settings) {
-      if (json.settings.width !== undefined && this.explicitOpts.width === undefined)
+      if (json.settings.width !== undefined && this.explicitOpts.width === undefined) {
+        if (this.opts.width !== json.settings.width) dimensionsChanged = true;
         this.opts.width = json.settings.width;
-      if (json.settings.height !== undefined && this.explicitOpts.height === undefined)
+      }
+      if (json.settings.height !== undefined && this.explicitOpts.height === undefined) {
+        if (this.opts.height !== json.settings.height) dimensionsChanged = true;
         this.opts.height = json.settings.height;
+      }
+
+      // Resize canvas and renderer if dimensions changed
+      if (dimensionsChanged && this.opts.width > 0 && this.opts.height > 0) {
+        this.canvas.width = this.opts.width;
+        this.canvas.height = this.opts.height;
+        if (this.pixiApp?.renderer) {
+          this.pixiApp.renderer.resize(this.opts.width, this.opts.height);
+        }
+      }
+
+      // Store original JSON dimensions for scaling clips during render
+      if (json.settings.width && json.settings.height) {
+        this.jsonDimensions = { width: json.settings.width, height: json.settings.height };
+      }
       if (json.settings.fps !== undefined && this.explicitOpts.fps === undefined)
         this.opts.fps = json.settings.fps;
       if (
@@ -783,11 +813,15 @@ export class Compositor extends EventEmitter<{
 
     // Use the same rendering pipeline as the encoder, but for a single frame.
     // Sprites must NOT be marked expired before this call — use a fresh aborter.
+    const jsonWidth = this.jsonDimensions.width || this.opts.width || 1920;
+    const jsonHeight = this.jsonDimensions.height || this.opts.height || 1080;
     const spriteRender = createSpritesRender({
       pixiApp: this.pixiApp,
       backgroundColor: this.opts.backgroundColor,
       sprites: this.sprites,
       aborter: { aborted: false },
+      scaleX: this.opts.width > 0 ? this.opts.width / jsonWidth : 1,
+      scaleY: this.opts.height > 0 ? this.opts.height / jsonHeight : 1,
     });
 
     try {
@@ -813,6 +847,8 @@ function createSpritesRender(opts: {
   backgroundColor: string;
   sprites: Array<IClip & { main: boolean; expired: boolean }>;
   aborter: { aborted: boolean };
+  scaleX: number;
+  scaleY: number;
 }): {
   render: (timestamp: number) => Promise<{
     audios: Float32Array[][];
@@ -821,7 +857,7 @@ function createSpritesRender(opts: {
   }>;
   cleanup: () => void;
 } {
-  const { pixiApp, sprites, aborter } = opts;
+  const { pixiApp, sprites, aborter, scaleX, scaleY } = opts;
   const hasVideoTrack = pixiApp != null;
 
   // if (pixiApp) {
@@ -845,8 +881,9 @@ function createSpritesRender(opts: {
     width: pixiApp?.renderer.width || 0,
     height: pixiApp?.renderer.height || 0,
   });
+  // Scale transition background to match export dimensions
   const transBgGraphics = new Graphics()
-    .rect(0, 0, pixiApp?.renderer.width || 0, pixiApp?.renderer.height || 0)
+    .rect(0, 0, (pixiApp?.renderer.width || 0) / scaleX, (pixiApp?.renderer.height || 0) / scaleY)
     .fill({ color: 0x000000 });
 
   // Create filters cache - cache both the filter and the render function
@@ -949,8 +986,9 @@ function createSpritesRender(opts: {
     const pooled = getTransClipObjects(clip.id);
     const { root: rootContainer, mainSprite: tempSprite } = pooled;
 
-    rootContainer.x = clip.center.x + xOffset;
-    rootContainer.y = clip.center.y + yOffset;
+    // Scale positions from original project dimensions to export dimensions
+    rootContainer.x = (clip.center.x + xOffset) * scaleX;
+    rootContainer.y = (clip.center.y + yOffset) * scaleY;
     rootContainer.rotation =
       ((clip.flip == null ? 1 : -1) * ((clip.angle + angleOffset) * Math.PI)) / 180;
     rootContainer.alpha = clip.opacity * opacityMultiplier;
@@ -1223,6 +1261,11 @@ function createSpritesRender(opts: {
     clipsEffectContainer = new Container();
     clipsNormalContainer = new Container();
     postProcessContainer = new Container();
+
+    // Apply scale to map from original project dimensions to export dimensions
+    clipsNormalContainer.scale.set(scaleX, scaleY);
+    clipsEffectContainer.scale.set(scaleX, scaleY);
+    postProcessContainer.scale.set(scaleX, scaleY);
 
     clipsNormalContainer.sortableChildren = true;
     postProcessContainer.sortableChildren = true;

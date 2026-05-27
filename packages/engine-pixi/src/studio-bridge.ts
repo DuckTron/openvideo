@@ -146,7 +146,6 @@ export class StudioBridge {
   }
 
   private async handleAddClip(coreClip: AnyClip) {
-    console.log("HANDLE ADD CLIP", coreClip);
     if (coreClip.type === "Transition") {
       await this.studio.addTransition(
         coreClip.transitionKey || "none",

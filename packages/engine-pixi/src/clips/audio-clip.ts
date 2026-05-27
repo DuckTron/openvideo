@@ -197,15 +197,11 @@ export class Audio extends BaseClip implements IPlaybackCapable {
         ? await parseStream2PCM(dataSource, Audio.ctx)
         : dataSource;
 
-    Log.info("Audio clip decoded complete:", performance.now() - tStart);
-
     this._meta.duration = (pcm[0].length / DEFAULT_AUDIO_CONF.sampleRate) * 1e6;
 
     this.chan0Buf = pcm[0];
     // Mono to stereo conversion
     this.chan1Buf = pcm[1] ?? this.chan0Buf;
-
-    Log.info("Audio clip convert to AudioData, time:", performance.now() - tStart);
   }
 
   /**
