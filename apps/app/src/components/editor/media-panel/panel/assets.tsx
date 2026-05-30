@@ -24,6 +24,7 @@ import { uploadFile } from "@/lib/upload-utils";
 import { trpc } from "@/lib/trpc";
 import Draggable from "@/components/shared/draggable";
 import { useGeneratorModalStore } from "@/stores/generator-modal-store";
+import { AssetGeneratorExpandable } from "../asset-generator-expandable";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -274,7 +275,11 @@ function AssetCard({
 
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 
-export default function PanelAssets() {
+interface PanelAssetsProps {
+  showHeader?: boolean;
+}
+
+export default function PanelAssets({ showHeader = true }: PanelAssetsProps) {
   const spaceId = useProjectStore((state) => state.spaceId);
   const files = useAssetsStore((state) => state.files);
   const setFiles = useAssetsStore((state) => state.setFiles);
@@ -557,92 +562,55 @@ export default function PanelAssets() {
         ) : (
           /* With assets: search + grid */
           <>
-            <div className="px-4 pt-3 pb-3">
-              <div className="flex items-center gap-2 w-full">
-                {/* Plus Menu (Upload & Generate) */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-8 w-8 p-0 shrink-0 bg-transparent hover:bg-secondary/50 border-border text-foreground rounded-xl transition-colors flex items-center justify-center"
-                    >
-                      {isUploading ? (
-                        <Loader2 size={15} className="animate-spin" />
-                      ) : (
-                        <Plus size={16} strokeWidth={2.5} />
-                      )}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="start"
-                    className="bg-popover text-popover-foreground border-border rounded-xl w-40"
-                  >
-                    <DropdownMenuItem
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploading}
-                      className="gap-2 px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
-                    >
-                      <Upload size={14} />
-                      <span>Upload a file</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => openGenerator()}
-                      className="gap-2 px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer text-primary"
-                    >
-                      <Sparkles size={14} />
-                      <span>Generate with AI</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {/* Search Input */}
-                <div className="relative flex-1 min-w-0">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  />
-                  <input
-                    placeholder="Search..."
-                    className="w-full h-8 pl-9 pr-3 text-[13px] bg-secondary/30 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border transition-all"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-
-                {/* Filter Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="h-8 w-8 p-0 shrink-0 bg-secondary/30 hover:bg-secondary/60 border-border text-foreground flex items-center justify-center rounded-xl transition-colors"
-                    >
-                      <ListFilter size={15} />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="border-border bg-popover text-popover-foreground rounded-xl w-36"
-                  >
-                    {[
-                      { value: "all", label: "All Assets" },
-                      { value: "image", label: "Images" },
-                      { value: "video", label: "Videos" },
-                      { value: "audio", label: "Audio" },
-                    ].map((option) => (
-                      <DropdownMenuItem
-                        key={option.value}
-                        onClick={() => setFilterType(option.value as any)}
-                        className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
-                      >
-                        <span>{option.label}</span>
-                        {filterType === option.value && (
-                          <div className="size-1.5 rounded-full bg-foreground" />
-                        )}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+            {/* Search and Filter Row */}
+            <div className="flex items-center gap-2 w-full px-4 py-3">
+              {/* Search Input */}
+              <div className="relative flex-1 min-w-0">
+                <Search
+                  size={14}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                />
+                <input
+                  placeholder="Search assets..."
+                  className="w-full h-9 pl-9 pr-3 text-[13px] bg-secondary/50 border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border focus:bg-background transition-all"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
               </div>
+
+              {/* Filter Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
+                  >
+                    <ListFilter size={15} />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="border-border bg-popover text-popover-foreground rounded-xl w-36"
+                >
+                  {[
+                    { value: "all", label: "All Assets" },
+                    { value: "image", label: "Images" },
+                    { value: "video", label: "Videos" },
+                    { value: "audio", label: "Audio" },
+                  ].map((option) => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onClick={() => setFilterType(option.value as any)}
+                      className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
+                    >
+                      <span>{option.label}</span>
+                      {filterType === option.value && (
+                        <div className="size-1.5 rounded-full bg-foreground" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             <ScrollArea className="flex-1 px-4">
@@ -664,6 +632,14 @@ export default function PanelAssets() {
                 </div>
               )}
             </ScrollArea>
+
+            {/* Expandable Generator */}
+            {!showHeader && (
+              <AssetGeneratorExpandable
+                onUploadClick={() => fileInputRef.current?.click()}
+                isUploading={isUploading}
+              />
+            )}
           </>
         )}
       </div>

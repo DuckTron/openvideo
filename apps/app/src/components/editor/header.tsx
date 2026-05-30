@@ -5,8 +5,7 @@ import { useProjectStore } from "@/stores/project-store";
 import { Log } from "@openvideo/engine-pixi";
 import { ExportModal } from "./export-modal";
 import Link from "next/link";
-import { Icons } from "../shared/icons";
-import { Keyboard, ChevronLeft } from "lucide-react";
+import { Keyboard, ChevronLeft, PenLine, Bot, Play, Undo2, Redo2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { ShortcutsModal } from "./shortcuts-modal";
 import { useEffect } from "react";
@@ -15,6 +14,8 @@ import AutosizeInput from "../ui/autosize-input";
 import { authClient } from "@/lib/auth-client";
 import { core, projectStore } from "@/lib/project";
 import { useStore } from "zustand";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePanelStore } from "@/stores/panel-store";
 
 export default function Header() {
   const { aspectRatio, setCanvasSize } = useProjectStore();
@@ -28,6 +29,7 @@ export default function Header() {
   const { projectName, setProjectName } = useProjectStore();
   const [isSaving, setIsSaving] = useState(false);
   const [title, setTitle] = useState(projectName || "Untitled video");
+  const { editorMode, setEditorMode } = usePanelStore();
 
   // Sync title with store when project name changes externally (like on initial load)
   useEffect(() => {
@@ -55,79 +57,7 @@ export default function Header() {
   const canUndo = useStore(projectStore, (s) => s.history.length > 0);
   const canRedo = useStore(projectStore, (s) => s.future.length > 0);
 
-  // NOTE: canUndo/canRedo state now sourced from core.store — no studio history listener needed.
-
-  // const handleSave = async (showToast = true) => {
-  //   if (!studio || !projectId) return;
-
-  //   setIsSaving(true);
-  //   let toastId;
-  //   if (showToast) {
-  //     toastId = toast.loading('Saving project...');
-  //   }
-
-  //   try {
-  //     const studioJSON = studio.exportToJSON();
-  //     await storageService.saveProjectFull(projectId, studioJSON);
-  //     console.log('Project saved', studioJSON);
-  //     if (showToast) {
-  //       toast.success('Project saved', { id: toastId });
-  //     }
-  //   } catch (error) {
-  //     console.error('Failed to save project', error);
-  //     if (showToast) {
-  //       toast.error('Failed to save project', { id: toastId });
-  //     }
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
-  // Auto-save on studio changes (with debounce)
-  // useEffect(() => {
-  //   if (!studio || !projectId) return;
-
-  //   let timeoutId: NodeJS.Timeout;
-
-  //   const onStudioChange = () => {
-  //     clearTimeout(timeoutId);
-  //     timeoutId = setTimeout(() => {
-  //       handleSave(false); // Silent save
-  //     }, 1000); // 1 second debounce
-  //   };
-  //   const eventsToListen = [
-  //     'history:changed',
-  //     'clip:added',
-  //     'clip:removed',
-  //     'clip:updated',
-  //     'clip:moved',
-  //     'track:added',
-  //     'track:removed',
-  //     'clips:removed',
-  //     'clip:replaced',
-  //     'clip:propsChange',
-  //     'propsChange',
-  //   ];
-
-  //   eventsToListen.forEach((event) => {
-  //     studio.on(event, onStudioChange);
-  //   });
-
-  //   return () => {
-  //     eventsToListen.forEach((event) => {
-  //       studio.off(event, onStudioChange);
-  //     });
-  //     clearTimeout(timeoutId);
-  //   };
-  // }, [studio, projectId]);
-
-  const handleNew = () => {
-    const confirmed = window.confirm(
-      "Are you sure you want to start a new project? Unsaved changes will be lost.",
-    );
-    if (confirmed) {
-      core.project.new();
-    }
-  };
+  // NOTE: canUndo/canRedo state now sourced from core.store
 
   const handleExportJSON = () => {
     try {
@@ -192,78 +122,87 @@ export default function Header() {
     setTitle(e.target.value);
   };
 
-  const handleLoadFromJson = async () => {
-    // const fontsInTemplate = template.clips.map((clip) => clip.style.fontUrl);
-    // await fontManager.loadFonts({
-    //   name: DEFAULT_FONT.postScriptName,
-    //   src: DEFAULT_FONT.src
-    // })
-    // // const loadedFonts = await Promise.all(fontsInTemplate.map((url) => core.fontManager.load(url)));
-    // core.project.import(template);
-  };
-
   return (
-    <header className="relative flex h-[52px] w-full shrink-0 items-center justify-between px-4 bg-card z-10 border-b">
-      <div className="flex items-center gap-3">
-        <Button variant="outline" size="icon" asChild className="h-8 w-8 shrink-0">
+    <header className="relative flex h-[52px] w-full shrink-0 items-center justify-between px-3 bg-card z-10 border-b">
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          asChild
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        >
           <Link href="/home">
-            <ChevronLeft className="h-5 w-5 text-muted-foreground" />
+            <ChevronLeft className="h-4 w-4" />
           </Link>
         </Button>
-        {/* <Button
-          onClick={() => {
-            console.log(core.project.export());
-          }}
-        >
-          Debug
-        </Button> */}
-        <div className="pointer-events-auto flex h-10 items-center gap-2 rounded-md">
+        <div className="flex items-center">
           <AutosizeInput
             name="title"
             value={title}
             onChange={handleTitleChange}
             width={150}
-            inputClassName="border-none outline-none px-1 text-sm font-medium"
+            inputClassName="border-none bg-transparent px-2 py-1 text-sm font-medium hover:bg-muted rounded-md transition-colors focus:bg-muted"
           />
         </div>
       </div>
 
+      {/* Center Section - Mode Toggle */}
+      <Tabs
+        value={editorMode}
+        onValueChange={(v) => setEditorMode(v as "editor" | "agent" | "playground")}
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+      >
+        <TabsList className="h-8 bg-muted/80 border shadow-sm">
+          <TabsTrigger value="editor" className="text-xs gap-1.5 px-3 h-6">
+            <PenLine className="h-3.5 w-3.5" />
+            Editor
+          </TabsTrigger>
+          <TabsTrigger value="agent" className="text-xs gap-1.5 px-3 h-6">
+            <Bot className="h-3.5 w-3.5" />
+            Agent
+          </TabsTrigger>
+          <TabsTrigger value="playground" className="text-xs gap-1.5 px-3 h-6">
+            <Play className="h-3.5 w-3.5" />
+            Playground
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Right Section */}
-      <div className="flex items-center gap-4 pr-4">
-        <div className="flex items-center">
+      <div className="flex items-center gap-2 pr-1">
+        <div className="flex items-center rounded-lg border bg-muted/50 p-0.5">
           <Button
             onClick={() => core.undo()}
             disabled={!canUndo}
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7"
           >
-            <Icons.undo className="size-4.5" />
+            <Undo2 className="h-4 w-4" />
           </Button>
           <Button
             onClick={() => core.redo()}
             disabled={!canRedo}
-            className="text-muted-foreground h-8 w-8"
             variant="ghost"
             size="icon"
+            className="h-7 w-7"
           >
-            <Icons.redo className="size-4.5" />
+            <Redo2 className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground"
-            onClick={() => setIsShortcutsModalOpen(true)}
-          >
-            <Keyboard className="size-5" />
-          </Button>
-        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={() => setIsShortcutsModalOpen(true)}
+        >
+          <Keyboard className="h-4 w-4" />
+        </Button>
 
-        <Button size="sm" className="gap-2 h-8 px-4" onClick={() => setIsExportModalOpen(true)}>
-          Download
+        <Button size="sm" className="gap-2 h-8 px-3" onClick={() => setIsExportModalOpen(true)}>
+          <Download className="h-3.5 w-3.5" />
+          Export
         </Button>
 
         <ExportModal open={isExportModalOpen} onOpenChange={setIsExportModalOpen} />

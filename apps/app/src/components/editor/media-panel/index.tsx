@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useStudioStore } from "@/stores/studio-store";
 
 const viewMap: Record<Tab, React.ReactNode> = {
-  assets: <PanelAssets />,
+  assets: <PanelAssets showHeader={false} />,
   text: <PanelText />,
   captions: <PanelCaptions />,
   transitions: <PanelTransition />,
