@@ -18,6 +18,6 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": false,
     "moduleResolution": "NodeNext",
-    "esModuleInterop": true
-  }
+  },
+  "exclude": ["node_modules", "dist", "scratch"]
 }

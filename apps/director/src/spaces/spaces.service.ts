@@ -1,7 +1,7 @@
+import { getDB, schema, eq, and, desc } from "@openvideo/db";
+const db = getDB();
+
 import { Injectable, Logger, NotFoundException } from "@nestjs/common";
-import { DrizzleService } from "../db/drizzle.service";
-import * as schema from "../db/schema";
-import { eq, and, desc } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { RequestContext } from "../common/request-context";
 
@@ -25,8 +25,6 @@ export interface SpaceResponse {
 export class SpacesService {
   private readonly logger = new Logger(SpacesService.name);
 
-  constructor(private db: DrizzleService) {}
-
   async create(dto: CreateSpaceDto, ctx: RequestContext): Promise<SpaceResponse> {
     const id = nanoid();
 
@@ -42,7 +40,7 @@ export class SpacesService {
       values.orgId = ctx.orgId;
     }
 
-    const [row] = await this.db.db.insert(schema.space).values(values).returning();
+    const [row] = await db.insert(schema.space).values(values).returning();
 
     this.logger.log(`Created space ${id} for user ${ctx.userId}`);
     return this.toResponse(row);
@@ -55,7 +53,7 @@ export class SpacesService {
       where = and(where, eq(schema.space.orgId, ctx.orgId));
     }
 
-    const rows = await this.db.db
+    const rows = await db
       .select()
       .from(schema.space)
       .where(where)
@@ -74,7 +72,7 @@ export class SpacesService {
       where = and(where, eq(schema.space.userId, ctx.userId));
     }
 
-    const [row] = await this.db.db.select().from(schema.space).where(where);
+    const [row] = await db.select().from(schema.space).where(where);
 
     return row ? this.toResponse(row) : null;
   }
@@ -102,7 +100,7 @@ export class SpacesService {
     if (dto.name !== undefined) updates.name = dto.name;
     if (dto.data !== undefined) updates.data = dto.data;
 
-    const [row] = await this.db.db
+    const [row] = await db
       .update(schema.space)
       .set(updates)
       .where(eq(schema.space.id, spaceId))
@@ -115,7 +113,7 @@ export class SpacesService {
     // Verify access first
     await this.getOne(spaceId, ctx);
 
-    await this.db.db.delete(schema.space).where(eq(schema.space.id, spaceId));
+    await db.delete(schema.space).where(eq(schema.space.id, spaceId));
 
     this.logger.log(`Deleted space ${spaceId}`);
   }

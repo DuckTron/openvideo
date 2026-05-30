@@ -1,3 +1,6 @@
+import { getDB, schema, eq } from "@openvideo/db";
+const db = getDB();
+
 import {
   Controller,
   Post,
@@ -12,9 +15,6 @@ import {
 } from "@nestjs/common";
 import { Public } from "./public.decorator";
 import { JwtService } from "@nestjs/jwt";
-import { DrizzleService } from "../db/drizzle.service";
-import * as schema from "../db/schema";
-import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import * as bcrypt from "bcrypt";
 import { ApiTokenService } from "./api-token.service";
@@ -41,7 +41,7 @@ interface CreateTokenDto {
 export class AuthController {
   constructor(
     private jwtService: JwtService,
-    private db: DrizzleService,
+
     private apiTokenService: ApiTokenService,
   ) {}
 
@@ -54,7 +54,7 @@ export class AuthController {
     const { email, password, name } = body;
 
     // Check if user already exists
-    const existing = await this.db.db
+    const existing = await db
       .select()
       .from(schema.user)
       .where(eq(schema.user.email, email))
@@ -67,15 +67,14 @@ export class AuthController {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    // Create user + credential account (Better Auth pattern)
     const userId = nanoid();
-    const [user] = await this.db.db
+    const [user] = await db
       .insert(schema.user)
       .values({
         id: userId,
         email,
         name: name || email.split("@")[0],
-        hashedPassword,
         createdAt: new Date(),
         updatedAt: new Date(),
       })
@@ -85,6 +84,17 @@ export class AuthController {
         name: schema.user.name,
         createdAt: schema.user.createdAt,
       });
+
+    // Store hashed password in account table
+    await db.insert(schema.account).values({
+      id: nanoid(),
+      accountId: userId,
+      providerId: "credential",
+      userId,
+      password: hashedPassword,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
 
     // Generate JWT
     const token = this.jwtService.sign({
@@ -113,18 +123,25 @@ export class AuthController {
     const { email, password } = body;
 
     // Find user
-    const [user] = await this.db.db
-      .select()
-      .from(schema.user)
-      .where(eq(schema.user.email, email))
-      .limit(1);
+    const [user] = await db.select().from(schema.user).where(eq(schema.user.email, email)).limit(1);
 
     if (!user) {
       throw new UnauthorizedException("Invalid email or password");
     }
 
+    // Get credential account for password verification
+    const [credAccount] = await db
+      .select()
+      .from(schema.account)
+      .where(eq(schema.account.userId, user.id))
+      .limit(1);
+
+    if (!credAccount?.password) {
+      throw new UnauthorizedException("Invalid email or password");
+    }
+
     // Verify password
-    const isValid = await bcrypt.compare(password, user.hashedPassword);
+    const isValid = await bcrypt.compare(password, credAccount.password);
     if (!isValid) {
       throw new UnauthorizedException("Invalid email or password");
     }
@@ -186,7 +203,7 @@ export class AuthController {
     }
 
     // Get user details
-    const [user] = await this.db.db
+    const [user] = await db
       .select({
         id: schema.user.id,
         email: schema.user.email,

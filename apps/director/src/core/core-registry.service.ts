@@ -1,5 +1,7 @@
+import { getDB, schema, eq } from "@openvideo/db";
+const db = getDB();
+
 import { Injectable, Logger } from "@nestjs/common";
-import { DrizzleService } from "../db/drizzle.service";
 import { ServerCore } from "./server-core";
 import { IProject } from "@openvideo/core";
 
@@ -8,30 +10,40 @@ export class CoreRegistryService {
   private cores = new Map<string, ServerCore>();
   private readonly logger = new Logger(CoreRegistryService.name);
 
-  constructor(private db: DrizzleService) {}
-
   async get(projectId: string): Promise<ServerCore> {
     if (this.cores.has(projectId)) {
       return this.cores.get(projectId)!;
     }
 
     this.logger.log(`Loading project ${projectId} from database into memory`);
-    const snapshot = await this.db.loadSpaceSnapshot(projectId);
 
-    // If no snapshot exists, load project dimensions from project table
-    let initialState = snapshot;
-    if (!snapshot) {
-      const projectData = await this.db.loadProjectData(projectId);
-      if (projectData) {
+    // Try loading space snapshot (data column stores IProject snapshot)
+    const [spaceRow] = await db
+      .select()
+      .from(schema.space)
+      .where(eq(schema.space.id, projectId))
+      .limit(1);
+
+    let initialState: any = spaceRow?.data || null;
+
+    // Fallback: load from project table
+    if (!initialState) {
+      const [projectRow] = await db
+        .select()
+        .from(schema.project)
+        .where(eq(schema.project.id, projectId))
+        .limit(1);
+
+      if (projectRow) {
         initialState = {
           settings: {
-            width: projectData.width,
-            height: projectData.height,
-            fps: projectData.fps,
+            width: projectRow.width,
+            height: projectRow.height,
+            fps: projectRow.fps,
             duration: 30_000_000,
           },
-          tracks: projectData.data?.tracks || [],
-          clips: projectData.data?.clips || {},
+          tracks: projectRow.data?.tracks || [],
+          clips: projectRow.data?.clips || {},
         };
       }
     }
@@ -50,7 +62,12 @@ export class CoreRegistryService {
     }
 
     const snapshot = core.getSnapshot();
-    await this.db.saveSpaceSnapshot(projectId, snapshot);
+
+    await db
+      .update(schema.space)
+      .set({ data: snapshot, updatedAt: new Date() })
+      .where(eq(schema.space.id, projectId));
+
     this.logger.log(`Persisted project ${projectId} snapshot to database`);
   }
 

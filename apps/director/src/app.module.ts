@@ -1,7 +1,6 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { AuthModule } from "./auth/auth.module";
-import { DbModule } from "./db/db.module";
 import { CoreModule } from "./core/core.module";
 import { GatewayModule } from "./gateway/gateway.module";
 import { RagModule } from "./rag/rag.module";
@@ -28,7 +27,6 @@ import { ChatModule } from "./chat/chat.module";
     }),
     CommonModule,
     AuthModule,
-    DbModule,
     CoreModule,
     GatewayModule,
     RagModule,
