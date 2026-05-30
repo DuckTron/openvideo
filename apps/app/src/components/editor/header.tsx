@@ -127,7 +127,7 @@ export default function Header() {
       {/* Left: Project Navigation */}
       <div className="flex items-center gap-4 w-[280px]">
         <button
-          onClick={() => router.push("/home")}
+          onClick={() => router.push("/spaces")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ChevronLeft className="h-4 w-4" />

@@ -106,7 +106,7 @@ const Playhead = ({ scrollLeft, scale }: { scrollLeft: number; scale: ITimelineS
         top: 50,
         width: 1,
         height: "calc(100% - 50px)",
-        zIndex: 100,
+        zIndex: 10,
         cursor: "ew-resize",
         touchAction: "none",
       }}
