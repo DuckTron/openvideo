@@ -15,35 +15,32 @@ export class CoreRegistryService {
       return this.cores.get(projectId)!;
     }
 
-    this.logger.log(`Loading project ${projectId} from database into memory`);
+    this.logger.log(`Loading space ${projectId} from database into memory`);
 
-    // Try loading space snapshot (data column stores IProject snapshot)
     const [spaceRow] = await db
       .select()
       .from(schema.space)
       .where(eq(schema.space.id, projectId))
       .limit(1);
 
-    let initialState: any = spaceRow?.data || null;
+    let initialState: any = null;
 
-    // Fallback: load from project table
-    if (!initialState) {
-      const [projectRow] = await db
-        .select()
-        .from(schema.project)
-        .where(eq(schema.project.id, projectId))
-        .limit(1);
-
-      if (projectRow) {
+    if (spaceRow) {
+      // Prefer the scene field (unified schema), fall back to data field for legacy records
+      if (spaceRow.scene && (spaceRow.scene as any).tracks) {
+        initialState = spaceRow.scene;
+      } else if (spaceRow.data && (spaceRow.data as any).tracks) {
+        initialState = spaceRow.data;
+      } else {
         initialState = {
           settings: {
-            width: projectRow.width,
-            height: projectRow.height,
-            fps: projectRow.fps,
+            width: spaceRow.width,
+            height: spaceRow.height,
+            fps: spaceRow.fps,
             duration: 30_000_000,
           },
-          tracks: projectRow.data?.tracks || [],
-          clips: projectRow.data?.clips || {},
+          tracks: [],
+          clips: {},
         };
       }
     }
@@ -57,7 +54,7 @@ export class CoreRegistryService {
   async persist(projectId: string): Promise<void> {
     const core = this.cores.get(projectId);
     if (!core) {
-      this.logger.warn(`Cannot persist project ${projectId}: not found in memory`);
+      this.logger.warn(`Cannot persist space ${projectId}: not found in memory`);
       return;
     }
 
@@ -65,10 +62,10 @@ export class CoreRegistryService {
 
     await db
       .update(schema.space)
-      .set({ data: snapshot, updatedAt: new Date() })
+      .set({ scene: snapshot, updatedAt: new Date() })
       .where(eq(schema.space.id, projectId));
 
-    this.logger.log(`Persisted project ${projectId} snapshot to database`);
+    this.logger.log(`Persisted space ${projectId} snapshot to database`);
   }
 
   unload(projectId: string) {
@@ -76,7 +73,7 @@ export class CoreRegistryService {
     if (core) {
       core.destroy();
       this.cores.delete(projectId);
-      this.logger.log(`Unloaded project ${projectId} from memory`);
+      this.logger.log(`Unloaded space ${projectId} from memory`);
     }
   }
 }

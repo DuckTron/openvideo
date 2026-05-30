@@ -34,7 +34,13 @@ export const spaceRouter = router({
     .input(
       z.object({
         name: z.string().min(1),
-        data: z.any().default({}),
+        description: z.string().optional(),
+        thumbnail: z.string().optional(),
+        width: z.number().int().positive().optional(),
+        height: z.number().int().positive().optional(),
+        fps: z.number().int().positive().optional(),
+        scene: z.any().optional(),
+        data: z.any().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -45,6 +51,12 @@ export const spaceRouter = router({
           id,
           name: input.name,
           userId: ctx.user.id,
+          description: input.description,
+          thumbnail: input.thumbnail,
+          width: input.width ?? 1080,
+          height: input.height ?? 1920,
+          fps: input.fps ?? 30,
+          scene: input.scene ?? { tracks: [], clips: {}, settings: {} },
           data: input.data,
         })
         .returning();
@@ -57,7 +69,13 @@ export const spaceRouter = router({
       z.object({
         id: z.string(),
         name: z.string().optional(),
-        data: z.any().optional(),
+        description: z.string().nullable().optional(),
+        thumbnail: z.string().nullable().optional(),
+        width: z.number().int().positive().optional(),
+        height: z.number().int().positive().optional(),
+        fps: z.number().int().positive().optional(),
+        scene: z.any().optional(),
+        data: z.any().nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -67,6 +85,12 @@ export const spaceRouter = router({
         updatedAt: new Date(),
       };
       if (updates.name !== undefined) updateData.name = updates.name;
+      if (updates.description !== undefined) updateData.description = updates.description;
+      if (updates.thumbnail !== undefined) updateData.thumbnail = updates.thumbnail;
+      if (updates.width !== undefined) updateData.width = updates.width;
+      if (updates.height !== undefined) updateData.height = updates.height;
+      if (updates.fps !== undefined) updateData.fps = updates.fps;
+      if (updates.scene !== undefined) updateData.scene = updates.scene;
       if (updates.data !== undefined) updateData.data = updates.data;
 
       const result = await db

@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Project } from "@/lib/projects-storage";
+import type { Project } from "@/lib/projects-api";
 
 interface ProjectsState {
   projects: Project[];
@@ -38,7 +38,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => ({
   updateProject: (id, updates) =>
     set((state) => ({
       projects: state.projects.map((p) =>
-        p.id === id ? { ...p, ...updates, updatedAt: new Date() } : p,
+        p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p,
       ),
     })),
 

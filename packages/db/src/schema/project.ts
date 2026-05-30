@@ -2,43 +2,29 @@ import { relations } from "drizzle-orm";
 import { pgTable, text, timestamp, integer, json, index } from "drizzle-orm/pg-core";
 import { user } from "./auth.js";
 
-export const project = pgTable(
-  "project",
+export const space = pgTable(
+  "spaces",
   {
     id: text("id").primaryKey(),
     name: text("name").notNull(),
     description: text("description"),
-    spaceId: text("space_id").unique(), // References OpenVideo space
     thumbnail: text("thumbnail"),
     width: integer("width").default(1080).notNull(),
     height: integer("height").default(1920).notNull(),
     fps: integer("fps").default(30).notNull(),
-    data: json("data")
+    scene: json("scene")
       .$type<{
         tracks: any[];
         clips: Record<string, any>;
         settings?: any;
       }>()
-      .notNull(),
-    userId: text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
-    createdAt: timestamp("created_at").defaultNow().notNull(),
-    updatedAt: timestamp("updated_at").defaultNow().notNull(),
-  },
-  (t) => [index("project_userId_idx").on(t.userId), index("project_spaceId_idx").on(t.spaceId)],
-);
-
-export const space = pgTable(
-  "space",
-  {
-    id: text("id").primaryKey(),
-    name: text("name").notNull(),
+      .default({ tracks: [], clips: {}, settings: {} }),
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     orgId: text("org_id"), // Optional: for future multi-tenancy
-    data: json("data").$type<any>().notNull(), // Stores the entire IProject snapshot
+    data: json("data").$type<any>(), // Stores any extra metadata
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
   },
@@ -67,13 +53,6 @@ export const directorSession = pgTable(
     index("director_session_orgId_idx").on(t.orgId),
   ],
 );
-
-export const projectRelations = relations(project, ({ one }) => ({
-  user: one(user, {
-    fields: [project.userId],
-    references: [user.id],
-  }),
-}));
 
 export const spaceRelations = relations(space, ({ one, many }) => ({
   user: one(user, {

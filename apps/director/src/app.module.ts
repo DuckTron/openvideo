@@ -9,7 +9,6 @@ import { PlannerModule } from "./planner/planner.module";
 import { ExecutorModule } from "./executor/executor.module";
 import { QueueModule } from "./queue/queue.module";
 import { AssetsModule } from "./assets/assets.module";
-import { ProjectModule } from "./project/project.module";
 import { SessionModule } from "./session/session.module";
 import { DirectorModule } from "./director/director.module";
 import { HealthController } from "./health/health.controller";
@@ -35,7 +34,6 @@ import { ChatModule } from "./chat/chat.module";
     ExecutorModule,
     QueueModule,
     AssetsModule,
-    ProjectModule,
     SessionModule,
     DirectorModule,
     TriggerModule,

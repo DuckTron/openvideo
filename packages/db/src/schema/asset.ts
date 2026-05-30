@@ -18,6 +18,7 @@ export const asset = pgTable(
     size: integer("size"), // size in bytes
     width: integer("width"),
     height: integer("height"),
+    source: text("source").notNull().default("upload"), // 'upload' | 'ai_generated'
     userId: text("user_id")
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),

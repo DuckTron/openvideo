@@ -1,5 +1,4 @@
 import { router } from "./trpc.js";
-import { projectRouter } from "./routers/project.js";
 import { spaceRouter } from "./routers/space.js";
 import { assetRouter } from "./routers/asset.js";
 import { chatRouter } from "./routers/chat.js";
@@ -11,7 +10,6 @@ import { tokenRouter } from "./routers/token.js";
  * Add routers here as you build them
  */
 export const appRouter = router({
-  project: projectRouter,
   space: spaceRouter,
   asset: assetRouter,
   chat: chatRouter,

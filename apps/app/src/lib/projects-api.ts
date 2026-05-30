@@ -1,7 +1,21 @@
-import { type Project } from "@/lib/projects-storage";
-
-// Re-export Project type for components
-export type { Project } from "@/lib/projects-storage";
+export interface Project {
+  id: string;
+  name: string;
+  description: string | null;
+  spaceId: string;
+  thumbnail: string | null;
+  width: number;
+  height: number;
+  fps: number;
+  data: {
+    tracks: any[];
+    clips: Record<string, any>;
+    settings?: any;
+  };
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export interface CreateProjectRequest {
   name: string;

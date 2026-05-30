@@ -1,55 +1,100 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OpenVideo } from "@openvideo/ai";
 import { auth } from "@/lib/auth";
-import { projectsStorage } from "@/lib/projects-storage";
+import * as crypto from "crypto";
 
-// Server-side OpenVideo instance with API key
-const apiKey = process.env.OPENVIDEO_KEY;
 const baseURL = process.env.DIRECTOR_URL || "http://localhost:4000";
+const jwtSecret = process.env.JWT_SECRET || "your-better-auth-secret";
 
-let serverOpenVideo: OpenVideo | null = null;
+// Helper to sign a JWT on the fly
+function signJwt(payload: any, secret: string): string {
+  const header = {
+    alg: "HS256",
+    typ: "JWT",
+  };
 
-function getServerOpenVideo(): OpenVideo {
-  if (!serverOpenVideo) {
-    if (!apiKey) {
-      throw new Error("OPENVIDEO_KEY environment variable is required");
-    }
-    serverOpenVideo = new OpenVideo({
-      mode: "direct",
-      apiKey,
-      baseURL,
-    });
-  }
-  return serverOpenVideo;
+  const base64UrlEncode = (obj: any) => {
+    return Buffer.from(JSON.stringify(obj))
+      .toString("base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+  };
+
+  const encodedHeader = base64UrlEncode(header);
+  const encodedPayload = base64UrlEncode(payload);
+
+  const signature = crypto
+    .createHmac("sha256", secret)
+    .update(`${encodedHeader}.${encodedPayload}`)
+    .digest("base64")
+    .replace(/=/g, "")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_");
+
+  return `${encodedHeader}.${encodedPayload}.${signature}`;
 }
 
-// Get authenticated user ID
-async function getUserId(request: NextRequest): Promise<string | null> {
-  const session = await auth.api.getSession({ headers: request.headers });
-  return session?.user?.id ?? null;
+// Map a Space object from Director to the legacy Project structure expected by the frontend
+function mapSpaceToProject(space: any): any {
+  return {
+    id: space.id,
+    name: space.name,
+    description: space.description ?? null,
+    spaceId: space.id,
+    thumbnail: space.thumbnail ?? null,
+    width: space.width,
+    height: space.height,
+    fps: space.fps,
+    data: space.scene ?? { tracks: [], clips: {}, settings: {} },
+    userId: space.userId,
+    createdAt: space.createdAt,
+    updatedAt: space.updatedAt,
+  };
+}
+
+// Get authenticated user session
+async function getSession(request: NextRequest) {
+  return await auth.api.getSession({ headers: request.headers });
 }
 
 // GET /api/projects/[id] - Get a specific project
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const userId = await getUserId(request);
+    const session = await getSession(request);
 
-    if (!userId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
-    console.log({
-      id,
-      userId,
+
+    const token = signJwt(
+      {
+        sub: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+      },
+      jwtSecret,
+    );
+
+    const openVideo = new OpenVideo({
+      mode: "direct",
+      accessToken: token,
+      baseURL,
     });
-    const project = await projectsStorage.getProjectById(id, userId);
 
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    try {
+      const space = await openVideo.spaces.get({ id });
+      return NextResponse.json(mapSpaceToProject(space));
+    } catch (error: any) {
+      if (error.status === 404) {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
+      }
+      throw error;
     }
-
-    return NextResponse.json(project);
   } catch (error) {
     console.error("Error fetching project:", error);
     return NextResponse.json({ error: "Failed to fetch project" }, { status: 500 });
@@ -59,51 +104,56 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 // PUT /api/projects/[id] - Update a project
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const userId = await getUserId(request);
+    const session = await getSession(request);
 
-    if (!userId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, data } = body;
 
-    // Get the current project before update
-    const currentProject = await projectsStorage.getProjectById(id, userId);
+    const token = signJwt(
+      {
+        sub: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+      },
+      jwtSecret,
+    );
 
-    if (!currentProject) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    // Update project using storage
-    const updatedProject = await projectsStorage.updateProject(id, userId, {
-      name: name || currentProject.name,
-      description: description !== undefined ? description : currentProject.description,
+    const openVideo = new OpenVideo({
+      mode: "direct",
+      accessToken: token,
+      baseURL,
     });
 
-    if (!updatedProject) {
-      return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
+    // In the old schema updates could send partial space settings/metadata
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (data !== undefined) {
+      updateData.scene = data;
+      if (data.settings?.width !== undefined) updateData.width = data.settings.width;
+      if (data.settings?.height !== undefined) updateData.height = data.settings.height;
+      if (data.settings?.fps !== undefined) updateData.fps = data.settings.fps;
     }
 
-    // Also update the corresponding OpenVideo space if name changed
-    if (name && name !== currentProject.name) {
-      try {
-        const openVideo = getServerOpenVideo();
-        await openVideo.spaces.update(updatedProject.spaceId, {
-          name: `${name} - Space`,
-          data: {
-            projectType: "editor-project",
-            description: description || updatedProject.description || "",
-          },
-        });
-      } catch (spaceError) {
-        console.error("Failed to update OpenVideo space:", spaceError);
-        // Don't fail the request if space update fails
+    try {
+      const updatedSpace = await openVideo.spaces.update({
+        id,
+        ...updateData,
+      });
+      return NextResponse.json(mapSpaceToProject(updatedSpace));
+    } catch (error: any) {
+      if (error.status === 404) {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
       }
+      throw error;
     }
-
-    return NextResponse.json(updatedProject);
   } catch (error) {
     console.error("Error updating project:", error);
     return NextResponse.json({ error: "Failed to update project" }, { status: 500 });
@@ -116,50 +166,40 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const userId = await getUserId(request);
+    const session = await getSession(request);
 
-    if (!userId) {
+    if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
 
-    const project = await projectsStorage.getProjectById(id, userId);
+    const token = signJwt(
+      {
+        sub: session.user.id,
+        email: session.user.email,
+        name: session.user.name,
+        iat: Math.floor(Date.now() / 1000),
+        exp: Math.floor(Date.now() / 1000) + 60 * 60,
+      },
+      jwtSecret,
+    );
 
-    if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
+    const openVideo = new OpenVideo({
+      mode: "direct",
+      accessToken: token,
+      baseURL,
+    });
 
-    // Delete OpenVideo assets and space
     try {
-      const openVideo = getServerOpenVideo();
-
-      // Delete all assets in the space (this also cleans up indexes)
-      const assets = await openVideo.assets.list({ spaceId: project.spaceId });
-      for (const asset of assets) {
-        try {
-          await openVideo.assets.delete({ spaceId: project.spaceId, assetId: asset.id });
-        } catch (assetError) {
-          console.error(`Failed to delete asset ${asset.id}:`, assetError);
-          // Continue with other assets
-        }
+      await openVideo.spaces.delete({ id });
+      return NextResponse.json({ success: true });
+    } catch (error: any) {
+      if (error.status === 404) {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
       }
-
-      // Delete the space
-      await openVideo.spaces.delete(project.spaceId);
-    } catch (spaceError) {
-      console.error("Failed to delete OpenVideo space/assets:", spaceError);
-      // Continue with project deletion even if space deletion fails
+      throw error;
     }
-
-    // Remove project from storage
-    const deleted = await projectsStorage.deleteProject(id, userId);
-
-    if (!deleted) {
-      return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting project:", error);
     return NextResponse.json({ error: "Failed to delete project" }, { status: 500 });
