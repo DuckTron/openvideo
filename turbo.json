@@ -7,7 +7,31 @@
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
-      "env": ["VERCEL"]
+      "env": [
+        "VERCEL",
+        "ELEVENLABS_API_KEY",
+        "ELEVENLABS_URL",
+        "ELEVENLABS_MODEL",
+        "DEEPGRAM_URL",
+        "DEEPGRAM_API_KEY",
+        "DEEPGRAM_MODEL",
+        "R2_PUBLIC_DOMAIN",
+        "R2_BUCKET_NAME",
+        "R2_ACCESS_KEY_ID",
+        "R2_SECRET_ACCESS_KEY",
+        "R2_ACCOUNT_ID",
+        "PEXELS_URL",
+        "PEXELS_API_KEY",
+        "OPENVIDEO_KEY",
+        "DATABASE_URL",
+        "REDIS_URL",
+        "RESEND_KEY",
+        "BETTER_AUTH_URL",
+        "DIRECTOR_URL",
+        "TRIGGER_SECRET_KEY",
+        "JWT_SECRET",
+        "HUSKY"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
