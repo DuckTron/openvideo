@@ -46,6 +46,8 @@
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
   --font-heading: var(--font-sans);
+
+  --color-openvideo-gray: var(--openvideo-gray);
 }
 
 :root {
@@ -83,6 +85,8 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
   --background: oklch(1 0 0);
   --foreground: oklch(0.141 0.005 285.823);
+
+  --openvideo-gray: rgb(227, 219, 211);
 }
 
 .dark {
@@ -227,4 +231,12 @@
 
 @utility diagonal-stripes {
   background: repeating-linear-gradient(45deg, transparent 0 4px, var(--border-light) 4px 6px);
+}
+
+.fake-browser-wrapper {
+  width: 100% !important;
+  max-width: min(1450px, calc(100% / 0.9)) !important;
+  height: 100%;
+  transform: scale(0.9) !important;
+  transform-origin: center !important;
 }
