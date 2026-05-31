@@ -120,7 +120,7 @@ const Playhead = ({ scrollLeft, scale }: { scrollLeft: number; scale: ITimelineS
           borderRadius: "0 0 4px 4px",
           backgroundColor: isDragging ? "#ffffff" : "#000000",
           height: "16px",
-          width: "12px",
+          width: "10px",
           transform: "translateX(-50%)",
           cursor: isDragging ? "grabbing" : "grab",
           borderColor: "#ffffff",
