@@ -50,7 +50,7 @@ const Hero = () => {
         </div>
       </section>
 
-      <div className="relative w-full overflow-hidden">
+      {/* <div className="relative w-full overflow-hidden">
         <div className="absolute inset-0 w-full h-full">
           <DotOrbit
             width="100%"
@@ -79,7 +79,7 @@ const Hero = () => {
             />
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
