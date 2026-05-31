@@ -1,66 +1,58 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
+import { LogoIcons } from "@/components/shared/logos";
+import { Button } from "@/components/ui/button";
 import { UserAuthForm } from "@/components/user-auth-form";
-import { ArrowLeftIcon } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Authentication",
-  description: "Authentication forms built using the components.",
+  title: "Sign up",
+  description: "Create your OpenVideo account",
 };
 
-export default function AuthenticationPage() {
+export default function SignUpPage() {
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center bg-card px-4">
-      <Link
-        href="/"
-        className={cn(
-          buttonVariants({ variant: "outline" }),
+    <div className="min-h-screen flex flex-col bg-card">
+      {/* Header - matching spaces page style */}
+      <header className="h-12 flex items-center px-4 border-b sticky top-0 z-10 bg-card/80 backdrop-blur-md">
+        <div className="w-full flex items-center justify-between">
+          <Link href="/" className="inline-flex items-center gap-2.5 font-bold tracking-tight">
+            <LogoIcons.scenify className="size-5" />
+            <span>OpenVideo</span>
+          </Link>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/signin">Sign in</Link>
+          </Button>
+        </div>
+      </header>
 
-          "absolute left-4 top-4 w-8 md:left-8 md:top-8 rounded-full",
-        )}
-      >
-        <ArrowLeftIcon />
-      </Link>
-
-      <Link
-        href="/signin"
-        className={cn(
-          buttonVariants({ variant: "outline" }),
-          "absolute right-4 top-4 md:right-8 md:top-8 rounded-full",
-        )}
-      >
-        Login
-      </Link>
-      <div className="w-full max-w-[380px]">
-        <div className="flex w-full flex-col justify-center space-y-8">
-          <div className="flex flex-col space-y-3 text-center">
-            <h1 className="text-3xl md:text-4xl font-medium tracking-tight">Create an account</h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your name, email, and optional profile photo to create your account
+      {/* Main content - centered form */}
+      <main className="flex-1 flex items-center justify-center p-4">
+        <div className="w-full max-w-[380px]">
+          <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1.5 text-center">
+              <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+              <p className="text-sm text-muted-foreground">Enter your email to get started</p>
+            </div>
+            <UserAuthForm kind="signup" />
+            <p className="text-center text-xs text-muted-foreground">
+              By signing up, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="hover:text-foreground underline underline-offset-4 transition-colors"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="hover:text-foreground underline underline-offset-4 transition-colors"
+              >
+                Privacy Policy
+              </Link>
             </p>
           </div>
-          <UserAuthForm kind="signup" />
-          <p className="px-8 text-center text-sm text-muted-foreground">
-            By signing up, you agree to our{" "}
-            <Link
-              href="/terms"
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
-            >
-              Terms of Service
-            </Link>{" "}
-            and{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-4 hover:text-foreground transition-colors"
-            >
-              Privacy Policy
-            </Link>
-            .
-          </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 }

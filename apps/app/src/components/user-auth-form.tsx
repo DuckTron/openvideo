@@ -77,10 +77,10 @@ export function UserAuthForm({ className, kind, ...props }: UserAuthFormProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="h-10 rounded-full px-4"
+              className="h-10 px-4"
             />
           </div>
-          <Button className="rounded-full h-10" disabled={isLoading}>
+          <Button className="h-10" disabled={isLoading}>
             {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
             {kind === "signin" ? "Sign In" : "Sign Up"} with Email
           </Button>
@@ -97,7 +97,7 @@ export function UserAuthForm({ className, kind, ...props }: UserAuthFormProps) {
       <div className="flex flex-col gap-2">
         <Button
           variant="outline"
-          className="rounded-full h-10"
+          className="h-10"
           type="button"
           disabled={isLoadingGitHub}
           onClick={signinGit}
