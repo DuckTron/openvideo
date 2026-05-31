@@ -11,7 +11,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         {
           title: "core",
           description: "Headless video editor",
-          url: "/core",
+          url: "/core/00-getting-started",
         },
         {
           title: "engine-pixi",
