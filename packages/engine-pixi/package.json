@@ -48,6 +48,7 @@
     "opfs-tools": "^0.7.2",
     "pixi-filters": "^6.1.5",
     "pixi.js": "^8.14.3",
+    "typescript": "~5.9.2",
     "wave-resampler": "^1.0.0",
     "wrapbox": "^0.1.0"
   },
@@ -59,7 +60,6 @@
     "@vitest/ui": "^4.0.18",
     "jsdom": "^27.4.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "typescript": "~5.9.2",
     "vite": "^7.1.5",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
