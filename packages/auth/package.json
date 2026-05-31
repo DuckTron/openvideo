@@ -30,10 +30,9 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.11",
     "@openvideo/db": "workspace:*",
+    "@types/node": "^20",
     "better-auth": "^1.6.12",
     "typescript": "~5.9.2"
   },
-  "devDependencies": {
-    "@types/node": "^20"
-  }
+  "devDependencies": {}
 }

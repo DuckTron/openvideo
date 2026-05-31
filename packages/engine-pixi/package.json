@@ -40,6 +40,7 @@
   "dependencies": {
     "@openvideo/core": "workspace:*",
     "@pixi/layout": "^3.2.0",
+    "@types/dom-webcodecs": "^0.1.17",
     "gl-transitions": "^1.43.0",
     "gsap": "^3.12.7",
     "mediabunny": "^1.26.0",
@@ -53,7 +54,6 @@
     "wrapbox": "^0.1.0"
   },
   "devDependencies": {
-    "@types/dom-webcodecs": "^0.1.17",
     "@types/rollup-plugin-peer-deps-external": "^2.2.6",
     "@vitest/browser": "^4.0.18",
     "@vitest/browser-playwright": "^4.0.18",

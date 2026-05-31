@@ -32,13 +32,13 @@
     "check-types": "pnpm exec tsc --noEmit"
   },
   "dependencies": {
+    "@types/pg": "^8.18.0",
     "drizzle-orm": "^0.45.2",
     "pg": "^8.20.0",
     "typescript": "~5.9.2"
   },
   "devDependencies": {
     "@types/node": "^20",
-    "@types/pg": "^8.18.0",
     "dotenv": "^16.4.5",
     "drizzle-kit": "^0.31.10"
   }

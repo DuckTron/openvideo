@@ -38,13 +38,13 @@
     "test": "pnpm exec vitest"
   },
   "dependencies": {
+    "@types/lodash-es": "^4.17.12",
     "lodash-es": "^4.17.21",
     "nanoid": "^5.0.7",
     "typescript": "~5.9.2",
     "zustand": "^5.0.4"
   },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.12",
     "vite": "^7.1.5",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.18"
