@@ -9,7 +9,7 @@ const resend = new Resend(process.env.RESEND_API_KEY || "re_123");
 const auth = createAuth({
   async sendMagicLinkEmail({ email, magicLink }: { email: string; magicLink: string }) {
     await resend.emails.send({
-      from: `"Login" <account@designcombo.dev>`,
+      from: `"Login" <account@openvideo.dev>`,
       to: email,
       subject: "Your login request to OpenVideo",
       react: sendMagicLinkEmail({ email, magicLink }),
