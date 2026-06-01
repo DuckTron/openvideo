@@ -114,6 +114,35 @@ Return raw JSON only. No markdown, no backticks."""
         except Exception as e:
             raise VisionAnalysisError(f"Scene analysis failed: {str(e)}")
     
+    async def analyze_text(self, text: str, prompt: str) -> Dict[str, Any]:
+        """Analyze text content using Gemini (no image required).
+        
+        Used for generating structured metadata like chapters, topics,
+        and summaries from transcript or visual scene descriptions.
+        
+        Returns a parsed dict from the model's JSON response, or an
+        empty dict on failure.
+        """
+        try:
+            full_prompt = f"""{prompt}
+
+---
+CONTENT:
+{text}
+---
+
+Return raw JSON only. No markdown, no backticks, no explanation."""
+            response = await self.model.generate_content_async(full_prompt)
+            raw_text = response.text or ""
+            clean_json = raw_text.replace("```json", "").replace("```", "").strip()
+            return json.loads(clean_json)
+        except json.JSONDecodeError as e:
+            # Model didn't return valid JSON – return whatever we got
+            return {"raw": raw_text[:2000] if raw_text else ""}
+        except Exception as e:
+            # Non-critical: log and return empty so caller can continue
+            return {}
+
     def _detect_mime_type(self, image_data: bytes) -> str:
         """Detect MIME type from image bytes."""
         # Simple detection based on file signatures

@@ -116,15 +116,18 @@ class VideoIndexer:
                 max_scenes=50
             )
             
-            # Run transcription first (needed for temporal chunking)
+            # Run transcription — optional. Videos without audio will skip gracefully.
             await self._update_progress(asset.id, 25, "transcribing")
-            segments = await self.transcriber.transcribe(asset.src)
-            await self.database.save_transcript(asset.id, segments)
-            
+            segments = await self._safe_transcribe(asset)
+
             # Dense 1fps indexing with transcript-aware temporal chunks
             await self._update_progress(asset.id, 35, "dense_indexing")
             await self._index_video_dense(asset, temp_video_path, segments)
-            
+
+            # High-level AI understanding: chapters, topics, summary
+            await self._update_progress(asset.id, 88, "understanding")
+            await self._generate_asset_understanding(asset, segments, video_path=temp_video_path)
+
             await self._update_progress(asset.id, 100, "completed")
             
         finally:
@@ -139,18 +142,19 @@ class VideoIndexer:
         """Index audio asset with transcription."""
         try:
             await self._update_progress(asset.id, 25, "transcribing")
-            
-            # Transcribe audio
-            segments = await self.transcriber.transcribe(asset.src)
-            
-            # Save transcript
-            await self.database.save_transcript(asset.id, segments)
-            
+
+            # Transcribe audio — gracefully handle silent / no-audio files
+            segments = await self._safe_transcribe(asset)
+
             # Create vector documents
             await self._create_audio_vectors(asset, segments)
-            
+
+            # High-level AI understanding: chapters, topics, summary
+            await self._update_progress(asset.id, 88, "understanding")
+            await self._generate_asset_understanding(asset, segments)
+
             await self._update_progress(asset.id, 100, "completed")
-            
+
         except Exception as e:
             raise VideoIndexingError(f"Audio indexing failed: {str(e)}")
     
@@ -189,7 +193,28 @@ class VideoIndexer:
             await self.database.save_transcript(asset.id, segments)
             return segments
         except Exception as e:
-            print(f"Transcription failed for {asset.name}: {e}")
+            logger.warning(f"Transcription failed for {asset.name}: {e}")
+            return []
+
+    async def _safe_transcribe(self, asset: Asset) -> List[TranscriptSegment]:
+        """Transcribe with graceful failure for videos with no / silent audio.
+        
+        Returns an empty list when transcription is unavailable so the rest of
+        the pipeline continues with visual-only indexing.
+        """
+        try:
+            segments = await self.transcriber.transcribe(asset.src)
+            if segments:
+                await self.database.save_transcript(asset.id, segments)
+                logger.info(f"Transcription succeeded: {len(segments)} segment(s) for {asset.name}")
+            else:
+                logger.info(f"No speech detected in {asset.name} — continuing with visual-only indexing")
+            return segments
+        except Exception as e:
+            logger.warning(
+                f"Transcription unavailable for {asset.name} (possibly silent/no audio): {e}. "
+                "Continuing with visual-only indexing."
+            )
             return []
     
     async def _analyze_visual_scenes(
@@ -467,33 +492,39 @@ class VideoIndexer:
         BATCH_SIZE = 10  # Process 10 chunks per batch
         MAX_CONCURRENT = 5  # Max 5 parallel API calls
         
-        # Adaptive sampling: larger windows for longer videos
-        # But MORE frames per chunk for short videos (more detail, same API calls)
+        # Adaptive frame sampling based on video duration
+        # Target: <1min=1fps, 1-5min=0.5fps, 5-10min=0.33fps, >10min=0.25fps
         duration_sec = self._get_video_duration(video_path)
         
-        if duration_sec < 60:  # < 1 min: small windows, many frames per chunk
-            window_size_ms = 2000  # 2-second chunks
-            overlap_ms = 400
-            frames_per_chunk = 8   # More frames = more detail
-        elif duration_sec < 600:  # < 10 min: medium windows
-            window_size_ms = 5000
-            overlap_ms = 2000
-            frames_per_chunk = 5   # Balanced
-        else:  # > 10 min: larger windows, fewer frames per chunk (save costs)
-            window_size_ms = 10000
-            overlap_ms = 5000
-            frames_per_chunk = 3   # Fewer frames still sufficient for long content
+        if duration_sec < 60:  # < 1 min: 1 frame per second
+            frame_interval_sec = 1.0
+            window_size_ms = 4000  # 4s chunks for batching efficiency
+            overlap_ms = 0
+        elif duration_sec < 300:  # 1-5 min: 1 frame per 2 seconds
+            frame_interval_sec = 2.0
+            window_size_ms = 8000
+            overlap_ms = 0
+        elif duration_sec < 600:  # 5-10 min: 1 frame per 3 seconds
+            frame_interval_sec = 3.0
+            window_size_ms = 9000
+            overlap_ms = 0
+        else:  # > 10 min: 1 frame per 4 seconds
+            frame_interval_sec = 4.0
+            window_size_ms = 8000
+            overlap_ms = 0
         
         logger.info(f"Starting dense indexing for {asset.name}")
-        logger.info(f"Video duration: {duration_sec:.1f}s | Window: {window_size_ms/1000:.1f}s | Overlap: {overlap_ms/1000:.1f}s | Frames/chunk: {frames_per_chunk}")
+        logger.info(f"Video duration: {duration_sec:.1f}s | Frame interval: {frame_interval_sec}s | Window: {window_size_ms/1000:.1f}s")
         
         # Create temporal chunks
         chunks = self._create_temporal_chunks(segments, duration_sec, window_size_ms, overlap_ms)
         
-        # Calculate estimates
+        # Calculate estimates (frames depend on chunk duration / frame_interval)
         total_chunks = len(chunks)
         total_batches = (total_chunks + BATCH_SIZE - 1) // BATCH_SIZE
-        estimated_frames = total_chunks * frames_per_chunk  # adaptive frames per chunk
+        # Rough estimate: average chunk is window_size_ms, so frames per chunk ≈ window_size_ms/1000 / frame_interval_sec
+        avg_frames_per_chunk = (window_size_ms / 1000) / frame_interval_sec
+        estimated_frames = int(total_chunks * avg_frames_per_chunk)
         estimated_api_calls = total_batches  # 1 API call per batch (batch of 10)
         
         logger.info(f"📊 ESTIMATES: {total_chunks} chunks | {total_batches} batches | {estimated_frames} frames | {estimated_api_calls} API calls")
@@ -504,11 +535,11 @@ class VideoIndexer:
         documents = []
         processed = 0
         
-        async def process_batch(batch_chunks, batch_idx, num_frames):
+        async def process_batch(batch_chunks, batch_idx, frame_interval):
             async with semaphore:
                 batch_docs = []
                 for chunk in batch_chunks:
-                    doc = await self._process_single_chunk(asset, video_path, chunk, num_frames)
+                    doc = await self._process_single_chunk(asset, video_path, chunk, frame_interval)
                     if doc:
                         batch_docs.append(doc)
                 return batch_docs
@@ -517,7 +548,7 @@ class VideoIndexer:
         tasks = []
         for i in range(0, len(chunks), BATCH_SIZE):
             batch = chunks[i:i + BATCH_SIZE]
-            tasks.append(process_batch(batch, i // BATCH_SIZE, frames_per_chunk))
+            tasks.append(process_batch(batch, i // BATCH_SIZE, frame_interval_sec))
         
         # Execute batches with progress updates
         logger.info(f"🚀 Processing {len(tasks)} batch tasks with max {MAX_CONCURRENT} concurrent...")
@@ -552,6 +583,208 @@ class VideoIndexer:
             ]
             await self.database.save_visual_timeline(asset.id, visual_scenes)
             logger.info(f"✅ Dense indexing complete: {len(documents)} chunks indexed")
+
+    async def _generate_asset_understanding(
+        self,
+        asset: Asset,
+        segments: List[TranscriptSegment],
+        video_path: Optional[str] = None
+    ) -> None:
+        """Generate high-level AI understanding (chapters, topics, summary) for an asset.
+
+        All three artefacts are stored exclusively in the vector store as separate
+        layers so the LLM can retrieve them via semantic search:
+          - layer: "asset-chapters"  — list of named, time-stamped chapters
+          - layer: "asset-topics"    — flat list of key topics / themes
+          - layer: "asset-summary"   — one-paragraph prose summary
+
+        Gracefully skips if the vision analyzer is unavailable or fails.
+        Videos without a transcript still receive visual-context understanding.
+        """
+        try:
+            from langchain_core.documents import Document
+
+            # ------------------------------------------------------------------
+            # Build a combined content string from whatever is available.
+            # ------------------------------------------------------------------
+            has_transcript = bool(segments)
+            content_lines: List[str] = []
+
+            if has_transcript:
+                content_lines.append("=== TRANSCRIPT SEGMENTS ===")
+                for seg in segments:
+                    start_s = seg.start_ms / 1000
+                    end_s = seg.end_ms / 1000
+                    content_lines.append(f"[{start_s:.1f}s – {end_s:.1f}s] {seg.text}")
+
+            # If we have access to the dense-indexed visual scenes saved in the
+            # DB, retrieve them to enrich the understanding prompt.
+            visual_descriptions: List[str] = []
+            try:
+                timeline_rows = await self.database.get_visual_timeline(asset.id)
+                if timeline_rows:
+                    content_lines.append("=== VISUAL SCENE DESCRIPTIONS ===")
+                    for scene in timeline_rows[:40]:  # cap at 40 scenes to stay within context
+                        start_s = scene.get("startMs", 0) / 1000
+                        end_s = scene.get("endMs", 0) / 1000
+                        desc = scene.get("description", "")
+                        if desc:
+                            visual_descriptions.append(f"[{start_s:.1f}s – {end_s:.1f}s] {desc}")
+                            content_lines.append(visual_descriptions[-1])
+            except Exception as e:
+                logger.debug(f"Could not retrieve visual timeline for understanding: {e}")
+
+            if not content_lines:
+                logger.info(f"Skipping asset understanding for {asset.name}: no content available")
+                return
+
+            combined_content = "\n".join(content_lines)
+            asset_type_label = asset.type  # "video" | "audio" | "image"
+            has_time_info = has_transcript or bool(visual_descriptions)
+
+            # ------------------------------------------------------------------
+            # 1. CHAPTERS (only meaningful when we have timing information)
+            # ------------------------------------------------------------------
+            if has_time_info:
+                chapters_prompt = f"""You are analyzing a {asset_type_label} asset named "{asset.name}" for an AI video editor.
+
+Given the following content, identify distinct chapters or sections of this {asset_type_label}.
+For each chapter provide a title, a one-sentence description, and the approximate start/end timestamps.
+
+Return a JSON object:
+{{
+  "chapters": [
+    {{
+      "title": "Chapter title",
+      "description": "One-sentence description of what this chapter covers",
+      "startMs": <integer milliseconds>,
+      "endMs": <integer milliseconds>,
+      "keywords": ["keyword1", "keyword2"]
+    }}
+  ]
+}}"""
+                try:
+                    chapters_result = await self.vision_analyzer.analyze_text(combined_content, chapters_prompt)
+                    chapters = chapters_result.get("chapters", [])
+                    if chapters:
+                        chapter_docs = []
+                        for ch in chapters:
+                            content_str = (
+                                f"title: {asset.name} | "
+                                f"chapter: {ch.get('title', '')} | "
+                                f"description: {ch.get('description', '')} | "
+                                f"keywords: {', '.join(ch.get('keywords', []))}"
+                            )
+                            chapter_docs.append(Document(
+                                page_content=content_str,
+                                metadata={
+                                    "spaceId": asset.space_id,
+                                    "assetId": asset.id,
+                                    "assetName": asset.name,
+                                    "assetType": asset.type,
+                                    "src": asset.src,
+                                    "layer": "asset-chapters",
+                                    "chapterTitle": ch.get("title", ""),
+                                    "startMs": ch.get("startMs", 0),
+                                    "endMs": ch.get("endMs", 0),
+                                    "keywords": ch.get("keywords", [])
+                                }
+                            ))
+                        await self.vector_store.upsert_documents(chapter_docs)
+                        logger.info(f"✅ Indexed {len(chapter_docs)} chapter(s) for {asset.name}")
+                except Exception as e:
+                    logger.warning(f"Chapter generation failed for {asset.name}: {e}")
+
+            # ------------------------------------------------------------------
+            # 2. TOPICS
+            # ------------------------------------------------------------------
+            topics_prompt = f"""You are analyzing a {asset_type_label} asset named "{asset.name}" for an AI video editor.
+
+Given the following content, extract the main topics, themes, and concepts.
+Be specific and granular — prefer concrete topics over vague categories.
+
+Return a JSON object:
+{{
+  "topics": ["topic1", "topic2", ...],
+  "primaryTheme": "The single most dominant theme or subject matter",
+  "contentType": "e.g. tutorial, interview, product-demo, vlog, news, lecture, entertainment"
+}}"""
+            try:
+                topics_result = await self.vision_analyzer.analyze_text(combined_content, topics_prompt)
+                topics = topics_result.get("topics", [])
+                primary_theme = topics_result.get("primaryTheme", "")
+                content_type = topics_result.get("contentType", "")
+                if topics or primary_theme:
+                    topics_content = (
+                        f"title: {asset.name} | "
+                        f"primary theme: {primary_theme} | "
+                        f"content type: {content_type} | "
+                        f"topics: {', '.join(topics)}"
+                    )
+                    await self.vector_store.upsert_documents([Document(
+                        page_content=topics_content,
+                        metadata={
+                            "spaceId": asset.space_id,
+                            "assetId": asset.id,
+                            "assetName": asset.name,
+                            "assetType": asset.type,
+                            "src": asset.src,
+                            "layer": "asset-topics",
+                            "topics": topics,
+                            "primaryTheme": primary_theme,
+                            "contentType": content_type
+                        }
+                    )])
+                    logger.info(f"✅ Indexed topics for {asset.name}: {topics[:5]}")
+            except Exception as e:
+                logger.warning(f"Topics generation failed for {asset.name}: {e}")
+
+            # ------------------------------------------------------------------
+            # 3. SUMMARY
+            # ------------------------------------------------------------------
+            summary_prompt = f"""You are analyzing a {asset_type_label} asset named "{asset.name}" for an AI video editor.
+
+Given the following content, write a concise, informative summary (2–4 sentences) that captures:
+- What this {asset_type_label} is about
+- Key moments, topics, or highlights
+- Who it may be useful for
+
+Also provide a short one-line headline (≤12 words).
+
+Return a JSON object:
+{{
+  "headline": "Short punchy headline",
+  "summary": "Full 2-4 sentence summary"
+}}"""
+            try:
+                summary_result = await self.vision_analyzer.analyze_text(combined_content, summary_prompt)
+                headline = summary_result.get("headline", "")
+                summary = summary_result.get("summary", "")
+                if summary:
+                    summary_content = (
+                        f"title: {asset.name} | "
+                        f"headline: {headline} | "
+                        f"summary: {summary}"
+                    )
+                    await self.vector_store.upsert_documents([Document(
+                        page_content=summary_content,
+                        metadata={
+                            "spaceId": asset.space_id,
+                            "assetId": asset.id,
+                            "assetName": asset.name,
+                            "assetType": asset.type,
+                            "src": asset.src,
+                            "layer": "asset-summary",
+                            "headline": headline
+                        }
+                    )])
+                    logger.info(f"✅ Indexed summary for {asset.name}: {headline}")
+            except Exception as e:
+                logger.warning(f"Summary generation failed for {asset.name}: {e}")
+
+        except Exception as e:
+            # Never block overall indexing due to understanding failures
+            logger.warning(f"Asset understanding generation failed for {asset.name}: {e}")
     
     def _get_video_duration(self, video_path: str) -> float:
         """Get video duration in seconds."""
@@ -602,26 +835,21 @@ class VideoIndexer:
         asset: Asset, 
         video_path: str, 
         chunk: Dict,
-        num_frames: int = 4
+        frame_interval_sec: float = 2.0
     ) -> Optional[Document]:
         """Process a single temporal chunk: extract frames and analyze."""
         start_sec = chunk["start_ms"] / 1000
         end_sec = chunk["end_ms"] / 1000
         chunk_duration = end_sec - start_sec
         
-        # Extract num_frames spread evenly across the chunk
+        # Calculate number of frames based on frame_interval_sec
+        num_frames = max(1, int(chunk_duration / frame_interval_sec))
+        
+        # Generate frame positions spread evenly across the chunk
         if num_frames == 1:
             frame_positions = [start_sec + chunk_duration * 0.5]
-        elif num_frames == 2:
-            frame_positions = [start_sec, end_sec - 0.1]
-        elif num_frames == 3:
-            frame_positions = [start_sec, start_sec + chunk_duration * 0.5, end_sec - 0.1]
-        elif num_frames == 4:
-            frame_positions = [start_sec, start_sec + chunk_duration * 0.33, start_sec + chunk_duration * 0.67, end_sec - 0.1]
-        elif num_frames == 5:
-            frame_positions = [start_sec, start_sec + chunk_duration * 0.25, start_sec + chunk_duration * 0.5, start_sec + chunk_duration * 0.75, end_sec - 0.1]
-        elif num_frames >= 6:
-            # Evenly distribute frames
+        else:
+            # Evenly distribute frames across the chunk
             frame_positions = []
             for i in range(num_frames):
                 if i == 0:
@@ -630,8 +858,6 @@ class VideoIndexer:
                     frame_positions.append(end_sec - 0.1)
                 else:
                     frame_positions.append(start_sec + chunk_duration * (i / (num_frames - 1)))
-        else:
-            frame_positions = [start_sec, start_sec + chunk_duration * 0.5, end_sec - 0.1]
         
         frames = self._extract_frames_at_positions(video_path, frame_positions)
         

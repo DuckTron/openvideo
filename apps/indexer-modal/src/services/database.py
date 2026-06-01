@@ -215,3 +215,26 @@ class PostgreSQLClient(DatabaseClient):
                 
         except Exception as e:
             raise DatabaseError(f"Failed to create indexing status for {asset_id}: {str(e)}")
+
+    async def get_visual_timeline(self, asset_id: str) -> List[Dict[str, Any]]:
+        """Retrieve saved visual scene descriptions for an asset."""
+        try:
+            conn = psycopg2.connect(self.connection_string)
+            try:
+                with conn.cursor(cursor_factory=RealDictCursor) as cursor:
+                    cursor.execute(
+                        'SELECT scenes FROM asset_visual_timeline WHERE "assetId" = %s LIMIT 1',
+                        (asset_id,)
+                    )
+                    row = cursor.fetchone()
+                    if not row or not row["scenes"]:
+                        return []
+                    scenes = row["scenes"]
+                    if isinstance(scenes, str):
+                        scenes = json.loads(scenes)
+                    return scenes if isinstance(scenes, list) else []
+            finally:
+                conn.close()
+        except Exception as e:
+            raise DatabaseError(f"Failed to get visual timeline for {asset_id}: {str(e)}")
+

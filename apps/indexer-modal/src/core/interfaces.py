@@ -118,6 +118,16 @@ class VisionAnalyzer(ABC):
         """Analyze multiple frames from a scene."""
         pass
 
+    @abstractmethod
+    async def analyze_text(self, text: str, prompt: str) -> Dict[str, Any]:
+        """Analyze text content using AI (no image required).
+        
+        Used for generating structured metadata such as chapters, topics,
+        and summaries from transcript or visual scene text.
+        Returns a parsed dict from a JSON response, or empty dict on failure.
+        """
+        pass
+
 
 class VectorStore(ABC):
     """Interface for vector storage and retrieval."""
@@ -187,4 +197,13 @@ class DatabaseClient(ABC):
     @abstractmethod
     async def create_indexing_status(self, asset_id: str, space_id: str) -> None:
         """Create initial indexing status."""
+        pass
+
+    @abstractmethod
+    async def get_visual_timeline(self, asset_id: str) -> List[Dict[str, Any]]:
+        """Retrieve saved visual scene descriptions for an asset.
+        
+        Returns a list of scene dicts with keys: startMs, endMs, description,
+        objects, topics, keywords. Returns empty list if none saved.
+        """
         pass
