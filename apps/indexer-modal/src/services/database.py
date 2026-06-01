@@ -1,6 +1,7 @@
 """Database client implementation."""
 
 import os
+import json
 from typing import Optional, List, Dict, Any
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -90,21 +91,22 @@ class PostgreSQLClient(DatabaseClient):
                     
                     space_id = space_row[0]
                     
-                    # Upsert transcript
+                    # Upsert transcript - delete existing then insert
+                    cursor.execute(
+                        "DELETE FROM asset_transcript WHERE asset_id = %s",
+                        (asset_id,)
+                    )
                     cursor.execute(
                         """
                         INSERT INTO asset_transcript 
                         (id, asset_id, space_id, segments)
                         VALUES (%s, %s, %s, %s)
-                        ON CONFLICT (asset_id) 
-                        DO UPDATE SET
-                            segments = EXCLUDED.segments
                         """,
                         (
                             generate(),
                             asset_id,
                             space_id,
-                            segments_json
+                            json.dumps(segments_json)
                         )
                     )
                     conn.commit()
@@ -121,18 +123,28 @@ class PostgreSQLClient(DatabaseClient):
             conn = psycopg2.connect(self.connection_string)
             try:
                 with conn.cursor() as cursor:
-                    # Convert scenes to JSON
-                    scenes_json = [
-                        {
-                            "startMs": scene.start_ms,
-                            "endMs": scene.end_ms,
-                            "description": scene.description,
-                            "objects": scene.objects,
-                            "topics": scene.topics,
-                            "keywords": scene.keywords
-                        }
-                        for scene in scenes
-                    ]
+                    # Convert scenes to JSON - handle both dict and object input
+                    scenes_json = []
+                    for scene in scenes:
+                        if isinstance(scene, dict):
+                            scenes_json.append({
+                                "startMs": scene.get("startMs") or scene.get("start_ms"),
+                                "endMs": scene.get("endMs") or scene.get("end_ms"),
+                                "description": scene.get("description", ""),
+                                "objects": scene.get("objects", []),
+                                "topics": scene.get("topics", []),
+                                "keywords": scene.get("keywords", [])
+                            })
+                        else:
+                            # VisualScene object
+                            scenes_json.append({
+                                "startMs": getattr(scene, 'start_ms', None) or getattr(scene, 'startMs', 0),
+                                "endMs": getattr(scene, 'end_ms', None) or getattr(scene, 'endMs', 0),
+                                "description": getattr(scene, 'description', ""),
+                                "objects": getattr(scene, 'objects', []),
+                                "topics": getattr(scene, 'topics', []),
+                                "keywords": getattr(scene, 'keywords', [])
+                            })
                     
                     # Get space_id from asset
                     cursor.execute(
@@ -145,21 +157,22 @@ class PostgreSQLClient(DatabaseClient):
                     
                     space_id = space_row[0]
                     
-                    # Upsert visual timeline
+                    # Upsert visual timeline - delete existing then insert
+                    cursor.execute(
+                        "DELETE FROM asset_visual_timeline WHERE asset_id = %s",
+                        (asset_id,)
+                    )
                     cursor.execute(
                         """
                         INSERT INTO asset_visual_timeline 
                         (id, asset_id, space_id, scenes)
                         VALUES (%s, %s, %s, %s)
-                        ON CONFLICT (asset_id) 
-                        DO UPDATE SET
-                            scenes = EXCLUDED.scenes
                         """,
                         (
                             generate(),
                             asset_id,
                             space_id,
-                            scenes_json
+                            json.dumps(scenes_json)
                         )
                     )
                     conn.commit()

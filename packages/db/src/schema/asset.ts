@@ -38,6 +38,7 @@ export const assetTranscript = pgTable(
     id: text("id").primaryKey(),
     assetId: text("asset_id")
       .notNull()
+      .unique()
       .references(() => asset.id, { onDelete: "cascade" }),
     spaceId: text("space_id")
       .notNull()
@@ -59,6 +60,7 @@ export const assetVisualTimeline = pgTable(
     id: text("id").primaryKey(),
     assetId: text("asset_id")
       .notNull()
+      .unique()
       .references(() => asset.id, { onDelete: "cascade" }),
     spaceId: text("space_id")
       .notNull()

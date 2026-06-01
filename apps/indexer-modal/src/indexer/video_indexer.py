@@ -113,33 +113,14 @@ class VideoIndexer:
                 max_scenes=50
             )
             
-            # Run transcription and visual analysis in parallel
-            await self._update_progress(asset.id, 25, "processing")
+            # Run transcription first (needed for temporal chunking)
+            await self._update_progress(asset.id, 25, "transcribing")
+            segments = await self.transcriber.transcribe(asset.src)
+            await self.database.save_transcript(asset.id, segments)
             
-            # Transcription task
-            transcript_task = self._transcribe_and_save(asset)
-            
-            # Visual analysis task
-            visual_task = self._analyze_visual_scenes(asset, temp_video_path, scenes)
-            
-            # Wait for both to complete
-            segments, visual_scenes = await asyncio.gather(
-                transcript_task,
-                visual_task,
-                return_exceptions=True
-            )
-            
-            # Handle exceptions
-            if isinstance(segments, Exception):
-                print(f"Transcription failed: {segments}")
-                segments = []
-            
-            if isinstance(visual_scenes, Exception):
-                print(f"Visual analysis failed: {visual_scenes}")
-                visual_scenes = []
-            
-            # Create vector documents
-            await self._create_video_vectors(asset, segments, visual_scenes)
+            # Dense 1fps indexing with transcript-aware temporal chunks
+            await self._update_progress(asset.id, 35, "dense_indexing")
+            await self._index_video_dense(asset, temp_video_path, segments)
             
             await self._update_progress(asset.id, 100, "completed")
             
@@ -309,18 +290,31 @@ class VideoIndexer:
         scene: Scene, 
         frame_dir: str
     ) -> List[bytes]:
-        """Extract keyframes from a scene."""
+        """Extract keyframes from a scene at regular intervals for action detection."""
         try:
             cap = cv2.VideoCapture(video_path)
             frames = []
             
-            # Calculate frame positions (start, middle, end)
+            # Get scene duration
             duration = scene.end_time - scene.start_time
-            positions = [
-                scene.start_time,
-                scene.start_time + duration * 0.5,
-                scene.end_time - 0.1  # Slightly before end
-            ]
+            
+            # For short scenes (< 3s), extract 4 frames distributed throughout
+            # For longer scenes, extract frames every ~1 second, up to 8 frames
+            if duration < 3.0:
+                positions = [
+                    scene.start_time,
+                    scene.start_time + duration * 0.25,
+                    scene.start_time + duration * 0.5,
+                    scene.start_time + duration * 0.75,
+                ]
+            else:
+                # Extract frames every ~1 second
+                interval = max(0.8, duration / 8.0)
+                positions = []
+                current = scene.start_time
+                while current < scene.end_time - 0.2 and len(positions) < 8:
+                    positions.append(current)
+                    current += interval
             
             for pos in positions:
                 cap.set(cv2.CAP_PROP_POS_MSEC, pos * 1000)
@@ -449,6 +443,170 @@ class VideoIndexer:
         )
         
         await self.vector_store.upsert_documents([document])
+    
+    async def _index_video_dense(
+        self,
+        asset: Asset,
+        video_path: str,
+        segments: List[TranscriptSegment]
+    ) -> None:
+        """Dense 1fps indexing with transcript-aware temporal chunks.
+        
+        Best practice for AI video editors:
+        - Sample frames every 1 second for granular search
+        - Create temporal chunks aligned with transcript segments
+        - Combine visual + audio in multi-modal embeddings
+        """
+        from langchain_core.documents import Document
+        
+        logger.info(f"Starting dense 1fps indexing for {asset.name}")
+        
+        # Get video duration
+        cap = cv2.VideoCapture(video_path)
+        fps = cap.get(cv2.CAP_PROP_FPS) or 30
+        total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+        duration_sec = total_frames / fps if fps > 0 else 0
+        cap.release()
+        
+        logger.info(f"Video duration: {duration_sec:.1f}s, FPS: {fps}")
+        
+        # Create temporal chunks aligned with transcript segments
+        # If no transcript, use 5-second sliding windows
+        chunks = []
+        
+        if segments:
+            # Use transcript segments to define chunk boundaries
+            for seg in segments:
+                chunks.append({
+                    "start_ms": seg.start_ms,
+                    "end_ms": seg.end_ms,
+                    "text": seg.text,
+                    "type": "transcript_chunk"
+                })
+        else:
+            # No transcript - use 5-second sliding windows with 2s overlap
+            window_size = 5000  # 5 seconds
+            overlap = 2000  # 2 seconds
+            current = 0
+            while current < duration_sec * 1000:
+                chunks.append({
+                    "start_ms": current,
+                    "end_ms": min(current + window_size, int(duration_sec * 1000)),
+                    "text": "",
+                    "type": "visual_chunk"
+                })
+                current += (window_size - overlap)
+        
+        logger.info(f"Created {len(chunks)} temporal chunks")
+        
+        # Process each chunk: extract frames + analyze + create embedding
+        documents = []
+        
+        for i, chunk in enumerate(chunks):
+            start_sec = chunk["start_ms"] / 1000
+            end_sec = chunk["end_ms"] / 1000
+            chunk_duration = end_sec - start_sec
+            
+            # Extract 3-4 frames spread across the chunk
+            frame_positions = [
+                start_sec,
+                start_sec + chunk_duration * 0.33,
+                start_sec + chunk_duration * 0.67,
+                end_sec - 0.1
+            ]
+            
+            # Extract and analyze frames
+            frames = self._extract_frames_at_positions(video_path, frame_positions)
+            
+            if frames:
+                # Analyze frames with Gemini
+                context = f"""Video segment from {start_sec:.1f}s to {end_sec:.1f}s.
+Transcript: "{chunk['text']}""" if chunk['text'] else f"Video segment from {start_sec:.1f}s to {end_sec:.1f}s."
+                
+                analysis = await self.vision_analyzer.analyze_scene_frames(frames, context)
+                
+                # Create rich multi-modal content combining visual + transcript
+                visual_desc = analysis.get("description", "")
+                objects = ", ".join(analysis.get("objects", []))
+                topics = ", ".join(analysis.get("topics", []))
+                
+                # Combine transcript + visual for semantic search
+                if chunk['text']:
+                    page_content = f"""title: {asset.name}
+time: {start_sec:.1f}s - {end_sec:.1f}s
+transcript: {chunk['text']}
+visual: {visual_desc}
+objects: {objects}
+topics: {topics}"""
+                else:
+                    page_content = f"""title: {asset.name}
+time: {start_sec:.1f}s - {end_sec:.1f}s
+visual: {visual_desc}
+objects: {objects}
+topics: {topics}"""
+                
+                doc = Document(
+                    page_content=page_content,
+                    metadata={
+                        "spaceId": asset.space_id,
+                        "assetId": asset.id,
+                        "assetName": asset.name,
+                        "assetType": "video",
+                        "src": asset.src,
+                        "layer": "video-chunk",
+                        "startMs": chunk["start_ms"],
+                        "endMs": chunk["end_ms"],
+                        "transcriptText": chunk.get("text", ""),
+                        "visualDescription": visual_desc,
+                        "objects": analysis.get("objects", []),
+                        "topics": analysis.get("topics", []),
+                        "keywords": analysis.get("keywords", [])
+                    }
+                )
+                documents.append(doc)
+            
+            # Progress update every 5 chunks
+            if (i + 1) % 5 == 0:
+                progress = 35 + int((i + 1) / len(chunks) * 50)
+                await self._update_progress(asset.id, min(progress, 85), "analyzing")
+        
+        # Store all documents
+        if documents:
+            logger.info(f"Upserting {len(documents)} dense video chunks")
+            await self.vector_store.upsert_documents(documents)
+            
+            # Also save visual timeline
+            visual_scenes = [
+                {
+                    "startMs": d.metadata["startMs"],
+                    "endMs": d.metadata["endMs"],
+                    "description": d.metadata["visualDescription"],
+                    "objects": d.metadata["objects"],
+                    "topics": d.metadata["topics"],
+                    "keywords": d.metadata["keywords"]
+                }
+                for d in documents
+            ]
+            await self.database.save_visual_timeline(asset.id, visual_scenes)
+    
+    def _extract_frames_at_positions(self, video_path: str, positions: List[float]) -> List[bytes]:
+        """Extract frames at specific time positions."""
+        frames = []
+        cap = cv2.VideoCapture(video_path)
+        
+        for pos in positions:
+            cap.set(cv2.CAP_PROP_POS_MSEC, pos * 1000)
+            ret, frame = cap.read()
+            if ret:
+                frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                frame_resized = cv2.resize(frame_rgb, (640, 480))
+                pil_image = Image.fromarray(frame_resized)
+                img_bytes = io.BytesIO()
+                pil_image.save(img_bytes, format='JPEG')
+                frames.append(img_bytes.getvalue())
+        
+        cap.release()
+        return frames
     
     async def _update_progress(self, asset_id: str, progress: int, stage: str) -> None:
         """Update progress tracking."""

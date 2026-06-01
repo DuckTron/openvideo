@@ -54,18 +54,21 @@ class GeminiVisionAnalyzer(VisionAnalyzer):
             # Prepare prompt for structured analysis
             prompt = f"""{context}
 
-Analyze these {len(frames)} frames from a video scene.
+Analyze these {len(frames)} frames from a video scene, shown in chronological order.
+
+IMPORTANT: Describe any actions, movements, or interactions that occur BETWEEN the frames. If a person is holding, picking up, or interacting with an object in any frame, describe that action clearly.
 
 Describe:
-1. What is happening visually - actions, setting, composition, lighting, mood
-2. Key objects, people, or entities visible
-3. High-level topics or themes
-4. Any text visible on screen
-5. Important keywords that describe this scene
+1. What is happening visually - actions, movements, interactions between frames
+2. Key objects, people, or entities visible and what they are doing
+3. Any changes between frames (e.g., "person picks up object", "hands move toward product")
+4. High-level topics or themes
+5. Any text visible on screen
+6. Important keywords that describe this scene
 
 Return a JSON object:
 {{
-  "description": "detailed visual description",
+  "description": "detailed visual description including any actions or interactions",
   "objects": ["object1", "object2"],
   "topics": ["topic1", "topic2"],
   "keywords": ["keyword1", "keyword2"]

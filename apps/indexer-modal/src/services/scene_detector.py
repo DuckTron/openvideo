@@ -1,6 +1,7 @@
 """Scene detection implementation using ffmpeg."""
 
 import os
+import shutil
 import json
 import subprocess
 from typing import List, Optional
@@ -58,8 +59,7 @@ class FFmpegSceneDetector(SceneDetector):
                 scenes = scenes[:max_scenes]
             
             # Cleanup
-            os.remove(scenes_file)
-            os.rmdir(temp_dir)
+            shutil.rmtree(temp_dir, ignore_errors=True)
             
             return scenes
             
