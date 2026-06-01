@@ -83,7 +83,7 @@ export const apiToken = pgTable(
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
     name: text("name"), // "Production", "CI/CD"
-    scopes: text("scopes").array().default(["all"]),
+    scopes: text("scopes").default("all"),
     lastUsed: timestamp("last_used"),
     expiresAt: timestamp("expires_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
