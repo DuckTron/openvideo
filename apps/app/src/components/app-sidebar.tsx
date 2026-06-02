@@ -17,18 +17,18 @@ import { Button } from "./ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
-  LogOut,
-  Moon,
-  Sun,
-  Folder,
-  Users,
-  Play,
-  Trash2,
-  Bell,
-  ChevronDown,
-  ChevronsUpDownIcon,
-  PlusIcon,
-} from "lucide-react";
+  IconLogout,
+  IconMoon,
+  IconSun,
+  IconFolder,
+  IconUsers,
+  IconPlayerPlay,
+  IconTrash,
+  IconSelector,
+  IconPlus,
+  IconBrandDiscord,
+  IconBell,
+} from "@tabler/icons-react";
 import { useTheme } from "next-themes";
 import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -64,10 +64,10 @@ export function AppSidebar() {
   };
 
   const navItems = [
-    { id: "my-files", label: "My Files", icon: Folder, href: "/spaces" },
-    { id: "shared", label: "Shared with me", icon: Users, href: "/shared" },
-    { id: "apps", label: "Apps", icon: Play, href: "/apps" },
-    { id: "trash", label: "Trash", icon: Trash2, href: "/trash" },
+    { id: "my-files", label: "My Files", icon: IconFolder, href: "/spaces" },
+    { id: "shared", label: "Shared with me", icon: IconUsers, href: "/shared" },
+    { id: "apps", label: "Apps", icon: IconPlayerPlay, href: "/apps" },
+    { id: "trash", label: "Trash", icon: IconTrash, href: "/trash" },
   ];
   console.log({ session });
 
@@ -102,7 +102,7 @@ export function AppSidebar() {
                         {session?.user?.email}
                       </span>
                     </div>
-                    <ChevronsUpDownIcon className="ml-auto" />
+                    <IconSelector className="ml-auto" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -125,15 +125,15 @@ export function AppSidebar() {
                     <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                       <span>Theme</span>
                       {theme === "dark" ? (
-                        <Moon className="ml-auto size-4" />
+                        <IconMoon className="ml-auto size-4" />
                       ) : (
-                        <Sun className="ml-auto size-4" />
+                        <IconSun className="ml-auto size-4" />
                       )}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 size-4" />
+                    <IconLogout className="mr-2 size-4" />
                     Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -148,7 +148,7 @@ export function AppSidebar() {
             }}
             className="w-full my-0.5"
           >
-            <PlusIcon className="mr-2" />
+            <IconPlus className="mr-2" />
             Create New File
           </Button>
         </SidebarHeader>
@@ -182,7 +182,7 @@ export function AppSidebar() {
               <Popover>
                 <PopoverTrigger asChild>
                   <SidebarMenuButton className="px-4" tooltip="Notifications">
-                    <Bell />
+                    <IconBell />
 
                     <span>Notifications</span>
                   </SidebarMenuButton>
@@ -203,7 +203,7 @@ export function AppSidebar() {
                   rel="noopener noreferrer"
                   onClick={handleMobileClose}
                 >
-                  <Icons.discord />
+                  <IconBrandDiscord />
                   <span>Discord</span>
                 </Link>
               </SidebarMenuButton>

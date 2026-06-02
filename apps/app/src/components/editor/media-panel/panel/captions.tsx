@@ -4,14 +4,14 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Loader2,
-  Play,
-  Trash2,
-  Clock,
-  Sparkles,
-  MessageSquareQuote,
-  ChevronRight,
-} from "lucide-react";
+  IconLoader2,
+  IconPlayerPlay,
+  IconTrash,
+  IconClock,
+  IconSparkles,
+  IconMessage,
+  IconChevronRight,
+} from "@tabler/icons-react";
 import { fontManager, Log } from "@openvideo/engine-pixi";
 import type { AnyClip } from "@openvideo/core";
 import { generateCaptionClips } from "@/lib/caption-generator";

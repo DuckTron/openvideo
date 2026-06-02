@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Video } from "lucide-react";
+import { IconVideo } from "@tabler/icons-react";
 
 const Footer = () => {
   return (

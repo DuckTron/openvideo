@@ -2,15 +2,15 @@
 
 import { cva, type VariantProps } from "class-variance-authority";
 import {
-  Maximize,
-  Minimize,
-  Pause,
-  Play,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+  IconMaximize,
+  IconMinimize,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlayerSkipBack,
+  IconPlayerSkipForward,
+  IconVolume2,
+  IconVolumeOff,
+} from "@tabler/icons-react";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
@@ -300,9 +300,9 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                   type="button"
                 >
                   {isPlaying ? (
-                    <Pause aria-hidden="true" className="size-6" />
+                    <IconPlayerPause aria-hidden="true" className="size-6" />
                   ) : (
-                    <Play aria-hidden="true" className="size-6" />
+                    <IconPlayerPlay aria-hidden="true" className="size-6" />
                   )}
                 </button>
               </div>
@@ -359,7 +359,7 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                         }}
                         type="button"
                       >
-                        <SkipBack aria-hidden="true" className="size-4" />
+                        <IconPlayerSkipBack aria-hidden="true" className="size-4" />
                       </button>
                       <button
                         aria-label={isPlaying ? "Pause" : "Play"}
@@ -371,9 +371,9 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                         type="button"
                       >
                         {isPlaying ? (
-                          <Pause aria-hidden="true" className="size-4" />
+                          <IconPlayerPause aria-hidden="true" className="size-4" />
                         ) : (
-                          <Play aria-hidden="true" className="size-4" />
+                          <IconPlayerPlay aria-hidden="true" className="size-4" />
                         )}
                       </button>
                       <button
@@ -385,7 +385,7 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                         }}
                         type="button"
                       >
-                        <SkipForward aria-hidden="true" className="size-4" />
+                        <IconPlayerSkipForward aria-hidden="true" className="size-4" />
                       </button>
                       <div className="group/volume flex items-center gap-2">
                         <button
@@ -398,9 +398,9 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                           type="button"
                         >
                           {isMuted || volume === 0 ? (
-                            <VolumeX aria-hidden="true" className="size-4" />
+                            <IconVolumeOff aria-hidden="true" className="size-4" />
                           ) : (
-                            <Volume2 aria-hidden="true" className="size-4" />
+                            <IconVolume2 aria-hidden="true" className="size-4" />
                           )}
                         </button>
                         <div className="w-0 overflow-hidden transition-all group-hover/volume:w-20 motion-safe:duration-200">
@@ -443,9 +443,9 @@ const VideoPlayer = React.forwardRef<HTMLVideoElement, VideoPlayerProps>(
                         type="button"
                       >
                         {isFullscreen ? (
-                          <Minimize aria-hidden="true" className="size-4" />
+                          <IconMinimize aria-hidden="true" className="size-4" />
                         ) : (
-                          <Maximize aria-hidden="true" className="size-4" />
+                          <IconMaximize aria-hidden="true" className="size-4" />
                         )}
                       </button>
                     </div>

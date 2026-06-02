@@ -5,7 +5,16 @@ import { useProjectStore } from "@/stores/project-store";
 import { Log } from "@openvideo/engine-pixi";
 import { ExportModal } from "./export-modal";
 import Link from "next/link";
-import { Keyboard, ChevronLeft, PenLine, Bot, Play, Undo2, Redo2, Download } from "lucide-react";
+import {
+  IconKeyboard,
+  IconChevronLeft,
+  IconPencil,
+  IconRobot,
+  IconPlayerPlay,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconDownload,
+} from "@tabler/icons-react";
 import { toast } from "sonner";
 import { ShortcutsModal } from "./shortcuts-modal";
 import { useEffect } from "react";
@@ -130,7 +139,7 @@ export default function Header() {
           onClick={() => router.push("/spaces")}
           className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <IconChevronLeft className="h-4 w-4" />
           <span className="text-sm font-medium">Projects</span>
         </button>
 
@@ -156,21 +165,21 @@ export default function Header() {
               value="editor"
               className="text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <PenLine className="h-3.5 w-3.5" />
+              <IconPencil className="h-3.5 w-3.5" />
               Editor
             </TabsTrigger>
             <TabsTrigger
               value="agent"
               className="text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Bot className="h-3.5 w-3.5" />
+              <IconRobot className="h-3.5 w-3.5" />
               Agent
             </TabsTrigger>
             <TabsTrigger
               value="playground"
               className="text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Play className="h-3.5 w-3.5" />
+              <IconPlayerPlay className="h-3.5 w-3.5" />
               Playground
             </TabsTrigger>
           </TabsList>
@@ -186,14 +195,14 @@ export default function Header() {
             disabled={!canUndo}
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30"
           >
-            <Undo2 className="h-4 w-4" />
+            <IconArrowBackUp className="h-4 w-4" />
           </button>
           <button
             onClick={() => core.redo()}
             disabled={!canRedo}
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30"
           >
-            <Redo2 className="h-4 w-4" />
+            <IconArrowForwardUp className="h-4 w-4" />
           </button>
         </div>
 
@@ -205,14 +214,14 @@ export default function Header() {
             onClick={() => setIsShortcutsModalOpen(true)}
             className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           >
-            <Keyboard className="h-4 w-4" />
+            <IconKeyboard className="h-4 w-4" />
           </button>
 
           <button
             onClick={() => setIsExportModalOpen(true)}
             className="flex items-center gap-2 px-3 py-1.5 bg-foreground text-background text-xs font-medium rounded-md hover:bg-foreground/90 transition-colors"
           >
-            <Download className="h-3.5 w-3.5" />
+            <IconDownload className="h-3.5 w-3.5" />
             Export
           </button>
         </div>

@@ -6,7 +6,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudioStore } from "@/stores/studio-store";
 import { useProjectStore } from "@/stores/project-store";
 import { core } from "@/lib/project";
-import { Upload, Film, Search, X, HardDrive, Trash2, Music } from "lucide-react";
+import {
+  IconUpload,
+  IconMovie,
+  IconSearch,
+  IconX,
+  IconDeviceSdCard,
+  IconTrash,
+  IconMusic,
+} from "@tabler/icons-react";
 import { storageService, type StorageStats } from "@/lib/storage/storage-service";
 import type { MediaFile, MediaType } from "@/types/media";
 import { uploadFile } from "@/lib/upload-utils";
@@ -78,7 +86,7 @@ function AssetCard({
           <img src={asset.src} alt={asset.name} className="max-w-full max-h-full object-contain" />
         ) : asset.type === "audio" ? (
           <div className="w-full h-full flex items-center justify-center relative">
-            <Music className="text-[#2dc28c]" size={32} fill="#2dc28c" fillOpacity={0.2} />
+            <IconMusic className="text-[#2dc28c]" size={32} />
           </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-black/40 relative">
@@ -111,7 +119,7 @@ function AssetCard({
             onDelete(asset.id);
           }}
         >
-          <Trash2 size={12} className="text-white" />
+          <IconTrash size={12} className="text-white" />
         </button>
       </div>
 
@@ -377,7 +385,7 @@ export default function PanelUploads() {
           <div className="flex-1 p-4 flex gap-2">
             <InputGroup>
               <InputGroupAddon className="bg-secondary/30 pointer-events-none text-muted-foreground w-8 justify-center">
-                <Search size={14} />
+                <IconSearch size={14} />
               </InputGroupAddon>
 
               <InputGroupInput
@@ -392,7 +400,7 @@ export default function PanelUploads() {
               disabled={isUploading}
               variant={"outline"}
             >
-              <Upload size={14} />
+              <IconUpload size={14} />
             </Button>
           </div>
         </div>
@@ -405,7 +413,7 @@ export default function PanelUploads() {
               variant={"outline"}
               className="w-full"
             >
-              <Upload size={14} /> Upload
+              <IconUpload size={14} /> Upload
             </Button>
           </div>
         </div>
@@ -415,7 +423,7 @@ export default function PanelUploads() {
       <ScrollArea className="flex-1 px-4">
         {filteredAssets.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
-            <Upload size={32} className="opacity-50" />
+            <IconUpload size={32} className="opacity-50" />
             <span className="text-sm">
               {uploads.length === 0 ? "No uploads yet" : "No matches found"}
             </span>

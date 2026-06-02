@@ -41,7 +41,7 @@ import { getGroupedFonts, getFontByPostScriptName } from "@/utils/font-utils";
 
 import useLayoutStore from "../store/use-layout-store";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { IconChevronDown } from "@tabler/icons-react";
 import { NumberInput } from "@/components/ui/number-input";
 import { useStore } from "zustand";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
