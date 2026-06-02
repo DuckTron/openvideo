@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useRef } from "react";
-import { CircleOff, XIcon } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { IconWashDryOff, IconX } from "@tabler/icons-react";
 import useLayoutStore from "../store/use-layout-store";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ICaptionsControlProps } from "../interface/captions";
@@ -146,7 +146,7 @@ const CaptionPresetPicker = () => {
           handleApplyPreset(NONE_PRESET);
         }}
       >
-        <CircleOff />
+        <IconWashDryOff />
       </div>
 
       {presets.map((preset, index) => (
@@ -180,7 +180,7 @@ const CaptionPresetPicker = () => {
       <div className="flex items-center justify-between px-4 py-3 border-b">
         <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Presets</p>
         <button onClick={() => setFloatingControl("")}>
-          <XIcon className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-white transition-colors" />
+          <IconX className="h-4 w-4 cursor-pointer text-muted-foreground hover:text-white transition-colors" />
         </button>
       </div>
       <ScrollArea className="h-[400px]">

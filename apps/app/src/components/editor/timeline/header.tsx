@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { frameToTimeString, timeToString } from "../utils/time";
-import { SquareSplitHorizontal, Trash2, ZoomIn, ZoomOut, Copy, Scissors } from "lucide-react";
+import {
+  IconLayoutColumns,
+  IconTrash,
+  IconZoomOut,
+  IconZoomIn,
+  IconCopy,
+  IconScissors,
+} from "@tabler/icons-react";
 import { useClipActions } from "../studio-context-menu";
 import { useTimelineOffsetX } from "../hooks/use-timeline-offset";
 import { useStore } from "zustand";
@@ -122,7 +129,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <Trash2 size={14} />
+              <IconTrash size={14} />
             </Button>
 
             <Button
@@ -132,7 +139,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <Scissors size={15} />
+              <IconScissors size={15} />
             </Button>
             <Button
               disabled={!selectedClip || isLocked}
@@ -141,7 +148,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <Copy size={15} />
+              <IconCopy size={15} />
             </Button>
           </div>
           <div className="flex items-center justify-center">
@@ -254,7 +261,7 @@ const ZoomControl = ({
     <div className="flex items-center justify-end">
       <div className="flex lg:border-l pl-4 pr-2">
         <Button size={"icon"} variant={"ghost"} onClick={onZoomOutClick}>
-          <ZoomOut size={16} />
+          <IconZoomOut size={16} />
         </Button>
         <Slider
           className="w-28 hidden lg:flex"
@@ -269,7 +276,7 @@ const ZoomControl = ({
           }}
         />
         <Button size={"icon"} variant={"ghost"} onClick={onZoomInClick}>
-          <ZoomIn size={16} />
+          <IconZoomIn size={16} />
         </Button>
         <Button onClick={onZoomFitClick} variant={"ghost"} size={"icon"}>
           <svg xmlns="http://www.w3.org/2000/svg" width="16" viewBox="0 0 24 24">

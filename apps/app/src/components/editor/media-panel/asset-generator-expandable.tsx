@@ -7,7 +7,6 @@ import { useGeneratedStore } from "@/stores/generated-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  IconLoader2,
   IconVideo,
   IconPhoto,
   IconUser,
@@ -20,9 +19,8 @@ import {
   IconUpload,
   IconClock,
   IconChevronDown,
-  IconX,
+  IconArrowUp,
 } from "@tabler/icons-react";
-import { ArrowUpIcon } from "lucide-react";
 
 export type GenerateAssetType = "video" | "image" | "lip-sync" | "voiceover" | "music" | "sfx";
 
@@ -183,16 +181,30 @@ export function AssetGeneratorExpandable({
         ref={containerRef}
         className={cn("shrink-0 bg-card p-3", !floating && "border-t border-border")}
       >
-        <div className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-secondary/50 px-3 py-2">
+        <div className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-secondary/50 px-3 py-2 transition-all hover:border-primary/30 hover:bg-secondary">
           <button
             onClick={() => setIsExpanded(true)}
-            className="flex flex-1 items-center gap-3 text-left"
+            className="group flex flex-1 items-center gap-3 text-left"
           >
-            <IconSparkles className="size-4 shrink-0 text-primary" stroke={1.5} />
-            <span className="text-sm text-muted-foreground">Describe what you want to create</span>
+            <div className="relative">
+              <IconSparkles
+                className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110"
+                stroke={1.5}
+              />
+              <div className="absolute inset-0 size-4 animate-pulse rounded-full bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+              Describe what you want to create...
+            </span>
           </button>
-          <Button variant="ghost" size="icon" className="size-7 shrink-0" onClick={onUploadClick}>
-            <IconUpload className="size-4" stroke={1.5} />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1.5 px-2 text-xs border-border/60 bg-background hover:bg-primary/10 hover:text-primary hover:border-primary/30"
+            onClick={onUploadClick}
+          >
+            <IconUpload className="size-3.5" stroke={1.5} />
+            <span>Upload</span>
           </Button>
         </div>
       </div>
@@ -214,13 +226,17 @@ export function AssetGeneratorExpandable({
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={currentTypeOption.placeholder}
           className={cn(
-            "w-full min-h-[90px] resize-none rounded-xl border bg-transparent p-3 text-sm",
+            "w-full min-h-[100px] resize-none rounded-xl border bg-transparent p-3.5 text-sm",
             "border-border/50 bg-secondary/30 placeholder:text-muted-foreground/50",
-            "focus:border-primary/30 focus:outline-none focus:ring-1 focus:ring-primary/20",
+            "focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/10",
             "transition-all",
           )}
           autoFocus
         />
+        {/* Character count & hint */}
+        <div className="absolute bottom-2 right-2 flex items-center gap-2 text-[10px] text-muted-foreground/60">
+          {prompt.length > 0 && <span className="tabular-nums">{prompt.length}</span>}
+        </div>
       </div>
 
       {/* Toolbar */}
@@ -412,7 +428,7 @@ export function AssetGeneratorExpandable({
           >
             {/* {loading ? <IconLoader2 className="size-4 animate-spin" /> : "Generate"} */}
 
-            <ArrowUpIcon className="w-4 h-4" />
+            <IconArrowUp className="w-4 h-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>

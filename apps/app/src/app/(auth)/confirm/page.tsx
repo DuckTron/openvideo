@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LogoIcons } from "@/components/shared/logos";
-import { Mail } from "lucide-react";
+import { IconMail } from "@tabler/icons-react";
 
 export const metadata: Metadata = {
   title: "Check your email",
@@ -26,7 +26,7 @@ export default function ConfirmPage() {
         <div className="w-full max-w-[380px] pb-40">
           <div className="flex flex-col items-center gap-6 text-center">
             <div className="p-4 rounded-full bg-secondary/50">
-              <Mail className="size-6 text-muted-foreground" />
+              <IconMail className="size-6 text-muted-foreground" />
             </div>
             <div className="flex flex-col gap-1.5">
               <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>

@@ -4,14 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
-import { Sparkles, Play } from "lucide-react";
+import { IconSparkles, IconPlayerPlay } from "@tabler/icons-react";
 
 const Hero = () => {
   return (
     <div>
       <section className="relative flex flex-col items-center justify-center gap-8 md:gap-10 px-4 md:px-10 text-center py-8 md:py-16 pt-16 md:pt-24">
         <Badge variant="secondary" className="px-3 py-1.5 text-xs font-medium">
-          <Sparkles className="w-3 h-3 mr-1.5" />
+          <IconSparkles className="w-3 h-3 mr-1.5" />
           AI-Powered Video Editor
         </Badge>
 
@@ -32,7 +32,7 @@ const Hero = () => {
             size="lg"
           >
             <Link href="/spaces" className="flex items-center gap-2 text-sm">
-              <Play className="w-4 h-4" />
+              <IconPlayerPlay className="w-4 h-4" />
               Start Creating
             </Link>
           </Button>

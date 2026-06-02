@@ -5,8 +5,8 @@ import {
   IconPhoto,
   type IconProps,
   IconSparkle2,
+  IconCircleSquare,
 } from "@tabler/icons-react";
-import { ShapesIcon } from "lucide-react";
 import { create } from "zustand";
 
 export type Tab = "assets" | "text" | "captions" | "effects" | "transitions" | "elements";
@@ -35,7 +35,7 @@ export const tabs: {
     label: "Effects",
   },
   elements: {
-    icon: ShapesIcon,
+    icon: IconCircleSquare,
     label: "Elements",
   },
 };

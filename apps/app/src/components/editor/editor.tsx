@@ -12,8 +12,6 @@ import { Loading } from "@/components/editor/loading";
 import FloatingControl from "@/components/editor/floating-controls/floating-control";
 import { Compositor } from "@openvideo/engine-pixi";
 import { WebCodecsUnsupportedModal } from "@/components/editor/webcodecs-unsupported-modal";
-import { AssetGeneratorModal } from "@/components/editor/media-panel/asset-generator-modal";
-import { AssetGeneratorExpandable } from "@/components/editor/media-panel/asset-generator-expandable";
 import Assistant from "./assistant/assistant";
 import { core } from "@/lib/project";
 import { IProject } from "@openvideo/core";
@@ -229,9 +227,6 @@ export default function Editor({
 
       {/* WebCodecs Support Check Modal */}
       <WebCodecsUnsupportedModal open={!isWebCodecsSupported} />
-
-      {/* AI Generator Modal */}
-      <AssetGeneratorModal />
     </div>
   );
 }

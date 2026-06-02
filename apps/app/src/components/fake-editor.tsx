@@ -1,47 +1,31 @@
 "use client";
 
 import {
-  ChevronLeft,
-  PenLine,
-  Bot,
-  Play,
-  Undo2,
-  Redo2,
-  Keyboard,
-  Download,
-  Sparkles,
-  Search,
-  Plus,
-  Volume2,
-  Maximize2,
-  SkipBack,
-  SkipForward,
-  Paperclip,
-  Upload,
-  ArrowUp,
-  Image as ImageIcon,
-  Type,
-  Subtitles,
-  Shapes as ShapesIcon,
-  ListFilter,
-  Sparkles as SparklesIcon,
-  Trash2,
-  Copy,
-  ZoomIn,
-  ZoomOut,
-  ScissorsIcon,
-  RefreshCw,
-  PlusIcon,
-  PaperclipIcon,
-  ArrowUpIcon,
-} from "lucide-react";
-import {
+  IconChevronLeft,
+  IconPencil,
+  IconRobot,
+  IconPlayerPlay,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconKeyboard,
+  IconDownload,
+  IconSparkles,
+  IconSearch,
+  IconPlus,
+  IconPaperclip,
+  IconUpload,
+  IconArrowUp,
+  IconPhoto,
   IconLetterT,
   IconSubtitles,
-  IconPhoto,
-  IconSparkle2,
-  IconUpload,
-  IconSparkles,
+  IconShape,
+  IconFilter,
+  IconTrash,
+  IconCopy,
+  IconZoomOut,
+  IconZoomIn,
+  IconScissors,
+  IconRefresh,
 } from "@tabler/icons-react";
 import { Icons } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
@@ -63,7 +47,7 @@ function FakeHeader() {
       {/* Left: Project Navigation */}
       <div className="flex items-center gap-4 w-[280px]">
         <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-          <ChevronLeft className="h-4 w-4" />
+          <IconChevronLeft className="h-4 w-4" />
           <span className="text-sm font-medium">Projects</span>
         </button>
 
@@ -80,21 +64,21 @@ function FakeHeader() {
               value="editor"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <PenLine className="h-3.5 w-3.5" />
+              <IconPencil className="h-3.5 w-3.5" />
               Editor
             </TabsTrigger>
             <TabsTrigger
               value="agent"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Bot className="h-3.5 w-3.5" />
+              <IconRobot className="h-3.5 w-3.5" />
               Agent
             </TabsTrigger>
             <TabsTrigger
               value="playground"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Play className="h-3.5 w-3.5" />
+              <IconPlayerPlay className="h-3.5 w-3.5" />
               Playground
             </TabsTrigger>
           </TabsList>
@@ -106,10 +90,10 @@ function FakeHeader() {
         {/* History Controls - hidden on small screens */}
         <div className="hidden sm:flex items-center gap-1">
           <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30">
-            <Undo2 className="h-4 w-4" />
+            <IconArrowBackUp className="h-4 w-4" />
           </button>
           <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30">
-            <Redo2 className="h-4 w-4" />
+            <IconArrowForwardUp className="h-4 w-4" />
           </button>
         </div>
 
@@ -118,11 +102,11 @@ function FakeHeader() {
         {/* Help & Export */}
         <div className="flex items-center gap-1">
           <button className="hidden sm:flex p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors">
-            <Keyboard className="h-4 w-4" />
+            <IconKeyboard className="h-4 w-4" />
           </button>
 
           <button className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 bg-foreground text-background text-xs font-medium rounded-md hover:bg-foreground/90 transition-colors">
-            <Download className="h-3.5 w-3.5" />
+            <IconDownload className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
@@ -168,8 +152,8 @@ function FakeMediaPanel() {
     { icon: IconLetterT, label: "Text", active: false },
     { icon: IconSubtitles, label: "Captions", active: false },
     { icon: Icons.transition, label: "Transitions", active: false },
-    { icon: IconSparkle2, label: "Effects", active: false },
-    { icon: ShapesIcon, label: "Elements", active: false },
+    { icon: IconSparkles, label: "Effects", active: false },
+    { icon: IconShape, label: "Elements", active: false },
   ];
 
   return (
@@ -199,7 +183,7 @@ function FakeMediaPanel() {
       <div className="flex items-center gap-2 w-full px-4 py-3">
         {/* Search Input */}
         <div className="relative flex-1 min-w-0">
-          <Search
+          <IconSearch
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
@@ -214,7 +198,7 @@ function FakeMediaPanel() {
           variant="outline"
           className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
         >
-          <ListFilter size={15} />
+          <IconFilter size={15} />
         </Button>
       </div>
 
@@ -252,13 +236,13 @@ function FakeTimelinePanel() {
         {/* Left: Track tools - hidden on small screens */}
         <div className="hidden sm:flex items-center gap-1">
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <Trash2 className="size-4" />
+            <IconTrash className="size-4" />
           </button>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <ScissorsIcon className="size-4" />
+            <IconScissors className="size-4" />
           </button>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <Copy className="size-4" />
+            <IconCopy className="size-4" />
           </button>
         </div>
 
@@ -312,13 +296,13 @@ function FakeTimelinePanel() {
         {/* Right: Zoom controls - hidden on small screens */}
         <div className="hidden sm:flex items-center justify-end gap-1 sm:gap-2">
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <ZoomOut className="size-4" />
+            <IconZoomOut className="size-4" />
           </button>
           <div className="hidden md:block w-20 h-1.5 bg-muted rounded-full overflow-hidden">
             <div className="w-1/3 h-full bg-muted-foreground/60 rounded-full" />
           </div>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <ZoomIn className="size-4" />
+            <IconZoomIn className="size-4" />
           </button>
         </div>
       </div>
@@ -411,7 +395,7 @@ function FakeAssistantPanel() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
+            <IconRefresh className="w-3.5 h-3.5" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
@@ -419,7 +403,7 @@ function FakeAssistantPanel() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <PlusIcon className="w-3.5 h-3.5" />
+            <IconPlus className="w-3.5 h-3.5" />
             <span className="sr-only">New chat</span>
           </Button>
         </div>
@@ -470,14 +454,14 @@ function FakeAssistantPanel() {
             />
             <InputGroupAddon align="block-end">
               <InputGroupButton variant="ghost" className="rounded-lg text-foreground">
-                <PaperclipIcon className="w-4 h-4" />
+                <IconPaperclip className="w-4 h-4" />
               </InputGroupButton>
               <InputGroupButton
                 variant="default"
                 className="rounded-full ml-auto bg-foreground hover:bg-foreground/90 text-background"
                 size="icon-xs"
               >
-                <ArrowUpIcon className="w-4 h-4" />
+                <IconArrowUp className="w-4 h-4" />
                 <span className="sr-only">Send</span>
               </InputGroupButton>
             </InputGroupAddon>

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Video, Music, Clock, Settings2 } from "lucide-react";
+import { IconLoader2, IconVideo, IconMusic, IconClock, IconSettings } from "@tabler/icons-react";
 import { useStudioStore } from "@/stores/studio-store";
 
 interface ExportModalProps {
@@ -549,7 +549,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
                   >
                     <span className="text-sm text-foreground">Custom</span>
                     <div className="flex items-center gap-3">
-                      <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                      <IconSettings className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
                   </button>
                 </div>
@@ -584,7 +584,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <Video className="w-3.5 h-3.5 text-muted-foreground" />
+                    <IconVideo className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">Video</span>
                   </div>
                   <Switch checked={includeVideo} onCheckedChange={setIncludeVideo} />
@@ -664,7 +664,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <Music className="w-3.5 h-3.5 text-muted-foreground" />
+                    <IconMusic className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">Audio</span>
                   </div>
                   <Switch checked={includeAudio} onCheckedChange={setIncludeAudio} />
@@ -722,7 +722,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
               {/* Footer */}
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Clock className="w-3 h-3" />
+                  <IconClock className="w-3 h-3" />
                   <span className="text-[11px]">{(maxDuration / 1e6).toFixed(2)}s</span>
                 </div>
                 <div className="flex gap-2">
@@ -818,7 +818,7 @@ export function ExportModal({ open, onOpenChange }: ExportModalProps) {
               onClick={handleClose}
               className="w-full h-9 text-xs rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
             >
-              {isExporting && <Loader2 className="h-3.5 w-3.5 mr-2" />}
+              {isExporting && <IconLoader2 className="h-3.5 w-3.5 mr-2" />}
               Cancel Export
             </Button>
           </div>

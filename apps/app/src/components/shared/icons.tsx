@@ -1,19 +1,18 @@
 import {
-  AlertTriangle,
-  LucideIcon,
-  LucideProps,
-  User,
-  VideoIcon,
-  Crop,
-  Check,
-  Menu,
-  Loader2,
-} from "lucide-react";
+  IconAlertTriangle,
+  IconUser,
+  IconPhoto,
+  IconCrop,
+  IconCheck,
+  IconMenu,
+  IconLoader2,
+} from "@tabler/icons-react";
+import type { Icon as TablerIcon } from "@tabler/icons-react";
 
-export type Icon = LucideIcon;
+export type Icon = TablerIcon;
 
 export const Icons = {
-  spinner: Loader2,
+  spinner: IconLoader2,
   gitHub: ({ ...props }: LucideProps) => (
     <svg
       aria-hidden="true"
@@ -83,11 +82,11 @@ export const Icons = {
       />
     </svg>
   ),
-  user: User,
-  video: VideoIcon,
-  warning: AlertTriangle,
-  crop: Crop,
-  check: Check,
+  user: IconUser,
+  video: IconPhoto,
+  warning: IconAlertTriangle,
+  crop: IconCrop,
+  check: IconCheck,
   discord: ({ ...props }: LucideProps) => (
     <svg
       viewBox="0 0 256 199"
@@ -118,7 +117,7 @@ export const Icons = {
       <path d="M9 18c-4.51 2-5-2-7-2" />
     </svg>
   ),
-  menu: Menu,
+  menu: IconMenu,
   sparkle: ({ ...props }: LucideProps) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path

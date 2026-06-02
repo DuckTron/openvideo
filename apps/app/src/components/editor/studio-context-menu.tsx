@@ -13,17 +13,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  Clipboard,
-  Copy,
-  CopyPlus,
-  LockKeyhole,
-  LockKeyholeOpen,
-  MoreHorizontalIcon,
-  Trash2,
-} from "lucide-react";
+  IconClipboard,
+  IconCopy,
+  IconCopyPlus,
+  IconLock,
+  IconLockOpen,
+  IconDots,
+  IconTrash,
+} from "@tabler/icons-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useStudioStore } from "@/stores/studio-store";
 import { core, projectStore } from "@/lib/project";
 import { nanoid, AnyClip } from "@openvideo/core";
 
@@ -128,7 +127,7 @@ export function StudioContextMenu() {
                 "w-9 h-9 rounded-full transition-all hover:bg-accent/50 active:scale-90",
               )}
             >
-              <MoreHorizontalIcon className="w-4 h-4" />
+              <IconDots className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -142,19 +141,19 @@ export function StudioContextMenu() {
           {!isLocked && (
             <>
               <DropdownMenuItem onClick={handleCopy} disabled={!selectedClip}>
-                <Copy />
+                <IconCopy />
                 Copy
                 <DropdownMenuShortcut>⌘ C</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handlePaste} disabled={!hasClipboard}>
-                <Clipboard />
+                <IconClipboard />
                 Paste
                 <DropdownMenuShortcut>⌘ V</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handleDuplicate} disabled={!selectedClip}>
-                <CopyPlus />
+                <IconCopyPlus />
                 Duplicate
                 <DropdownMenuShortcut>⌘ D</DropdownMenuShortcut>
               </DropdownMenuItem>
@@ -162,14 +161,14 @@ export function StudioContextMenu() {
           )}
 
           <DropdownMenuItem onClick={handleToggleLock} disabled={!selectedClip}>
-            {isLocked ? <LockKeyholeOpen /> : <LockKeyhole />}
+            {isLocked ? <IconLockOpen /> : <IconLock />}
             {isLocked ? "Unlock" : "Lock"}
             <DropdownMenuShortcut>⌘ L</DropdownMenuShortcut>
           </DropdownMenuItem>
 
           {!isLocked && (
             <DropdownMenuItem onClick={handleDelete} disabled={!selectedClip}>
-              <Trash2 />
+              <IconTrash />
               Delete
               <DropdownMenuShortcut>⌫</DropdownMenuShortcut>
             </DropdownMenuItem>

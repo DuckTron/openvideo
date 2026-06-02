@@ -1,6 +1,14 @@
 "use client";
 import React from "react";
-import { Sparkles, Wand2, ArrowRightLeft, Move, Zap, Film, Palette, Layers } from "lucide-react";
+import {
+  IconSparkles,
+  IconWand,
+  IconArrowLeftRight,
+  IconMovie,
+  IconPalette,
+  IconBolt,
+  IconLayersOff,
+} from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 
 const FeatureCard = ({
@@ -29,34 +37,34 @@ const Features = () => {
       title: "Intelligent Assistant",
       description:
         "AI-powered editing suggestions that learn your style and automate repetitive tasks.",
-      icon: <Sparkles className="size-5 text-amber-500/90" />,
+      icon: <IconSparkles className="size-5 text-amber-500/90" />,
     },
     {
       title: "Instant Preview",
       description:
         "Real-time rendering with zero lag, so you can see changes instantly as you work.",
-      icon: <Zap className="size-5 text-yellow-500/90" />,
+      icon: <IconBolt className="size-5 text-yellow-500/90" />,
     },
     {
       title: "Smart Backgrounds",
       description: "Remove or replace backgrounds automatically with advanced AI detection.",
-      icon: <Layers className="size-5 text-blue-500/90" />,
+      icon: <IconLayersOff className="size-5 text-blue-500/90" />,
     },
     {
       title: "Cinema Grade",
       description: "Professional color grading and LUTs to give your videos that Hollywood look.",
-      icon: <Palette className="size-5 text-purple-500/90" />,
+      icon: <IconPalette className="size-5 text-purple-500/90" />,
     },
     {
       title: "Seamless Flow",
       description:
         "Intelligent scene detection and automatic transitions for perfect storytelling.",
-      icon: <ArrowRightLeft className="size-5 text-emerald-500/90" />,
+      icon: <IconArrowLeftRight className="size-5 text-emerald-500/90" />,
     },
     {
       title: "Motion Magic",
       description: "Advanced keyframing and motion tracking for dynamic, professional animations.",
-      icon: <Film className="size-5 text-rose-500/90" />,
+      icon: <IconMovie className="size-5 text-rose-500/90" />,
     },
   ];
 

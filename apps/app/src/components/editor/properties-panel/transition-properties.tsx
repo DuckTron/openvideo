@@ -4,7 +4,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 import { Slider } from "@/components/ui/slider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Timer } from "lucide-react";
+import { IconLoader2, IconClock } from "@tabler/icons-react";
 import { createPortal } from "react-dom";
 import { Icons } from "@/components/shared/icons";
 import { useStore } from "zustand";

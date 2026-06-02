@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter } from "next/navigation";
-import { Plus, MoreHorizontal, Trash2, Folder } from "lucide-react";
+import { IconPlus, IconDots, IconTrash, IconFolder } from "@tabler/icons-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
@@ -54,14 +54,14 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
     >
       {/* Thumbnail area - square like asset grid */}
       <div className="aspect-square bg-secondary/30 flex items-center justify-center relative">
-        <Folder className="size-10 text-muted-foreground/40" strokeWidth={1.5} />
+        <IconFolder className="size-10 text-muted-foreground/40" strokeWidth={1.5} />
 
         {/* Actions overlay */}
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="secondary" size="icon" className="size-7 shadow-sm">
-                <MoreHorizontal className="size-3.5" />
+                <IconDots className="size-3.5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -72,7 +72,7 @@ function ProjectCard({ project, onDelete }: ProjectCardProps) {
                 }}
                 className="text-destructive"
               >
-                <Trash2 className="mr-2 size-4" />
+                <IconTrash className="mr-2 size-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -200,7 +200,7 @@ export default function ProjectsView() {
             <h1 className="text-sm font-semibold">My Projects</h1>
           </div>
           <Button onClick={handleCreateClick} disabled={isCreating} size="sm">
-            <Plus className="size-4 mr-1.5" />
+            <IconPlus className="size-4 mr-1.5" />
             New Project
           </Button>
         </div>
@@ -215,14 +215,14 @@ export default function ProjectsView() {
           ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[60vh] text-center">
               <div className="p-4 rounded-xl bg-secondary/50 mb-4">
-                <Folder className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
+                <IconFolder className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
               </div>
               <h3 className="font-medium mb-1">No projects yet</h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Create your first project to get started
               </p>
               <Button onClick={handleCreateClick} disabled={isCreating} size="sm">
-                <Plus className="size-4 mr-1.5" />
+                <IconPlus className="size-4 mr-1.5" />
                 Create Project
               </Button>
             </div>

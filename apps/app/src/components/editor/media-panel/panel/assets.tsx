@@ -6,18 +6,15 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudioStore } from "@/stores/studio-store";
 import { core } from "@/lib/project";
 import {
-  Upload,
-  Search,
-  Trash2,
-  Music,
-  Loader2,
-  Image as ImageIcon,
-  Film,
-  Info,
-  ListFilter,
-  Sparkles,
-  Plus,
-} from "lucide-react";
+  IconSearch,
+  IconTrash,
+  IconMusic,
+  IconLoader2,
+  IconPhoto,
+  IconInfoCircle,
+  IconFilter,
+  IconVideo,
+} from "@tabler/icons-react";
 import { storageService } from "@/lib/storage/storage-service";
 import type { MediaType } from "@/types/media";
 import { uploadFile } from "@/lib/upload-utils";
@@ -131,7 +128,7 @@ function AssetCard({
       </div>
     ) : (
       <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
-        <Music size={24} className="text-primary" />
+        <IconMusic size={24} className="text-primary" />
       </div>
     );
 
@@ -147,9 +144,9 @@ function AssetCard({
         <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary/30 border border-border/40 group-hover:border-border transition-all flex items-center justify-center">
           {/* Media Type Icon (Top Left) */}
           <div className="absolute top-1.5 left-1.5 p-1 rounded-md bg-background/70 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none z-10">
-            {asset.type === "image" && <ImageIcon size={11} strokeWidth={2.5} />}
-            {asset.type === "video" && <Film size={11} strokeWidth={2.5} />}
-            {asset.type === "audio" && <Music size={11} strokeWidth={2.5} />}
+            {asset.type === "image" && <IconPhoto size={11} strokeWidth={2.5} />}
+            {asset.type === "video" && <IconVideo size={11} strokeWidth={2.5} />}
+            {asset.type === "audio" && <IconMusic size={11} strokeWidth={2.5} />}
           </div>
 
           {/* In Use Badge (Top Right) */}
@@ -249,7 +246,7 @@ function AssetCard({
               </span>
               {asset.type === "audio" && (
                 <span className="p-0.5 rounded-md bg-background/70 backdrop-blur-md text-foreground flex items-center justify-center">
-                  <Info size={9} className="opacity-80" />
+                  <IconInfoCircle size={9} className="opacity-80" />
                 </span>
               )}
             </div>
@@ -264,7 +261,7 @@ function AssetCard({
                 onDelete(asset.id);
               }}
             >
-              <Trash2 size={12} className="text-foreground" />
+              <IconTrash size={12} className="text-foreground" />
             </button>
           )}
         </div>
@@ -517,7 +514,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   if (!isLoaded || isAssetsStoreLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="animate-spin text-muted-foreground" size={24} />
+        <IconLoader2 className="animate-spin text-muted-foreground" size={24} />
       </div>
     );
   }
@@ -539,7 +536,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <div className="mb-4 text-muted-foreground">
-              <ImageIcon size={24} strokeWidth={1.5} />
+              <IconPhoto size={24} strokeWidth={1.5} />
             </div>
             <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] mb-5">
@@ -553,7 +550,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             <div className="flex items-center gap-2 w-full px-4 py-3">
               {/* Search Input */}
               <div className="relative flex-1 min-w-0">
-                <Search
+                <IconSearch
                   size={14}
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                 />
@@ -572,7 +569,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                     variant="outline"
                     className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
                   >
-                    <ListFilter size={15} />
+                    <IconFilter size={15} />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -603,7 +600,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             <ScrollArea className="flex-1 px-4">
               {filteredAssets.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                  <ImageIcon size={28} className="opacity-40" />
+                  <IconPhoto size={28} className="opacity-40" />
                   <span className="text-xs">No matches found.</span>
                 </div>
               ) : (

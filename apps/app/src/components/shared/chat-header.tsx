@@ -1,6 +1,6 @@
 "use client";
 
-import { RefreshCw, PlusIcon } from "lucide-react";
+import { IconRefresh, IconPlus } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -37,7 +37,7 @@ export function ChatHeader({
           className="h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={onRefresh}
         >
-          <RefreshCw className="w-3.5 h-3.5" />
+          <IconRefresh className="w-3.5 h-3.5" />
           <span className="sr-only">Refresh</span>
         </Button>
         <Button
@@ -46,7 +46,7 @@ export function ChatHeader({
           className="h-7 w-7 text-muted-foreground hover:text-foreground"
           onClick={onNewChat}
         >
-          <PlusIcon className="w-3.5 h-3.5" />
+          <IconPlus className="w-3.5 h-3.5" />
           <span className="sr-only">New chat</span>
         </Button>
       </div>

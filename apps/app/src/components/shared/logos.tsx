@@ -1,6 +1,7 @@
-import { AlertTriangle, LucideIcon, LucideProps, User, VideoIcon } from "lucide-react";
+import { IconAlertTriangle, IconUser, IconPhoto } from "@tabler/icons-react";
+import type { Icon as TablerIcon, IconProps as TablerIconProps } from "@tabler/icons-react";
 
-export type Icon = LucideIcon;
+export type Icon = TablerIcon;
 
 export const LogoIcons = {
   nextjs: ({ ...props }: LucideProps) => (
@@ -48,9 +49,9 @@ export const LogoIcons = {
       />
     </svg>
   ),
-  user: User,
-  video: VideoIcon,
-  warning: AlertTriangle,
+  user: IconUser,
+  video: IconPhoto,
+  warning: IconAlertTriangle,
   discord: ({ ...props }: LucideProps) => (
     <svg
       viewBox="0 0 256 199"
