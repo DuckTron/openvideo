@@ -31,7 +31,7 @@ const Hero = () => {
             className="h-11 px-5 font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
             size="lg"
           >
-            <Link href="/spaces" className="flex items-center gap-2 text-sm">
+            <Link href="/signin" className="flex items-center gap-2 text-sm">
               <IconPlayerPlay className="w-4 h-4" />
               Start Creating
             </Link>
