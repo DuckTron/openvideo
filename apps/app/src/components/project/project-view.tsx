@@ -46,6 +46,7 @@ import { useDirector } from "@/hooks/use-director";
 import { ChatPanel } from "@/components/shared/chat-panel";
 import { ChatHeader } from "@/components/shared/chat-header";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
+import { getPresignedConfig, uploadFileWithConfig } from "@/lib/upload-utils";
 
 export default function ProjectView({ projectId }: { projectId: string }) {
   const router = useRouter();
@@ -101,6 +102,9 @@ export default function ProjectView({ projectId }: { projectId: string }) {
         createdAt: asset.createdAt,
         updatedAt: asset.updatedAt,
         indexingStatus: asset.indexingStatus?.status ?? null,
+        indexingProgress: asset.indexingStatus?.progress ?? null,
+        indexingStage: asset.indexingStatus?.stage ?? null,
+        indexingError: asset.indexingStatus?.error ?? null,
       }));
       setFiles(projectFiles);
     }
@@ -146,7 +150,8 @@ export default function ProjectView({ projectId }: { projectId: string }) {
       size: file.size,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      indexingStatus: "processing" as const,
+      indexingStatus: null,
+      uploadProgress: 0,
     }));
 
     // Add temp files to list immediately
@@ -156,51 +161,64 @@ export default function ProjectView({ projectId }: { projectId: string }) {
     // Upload files in parallel, updating status individually
     const uploadPromises = fileArray.map(async (file, index) => {
       const tempId = tempFiles[index].id;
+      let currentId = tempId;
 
       try {
-        // 1. Get R2 presigned URL
-        const presignRes = await fetch("/api/uploads/presign", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: "upload", fileNames: [file.name] }),
-        });
-        if (!presignRes.ok) throw new Error("Failed to get upload URL");
-        const { uploads } = await presignRes.json();
-        const { presignedUrl, url } = uploads[0];
+        // 1. Get presigned R2 config — ONE call, reused for both DB registration and upload
+        const uploadConfig = await getPresignedConfig(file.name);
+        const { url } = uploadConfig;
 
-        // 2. Upload to R2
-        const uploadRes = await fetch(presignedUrl, {
-          method: "PUT",
-          body: file,
-          headers: { "Content-Type": file.type || "application/octet-stream" },
-        });
-        if (!uploadRes.ok) throw new Error(`Failed to upload ${file.name}`);
-
-        // 3. Register asset via tRPC (returns generated id)
+        // 2. Register asset via tRPC immediately with autoIndex: false (instant)
         const newAsset = await createAsset.mutateAsync({
           spaceId,
           name: file.name,
           type: tempFiles[index].type,
           src: url,
           size: file.size,
+          autoIndex: false,
         });
 
-        // 4. Indexing is already triggered by Director on asset registration
-        // Replace temp file with real file (Director starts indexing automatically)
+        // 3. Replace temp placeholder with real asset ID, show uploading state
+        currentId = newAsset.id;
         updateFile(tempId, {
           id: newAsset.id,
-          spaceId, // Ensure spaceId is preserved
+          spaceId,
           src: url,
-          indexingStatus: "pending" as const,
+          uploadProgress: 0,
+          indexingStatus: null,
+          indexingProgress: null,
+          indexingStage: null,
+          indexingError: null,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         });
 
+        // 4. Upload bytes to R2 using the SAME presigned config — no second presign!
+        await uploadFileWithConfig(file, uploadConfig, (progress) => {
+          updateFile(newAsset.id, { uploadProgress: progress });
+        });
+
+        // 5. Upload done — clear progress bar, set indexing pending
+        updateFile(newAsset.id, {
+          uploadProgress: null,
+          indexingStatus: "pending" as const,
+        });
+
+        // 6. Trigger indexing in the background (non-blocking)
+        triggerAssetIndex
+          .mutateAsync({
+            id: newAsset.id,
+            spaceId,
+          })
+          .catch((err) => {
+            console.error(`Failed to trigger index for ${file.name}:`, err);
+            updateFile(newAsset.id, { indexingStatus: "failed" });
+          });
+
         toast.success(`Uploaded ${file.name}`);
       } catch (error) {
         console.error(`Error uploading ${file.name}:`, error);
-        // Mark as failed
-        updateFile(tempId, { indexingStatus: "failed" });
+        updateFile(currentId, { uploadProgress: null, indexingStatus: "failed" });
         toast.error(`Failed to upload ${file.name}`);
       }
     });

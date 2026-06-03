@@ -1461,10 +1461,13 @@ topics: {topics}"""
             
             # Determine status based on progress/stage
             status = "processing"
+            error_message = None
             if progress == 100 and stage == "completed":
                 status = "completed"
             elif stage.startswith("failed"):
                 status = "failed"
+                error_message = stage.replace("failed: ", "", 1) if stage.startswith("failed: ") else stage
+                stage = "failed"
             elif progress == 0 and stage == "starting":
                 status = "processing"
             
@@ -1474,10 +1477,10 @@ topics: {topics}"""
                     cursor.execute(
                         """
                         UPDATE asset_indexing_status
-                        SET progress = %s, stage = %s, status = %s, "updatedAt" = %s
+                        SET progress = %s, stage = %s, status = %s, error = %s, "updatedAt" = %s
                         WHERE "assetId" = %s
                         """,
-                        (progress, stage, status, datetime.utcnow(), asset_id)
+                        (progress, stage, status, error_message, datetime.utcnow(), asset_id)
                     )
                     conn.commit()
                     logger.info(f"Updated progress for {asset_id}: {progress}% ({stage}) [{status}]")
