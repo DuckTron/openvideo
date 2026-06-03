@@ -143,7 +143,11 @@ function AssetCard({
     (asset.uploadProgress !== undefined &&
       asset.uploadProgress !== null &&
       asset.uploadProgress < 100);
-  const showPreview = (asset.type === "image" || asset.type === "video") && asset.src && !isTemp;
+  const showPreview =
+    (asset.type === "image" || asset.type === "video") &&
+    asset.src &&
+    !isTemp &&
+    asset.uploadProgress == null; // don't render until bytes are in R2
 
   const formatStage = (stage: string | null | undefined) => {
     if (!stage) return "Indexing";
