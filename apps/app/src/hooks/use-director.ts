@@ -28,7 +28,9 @@ export function useDirector(spaceId: string) {
 
     // Create direct Socket.io connection to Director
     const socket = io(directorConfig.wsUrl, {
+      path: "/ws",
       auth: { token: tokenData.token },
+      query: { spaceId },
       transports: ["websocket"],
       autoConnect: true,
     });
@@ -54,89 +56,88 @@ export function useDirector(spaceId: string) {
     });
 
     // Director events
-    socket.on("init", ({ state }: { state: any }) => {
-      console.log("[Director] Init received");
-      core.reset(state);
-    });
-
-    socket.on("chat.response", ({ message }: { message: string }) => {
-      setIsThinking(false);
-      setMessages((prev) => [
-        ...prev,
-        { id: Math.random().toString(36).substring(7), role: "assistant", content: message },
-      ]);
-    });
-
-    socket.on("plan.created", ({ plan }: { plan: any }) => {
-      setIsThinking(false);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Math.random().toString(36).substring(7),
-          role: "assistant",
-          content: `Plan created: ${plan.goal}`,
-          type: "plan",
-          payload: plan,
-        },
-      ]);
-    });
-
-    socket.on(
-      "plan.step",
-      ({
-        stepId,
-        description,
-        status,
-      }: {
-        stepId: string;
-        description: string;
-        status: string;
-      }) => {
-        const id = `step-${stepId}`;
-        const content =
-          status === "running"
-            ? `⏳ ${description}...`
-            : `${status === "done" ? "✅" : "❌"} ${description}`;
-
-        setMessages((prev) => {
-          const exists = prev.some((m) => m.id === id);
-          if (exists) {
-            return prev.map((m) => (m.id === id ? { ...m, content } : m));
-          }
-          return [
+    socket.on("message", (msg: any) => {
+      switch (msg.type) {
+        case "init":
+          console.log("[Director] Init received");
+          core.reset(msg.state);
+          break;
+        case "chat.response":
+          setIsThinking(false);
+          setMessages((prev) => [
             ...prev,
             {
-              id,
+              id: Math.random().toString(36).substring(7),
               role: "assistant",
-              content,
-              type: "plan",
+              content: msg.message,
             },
-          ];
-        });
-      },
-    );
+          ]);
+          break;
+        case "plan.created":
+          setIsThinking(false);
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: Math.random().toString(36).substring(7),
+              role: "assistant",
+              content: `Plan created: ${msg.plan.goal}`,
+              type: "plan",
+              payload: msg.plan,
+            },
+          ]);
+          break;
+        case "plan.step": {
+          const id = `step-${msg.stepId}`;
+          const content =
+            msg.status === "running"
+              ? `⏳ ${msg.description}...`
+              : `${msg.status === "done" ? "✅" : "❌"} ${msg.description}`;
 
-    socket.on("patch", ({ patches }: { patches: any[] }) => {
-      const newPatches = patches.filter((patch) => {
-        if (patch.op === "add" && patch.path?.startsWith("/clips/")) {
-          const clipId = patch.path.split("/")[2];
-          if (clipId && core.store.getState().clips[clipId]) return false;
+          setMessages((prev) => {
+            const exists = prev.some((m) => m.id === id);
+            if (exists) {
+              return prev.map((m) => (m.id === id ? { ...m, content } : m));
+            }
+            return [
+              ...prev,
+              {
+                id,
+                role: "assistant",
+                content,
+                type: "plan",
+              },
+            ];
+          });
+          break;
         }
-        return true;
-      });
+        case "patch": {
+          const newPatches = (msg.patch || msg.patches || []).filter((p: any) => {
+            if (p.op === "add" && p.path?.startsWith("/clips/")) {
+              const clipId = p.path.split("/")[2];
+              if (clipId && core.store.getState().clips[clipId]) return false;
+            }
+            return true;
+          });
 
-      if (newPatches.length === 0) return;
+          if (newPatches.length === 0) break;
 
-      isApplyingRemotePatch.current = true;
-      core.applyPatch(newPatches as any[]);
-      isApplyingRemotePatch.current = false;
+          isApplyingRemotePatch.current = true;
+          core.applyPatch(newPatches as any[]);
+          isApplyingRemotePatch.current = false;
+          break;
+        }
+        case "error":
+          console.error("[Director] Error:", msg.message);
+          setIsThinking(false);
+          break;
+      }
     });
 
     // Listen for local changes and send patches
     const handleLocalChange = (patches: any[]) => {
       if (isApplyingRemotePatch.current) return;
       if (socket.connected) {
-        socket.emit("patch", { patches });
+        socket.emit("patch", { patch: patches });
       }
     };
 

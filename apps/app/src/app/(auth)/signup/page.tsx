@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { UserAuthForm } from "@/components/user-auth-form";
-import { AuthLayout } from "../_components/auth-layout";
+import { UserAuthForm } from "@/components/auth/user-auth-form";
+import { AuthLayout } from "@/components/auth/auth-layout";
 
 export const metadata: Metadata = {
   title: "Sign up",
