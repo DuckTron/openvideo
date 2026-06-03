@@ -56,7 +56,8 @@ interface VideoPropertiesProps {
 
 export function VideoProperties({ clip }: VideoPropertiesProps) {
   const coreClipBase = useStore(projectStore, (s) => s.clips[clip.id]);
-  const coreClip = useEphemeralClip(clip.id, coreClipBase) as any;
+  // Use clip prop as fallback when store doesn't have the clip yet (selection race condition)
+  const coreClip = useEphemeralClip(clip.id, coreClipBase ?? clip) as any;
 
   if (!coreClip) return null;
 

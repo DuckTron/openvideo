@@ -19,10 +19,12 @@ export function useEphemeralClip(clipId: string, baseClip: any) {
   useEffect(() => {
     if (!clipId || !studio) return;
 
-    const handleTransforming = (data: { clip: any }) => {
+    const handleTransforming = (data: { clip: any; ephemeral?: any }) => {
       if (data.clip?.id === clipId) {
-        // Extract properties that are changing
-        const { left, top, width, height, angle, scaleX, scaleY } = data.clip;
+        // Use ephemeral payload if provided (has live transform values from Pixi)
+        // Otherwise fall back to extracting from clip object
+        const ephemeral = data.ephemeral || data.clip;
+        const { left, top, width, height, angle, scaleX, scaleY } = ephemeral;
         setEphemeralUpdates({
           left,
           top,

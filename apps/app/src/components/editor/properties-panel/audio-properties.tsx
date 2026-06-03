@@ -12,7 +12,9 @@ interface AudioPropertiesProps {
 }
 
 export function AudioProperties({ clip }: AudioPropertiesProps) {
-  const coreClip = useStore(projectStore, (s) => s.clips[clip.id]);
+  const coreClipBase = useStore(projectStore, (s) => s.clips[clip.id]);
+  // Use clip prop as fallback when store doesn't have the clip yet (selection race condition)
+  const coreClip = coreClipBase ?? clip;
 
   if (!coreClip) return null;
 

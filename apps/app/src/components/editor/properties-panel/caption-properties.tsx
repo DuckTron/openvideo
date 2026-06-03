@@ -57,7 +57,8 @@ interface CaptionPropertiesProps {
 
 export function CaptionProperties({ clip }: CaptionPropertiesProps) {
   const coreClipBase = useStore(projectStore, (s) => s.clips[clip.id]) as any;
-  const coreClip = useEphemeralClip(clip.id, coreClipBase);
+  // Use clip prop as fallback when store doesn't have the clip yet (selection race condition)
+  const coreClip = useEphemeralClip(clip.id, coreClipBase ?? clip);
 
   const { updateOne, setStyle, setColors, setVerticalPosition, setFont } = useCaptionUpdate(
     clip.id,
