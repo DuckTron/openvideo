@@ -106,7 +106,7 @@ export default function Editor({
               minSize={15}
               maxSize={40}
               onResize={setToolsPanel}
-              className="max-w-7xl relative overflow-visible! bg-card min-w-[400px]"
+              className="max-w-7xl relative overflow-visible! bg-card min-w-[450px]"
             >
               <MediaPanel />
               <FloatingControl />

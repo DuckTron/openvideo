@@ -11,6 +11,10 @@ export interface ProjectFile {
   createdAt: string;
   updatedAt: string;
   indexingStatus?: "pending" | "processing" | "completed" | "failed" | null;
+  indexingProgress?: number | null;
+  indexingStage?: string | null;
+  indexingError?: string | null;
+  uploadProgress?: number | null;
 }
 
 interface AssetsState {
@@ -36,7 +40,21 @@ export const useAssetsStore = create<AssetsState>((set, get) => ({
   isLoading: false,
   isUploading: false,
 
-  setFiles: (files) => set({ files }),
+  setFiles: (files) =>
+    set((state) => {
+      // Preserve temp placeholders AND any real files that are mid-upload.
+      // Without this, the 2-second polling refresh would overwrite the
+      // in-memory uploadProgress state with the DB version (which has none).
+      const inFlightIds = new Set(
+        state.files
+          .filter((f) => f.id.startsWith("temp_") || f.uploadProgress != null)
+          .map((f) => f.id),
+      );
+      const inFlightFiles = state.files.filter((f) => inFlightIds.has(f.id));
+      // Merge: DB files first (excluding in-flight), then in-flight files on top
+      const dbFiles = files.filter((f) => !inFlightIds.has(f.id));
+      return { files: [...dbFiles, ...inFlightFiles] };
+    }),
 
   addFiles: (newFiles) =>
     set((state) => ({
