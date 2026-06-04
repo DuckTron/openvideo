@@ -7,6 +7,7 @@ import CanvasTimeline from "./items/timeline";
 import { useStudioStore } from "@/stores/studio-store";
 import { projectStore, core } from "@/lib/project";
 import Playhead from "./playhead";
+import { useEditorHotkeys } from "@/hooks/use-editor-hotkeys";
 import {
   Audio,
   Image,
@@ -65,6 +66,18 @@ const Timeline = () => {
   const onMouseOut = () => {};
 
   const [timeline, setTimeline] = useState<CanvasTimeline | null>(null);
+
+  // Keyboard shortcuts
+  useEditorHotkeys({
+    timelineCanvas: timeline,
+    setZoomLevel: (zoomLevel) => {
+      if (typeof zoomLevel === "function") {
+        setScale((prev) => ({ ...prev, zoom: zoomLevel(prev.zoom) }));
+      } else {
+        setScale((prev) => ({ ...prev, zoom: zoomLevel }));
+      }
+    },
+  });
   useEffect(() => {
     const position = timeUsToUnits(currentTimeUs, scale.zoom);
     const canvasEl = canvasElRef.current;

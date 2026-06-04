@@ -530,9 +530,29 @@ export class SelectionManager {
         rafId = null;
         this.syncSelectedClipsTransformsRealtime();
 
-        // Emit for real-time sync to Core/UI
+        // Emit for real-time sync to Core/UI with computed transform values
         for (const clip of this.selectedClips) {
-          this.studio.emit("clip:transforming", { clip });
+          const renderer = this.studio.spriteRenderers.get(clip);
+          if (!renderer) continue;
+          const root = renderer.getRoot();
+          if (!root) continue;
+
+          // Compute current ephemeral transform values from Pixi root
+          const flipFactor = clip.flip?.x || clip.flip?.y ? -1 : 1;
+          const ephemeralAngle = flipFactor * root.angle;
+
+          this.studio.emit("clip:transforming", {
+            clip,
+            ephemeral: {
+              left: clip.left,
+              top: clip.top,
+              width: clip.width,
+              height: clip.height,
+              angle: ephemeralAngle,
+              scaleX: root.scale.x,
+              scaleY: root.scale.y,
+            },
+          });
         }
 
         // Force render for real-time visual feedback
@@ -677,6 +697,8 @@ export class SelectionManager {
         const logicalHeight = Math.abs(root.scale.y * sprite.scale.y) * logicalTexH;
         clip.left = root.x - logicalWidth / 2;
         clip.top = root.y - logicalHeight / 2;
+        // Note: ephemeral transform values (including angle) are computed and passed
+        // in the clip:transforming event, not stored on the clip object to avoid feedback loops
       }
       return;
     }

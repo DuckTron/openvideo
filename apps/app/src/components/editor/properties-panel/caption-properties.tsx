@@ -57,7 +57,8 @@ interface CaptionPropertiesProps {
 
 export function CaptionProperties({ clip }: CaptionPropertiesProps) {
   const coreClipBase = useStore(projectStore, (s) => s.clips[clip.id]) as any;
-  const coreClip = useEphemeralClip(clip.id, coreClipBase);
+  // Use clip prop as fallback when store doesn't have the clip yet (selection race condition)
+  const coreClip = useEphemeralClip(clip.id, coreClipBase ?? clip);
 
   const { updateOne, setStyle, setColors, setVerticalPosition, setFont } = useCaptionUpdate(
     clip.id,
@@ -383,7 +384,9 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconCircle className="size-4 text-muted-foreground" />
           <Slider
-            value={[Math.round((coreClip.opacity ?? 1) * 100)]}
+            value={[
+              Math.round((Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100),
+            ]}
             onValueChange={(v) => updateOne({ opacity: v[0] / 100 })}
             max={100}
             step={1}
@@ -392,7 +395,9 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
           <InputGroup className="w-20">
             <InputGroupInput
               type="number"
-              value={Math.round((coreClip.opacity ?? 1) * 100)}
+              value={Math.round(
+                (Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100,
+              )}
               onChange={(e) => updateOne({ opacity: (parseInt(e.target.value) || 0) / 100 })}
               className="text-sm p-0 text-center"
             />

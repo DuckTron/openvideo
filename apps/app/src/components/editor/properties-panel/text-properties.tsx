@@ -120,7 +120,8 @@ interface TextPropertiesProps {
 
 export function TextProperties({ clip }: TextPropertiesProps) {
   const coreClipBase = useStore(projectStore, (s) => s.clips[clip.id]);
-  const coreClip = useEphemeralClip(clip.id, coreClipBase) as any;
+  // Use clip prop as fallback when store doesn't have the clip yet (selection race condition)
+  const coreClip = useEphemeralClip(clip.id, coreClipBase ?? clip) as any;
 
   if (!coreClip) return null;
 
@@ -468,7 +469,9 @@ export function TextProperties({ clip }: TextPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconCircle className="size-4 text-muted-foreground" />
           <Slider
-            value={[Math.round((coreClip.opacity ?? 1) * 100)]}
+            value={[
+              Math.round((Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100),
+            ]}
             onValueChange={(v) => handleUpdate({ opacity: v[0] / 100 })}
             max={100}
             step={1}
@@ -476,7 +479,9 @@ export function TextProperties({ clip }: TextPropertiesProps) {
           />
           <InputGroup className="w-20">
             <NumberInput
-              value={Math.round((coreClip.opacity ?? 1) * 100)}
+              value={Math.round(
+                (Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100,
+              )}
               onChange={(val) => handleUpdate({ opacity: val / 100 })}
               className="p-0 text-center"
             />
