@@ -4,6 +4,10 @@ import { useStore } from "zustand";
 import { projectStore, core } from "@/lib/project";
 import { useStudioStore } from "@/stores/studio-store";
 import CanvasTimeline from "@/components/editor/timeline/items/timeline";
+import { nanoid, AnyClip } from "@openvideo/core";
+
+// Module-level clipboard for copy/paste - persists across renders
+let clipboardClips: AnyClip[] = [];
 
 interface UseEditorHotkeysProps {
   timelineCanvas: CanvasTimeline | null;
@@ -48,15 +52,77 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       projectStore.getState().select(Object.keys(clips));
     });
 
-    // Copy / Paste / Cut
+    // Copy
     hotkeys("command+c, ctrl+c", (event) => {
-      // Future: Implement Core-level clipboard
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      event.preventDefault();
+      const { clips, selectedIds } = projectStore.getState();
+      if (selectedIds.length === 0) return;
+
+      // Store copies of selected clips
+      clipboardClips = selectedIds
+        .map((id) => clips[id])
+        .filter(Boolean)
+        .map((clip) => JSON.parse(JSON.stringify(clip)));
     });
 
+    // Cut
+    hotkeys("command+x, ctrl+x", (event) => {
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      event.preventDefault();
+      const { clips, selectedIds } = projectStore.getState();
+      if (selectedIds.length === 0) return;
+
+      // Store copies then delete
+      clipboardClips = selectedIds
+        .map((id) => clips[id])
+        .filter(Boolean)
+        .map((clip) => JSON.parse(JSON.stringify(clip)));
+
+      core.clip.remove(selectedIds);
+    });
+
+    // Paste
     hotkeys("command+v, ctrl+v", (event) => {
-      if (studio) {
-        studio.duplicateSelected();
-      }
+      const activeTag = document.activeElement?.tagName.toLowerCase();
+      if (activeTag === "input" || activeTag === "textarea") return;
+
+      event.preventDefault();
+      if (clipboardClips.length === 0) return;
+
+      const currentTime = core.store.getState().currentTime;
+
+      // Calculate the earliest start time among clipboard clips to maintain relative offsets
+      const earliestFrom = Math.min(...clipboardClips.map((c) => c.timing?.display?.from ?? 0));
+
+      // Create new clips at current time with relative offsets preserved
+      const newClips = clipboardClips.map((clip) => {
+        const offsetFromStart = (clip.timing?.display?.from ?? 0) - earliestFrom;
+        const newFrom = currentTime + offsetFromStart;
+        const duration = clip.timing?.duration ?? 0;
+
+        return {
+          ...clip,
+          id: nanoid(),
+          timing: {
+            ...clip.timing,
+            display: {
+              ...clip.timing?.display,
+              from: newFrom,
+              to: newFrom + duration,
+            },
+          },
+        };
+      });
+
+      // Add all clips and select the new ones
+      Promise.all(newClips.map((clip) => core.clip.add(clip as AnyClip))).then(() => {
+        projectStore.getState().select(newClips.map((c) => c.id));
+      });
     });
 
     // Zoom In
@@ -138,6 +204,7 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       hotkeys.unbind("backspace, delete");
       hotkeys.unbind("command+a, ctrl+a");
       hotkeys.unbind("command+c, ctrl+c");
+      hotkeys.unbind("command+x, ctrl+x");
       hotkeys.unbind("command+v, ctrl+v");
       hotkeys.unbind("command+=, ctrl+=");
       hotkeys.unbind("command+-, ctrl+-");
