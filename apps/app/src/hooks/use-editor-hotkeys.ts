@@ -5,9 +5,6 @@ import { projectStore, core } from "@/lib/project";
 import CanvasTimeline from "@/components/editor/timeline/items/timeline";
 import { nanoid, AnyClip } from "@openvideo/core";
 
-// Module-level clipboard for copy/paste - persists across renders
-let clipboardClips: AnyClip[] = [];
-
 interface UseEditorHotkeysProps {
   timelineCanvas: CanvasTimeline | null;
   setZoomLevel?: (zoomLevel: number | ((prev: number) => number)) => void;
@@ -59,11 +56,12 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       const { clips, selectedIds } = projectStore.getState();
       if (selectedIds.length === 0) return;
 
-      // Store copies of selected clips
-      clipboardClips = selectedIds
+      // Store copies of selected clips in core store clipboard
+      const items = selectedIds
         .map((id) => clips[id])
         .filter(Boolean)
         .map((clip) => JSON.parse(JSON.stringify(clip)));
+      projectStore.getState().setClipboard(items);
     });
 
     // Cut
@@ -76,10 +74,11 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       if (selectedIds.length === 0) return;
 
       // Store copies then delete
-      clipboardClips = selectedIds
+      const items = selectedIds
         .map((id) => clips[id])
         .filter(Boolean)
         .map((clip) => JSON.parse(JSON.stringify(clip)));
+      projectStore.getState().setClipboard(items);
 
       core.clip.remove(selectedIds);
     });
@@ -90,15 +89,16 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       if (activeTag === "input" || activeTag === "textarea") return;
 
       event.preventDefault();
-      if (clipboardClips.length === 0) return;
+      const clipboard = projectStore.getState().clipboard;
+      if (clipboard.length === 0) return;
 
       const currentTime = core.store.getState().currentTime;
 
       // Calculate the earliest start time among clipboard clips to maintain relative offsets
-      const earliestFrom = Math.min(...clipboardClips.map((c) => c.timing?.display?.from ?? 0));
+      const earliestFrom = Math.min(...clipboard.map((c: AnyClip) => c.timing?.display?.from ?? 0));
 
       // Create new clips at current time with relative offsets preserved
-      const newClips = clipboardClips.map((clip) => {
+      const newClips = clipboard.map((clip: AnyClip) => {
         const offsetFromStart = (clip.timing?.display?.from ?? 0) - earliestFrom;
         const newFrom = currentTime + offsetFromStart;
         const duration = clip.timing?.duration ?? 0;
@@ -118,8 +118,8 @@ export function useEditorHotkeys({ timelineCanvas, setZoomLevel }: UseEditorHotk
       });
 
       // Add all clips and select the new ones
-      Promise.all(newClips.map((clip) => core.clip.add(clip as AnyClip))).then(() => {
-        projectStore.getState().select(newClips.map((c) => c.id));
+      Promise.all(newClips.map((clip: AnyClip) => core.clip.add(clip))).then(() => {
+        projectStore.getState().select(newClips.map((c: AnyClip) => c.id));
       });
     });
 

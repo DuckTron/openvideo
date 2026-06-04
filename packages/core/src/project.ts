@@ -15,6 +15,7 @@ export interface ProjectState extends IProject {
   speed: number;
   history: HistoryEntry[];
   future: HistoryEntry[]; // for redo
+  clipboard: AnyClip[]; // For copy/paste between timeline and studio
 }
 
 export interface ProjectActions {
@@ -52,6 +53,10 @@ export interface ProjectActions {
   applyPatch: (patches: Patch[]) => void;
   /** Return a plain serializable snapshot of the project (settings, tracks, clips). */
   getSnapshot: () => IProject;
+
+  // Clipboard
+  setClipboard: (clips: AnyClip[]) => void;
+  clearClipboard: () => void;
 }
 
 export type ProjectStore = ProjectState & ProjectActions;
@@ -89,6 +94,11 @@ export const createProjectStore = (initialState?: Partial<IProject>) => {
     },
     history: [],
     future: [],
+    clipboard: [],
+
+    // --- CLIPBOARD ---
+    setClipboard: (clips) => set({ clipboard: clips }),
+    clearClipboard: () => set({ clipboard: [] }),
 
     // --- COMMAND SYSTEM ---
 
