@@ -126,6 +126,16 @@ export function TextProperties({ clip }: TextPropertiesProps) {
   if (!coreClip) return null;
 
   const style = coreClip.style || {};
+  const transform = coreClip.transform || {};
+
+  // Handle both cases: ephemeral updates have top-level props (left, top, etc.)
+  // and stored clips have nested transform props (transform.x, transform.y, etc.)
+  const getX = () => coreClip.left ?? transform.x ?? 0;
+  const getY = () => coreClip.top ?? transform.y ?? 0;
+  const getWidth = () => coreClip.width ?? transform.width ?? 0;
+  const getHeight = () => coreClip.height ?? transform.height ?? 0;
+  const getAngle = () => coreClip.angle ?? transform.angle ?? 0;
+  const getOpacity = () => coreClip.opacity ?? transform.opacity ?? 1;
 
   const handleUpdate = (updates: any) => {
     core.clip.update(clip.id, updates);
@@ -243,8 +253,8 @@ export function TextProperties({ clip }: TextPropertiesProps) {
               <span className="text-[10px] font-medium text-muted-foreground">X</span>
             </InputGroupAddon>
             <NumberInput
-              value={Math.round(coreClip.left || 0)}
-              onChange={(val) => handleUpdate({ left: val })}
+              value={Math.round(getX())}
+              onChange={(val) => handleUpdate({ transform: { ...transform, x: val } })}
               className="p-0"
             />
           </InputGroup>
@@ -253,8 +263,8 @@ export function TextProperties({ clip }: TextPropertiesProps) {
               <span className="text-[10px] font-medium text-muted-foreground">Y</span>
             </InputGroupAddon>
             <NumberInput
-              value={Math.round(coreClip.top || 0)}
-              onChange={(val) => handleUpdate({ top: val })}
+              value={Math.round(getY())}
+              onChange={(val) => handleUpdate({ transform: { ...transform, y: val } })}
               className="p-0"
             />
           </InputGroup>
@@ -265,8 +275,8 @@ export function TextProperties({ clip }: TextPropertiesProps) {
               <span className="text-[10px] font-medium text-muted-foreground">W</span>
             </InputGroupAddon>
             <NumberInput
-              value={Math.round(coreClip.width || 0)}
-              onChange={(val) => handleUpdate({ width: val })}
+              value={Math.round(getWidth())}
+              onChange={(val) => handleUpdate({ transform: { ...transform, width: val } })}
               className="p-0"
             />
           </InputGroup>
@@ -275,8 +285,8 @@ export function TextProperties({ clip }: TextPropertiesProps) {
               <span className="text-[10px] font-medium text-muted-foreground">H</span>
             </InputGroupAddon>
             <NumberInput
-              value={Math.round(coreClip.height || 0)}
-              onChange={(val) => handleUpdate({ height: val })}
+              value={Math.round(getHeight())}
+              onChange={(val) => handleUpdate({ transform: { ...transform, height: val } })}
               className="p-0"
             />
           </InputGroup>
@@ -291,16 +301,16 @@ export function TextProperties({ clip }: TextPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconRotate className="size-4 text-muted-foreground" />
           <Slider
-            value={[Math.round(coreClip.angle ?? 0)]}
-            onValueChange={(v) => handleUpdate({ angle: v[0] })}
+            value={[Math.round(getAngle())]}
+            onValueChange={(v) => handleUpdate({ transform: { ...transform, angle: v[0] } })}
             max={360}
             step={1}
             className="flex-1"
           />
           <InputGroup className="w-20">
             <NumberInput
-              value={Math.round(coreClip.angle ?? 0)}
-              onChange={(val) => handleUpdate({ angle: val })}
+              value={Math.round(getAngle())}
+              onChange={(val) => handleUpdate({ transform: { ...transform, angle: val } })}
               className="p-0 text-center"
             />
             <InputGroupAddon align="inline-end" className="p-0 pr-2">
@@ -469,20 +479,18 @@ export function TextProperties({ clip }: TextPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconCircle className="size-4 text-muted-foreground" />
           <Slider
-            value={[
-              Math.round((Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100),
-            ]}
-            onValueChange={(v) => handleUpdate({ opacity: v[0] / 100 })}
+            value={[Math.round(getOpacity() * 100)]}
+            onValueChange={(v) =>
+              handleUpdate({ transform: { ...transform, opacity: v[0] / 100 } })
+            }
             max={100}
             step={1}
             className="flex-1"
           />
           <InputGroup className="w-20">
             <NumberInput
-              value={Math.round(
-                (Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100,
-              )}
-              onChange={(val) => handleUpdate({ opacity: val / 100 })}
+              value={Math.round(getOpacity() * 100)}
+              onChange={(val) => handleUpdate({ transform: { ...transform, opacity: val / 100 } })}
               className="p-0 text-center"
             />
             <InputGroupAddon align="inline-end" className="p-0 pr-2">

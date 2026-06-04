@@ -69,6 +69,16 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
   if (!coreClip) return null;
 
   const opts = coreClip.style || {};
+  const transform = coreClip.transform || {};
+
+  // Handle both cases: ephemeral updates have top-level props (left, top, etc.)
+  // and stored clips have nested transform props (transform.x, transform.y, etc.)
+  const getX = () => coreClip.left ?? transform.x ?? 0;
+  const getY = () => coreClip.top ?? transform.y ?? 0;
+  const getWidth = () => coreClip.width ?? transform.width ?? 0;
+  const getHeight = () => coreClip.height ?? transform.height ?? 0;
+  const getAngle = () => coreClip.angle ?? transform.angle ?? 0;
+  const getOpacity = () => coreClip.opacity ?? transform.opacity ?? 1;
   const captionColors = (coreClip as any)?.caption?.colors ?? {
     appeared: "#ffffff",
     active: "#ffffff",
@@ -146,8 +156,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
             </InputGroupAddon>
             <InputGroupInput
               type="number"
-              value={Math.round(coreClip.left || 0)}
-              onChange={(e) => updateOne({ left: parseInt(e.target.value) || 0 })}
+              value={Math.round(getX())}
+              onChange={(e) =>
+                updateOne({ transform: { ...transform, x: parseInt(e.target.value) || 0 } })
+              }
               className="text-sm p-0"
             />
           </InputGroup>
@@ -157,8 +169,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
             </InputGroupAddon>
             <InputGroupInput
               type="number"
-              value={Math.round(coreClip.top || 0)}
-              onChange={(e) => updateOne({ top: parseInt(e.target.value) || 0 })}
+              value={Math.round(getY())}
+              onChange={(e) =>
+                updateOne({ transform: { ...transform, y: parseInt(e.target.value) || 0 } })
+              }
               className="text-sm p-0"
             />
           </InputGroup>
@@ -170,8 +184,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
             </InputGroupAddon>
             <InputGroupInput
               type="number"
-              value={Math.round(coreClip.width || 0)}
-              onChange={(e) => updateOne({ width: parseInt(e.target.value) || 0 })}
+              value={Math.round(getWidth())}
+              onChange={(e) =>
+                updateOne({ transform: { ...transform, width: parseInt(e.target.value) || 0 } })
+              }
               className="text-sm p-0"
             />
           </InputGroup>
@@ -181,8 +197,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
             </InputGroupAddon>
             <InputGroupInput
               type="number"
-              value={Math.round(coreClip.height || 0)}
-              onChange={(e) => updateOne({ height: parseInt(e.target.value) || 0 })}
+              value={Math.round(getHeight())}
+              onChange={(e) =>
+                updateOne({ transform: { ...transform, height: parseInt(e.target.value) || 0 } })
+              }
               className="text-sm p-0"
             />
           </InputGroup>
@@ -244,8 +262,8 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconRotate className="size-4 text-muted-foreground" />
           <Slider
-            value={[Math.round(coreClip.angle ?? 0)]}
-            onValueChange={(v) => updateOne({ angle: v[0] })}
+            value={[Math.round(getAngle())]}
+            onValueChange={(v) => updateOne({ transform: { ...transform, angle: v[0] } })}
             max={360}
             step={1}
             className="flex-1"
@@ -253,8 +271,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
           <InputGroup className="w-20">
             <InputGroupInput
               type="number"
-              value={Math.round(coreClip.angle ?? 0)}
-              onChange={(e) => updateOne({ angle: parseInt(e.target.value) || 0 })}
+              value={Math.round(getAngle())}
+              onChange={(e) =>
+                updateOne({ transform: { ...transform, angle: parseInt(e.target.value) || 0 } })
+              }
               className="text-sm p-0 text-center"
             />
             <InputGroupAddon align="inline-end" className="p-0 pr-2">
@@ -384,10 +404,8 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
         <div className="flex items-center gap-4">
           <IconCircle className="size-4 text-muted-foreground" />
           <Slider
-            value={[
-              Math.round((Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100),
-            ]}
-            onValueChange={(v) => updateOne({ opacity: v[0] / 100 })}
+            value={[Math.round(getOpacity() * 100)]}
+            onValueChange={(v) => updateOne({ transform: { ...transform, opacity: v[0] / 100 } })}
             max={100}
             step={1}
             className="flex-1"
@@ -395,10 +413,12 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
           <InputGroup className="w-20">
             <InputGroupInput
               type="number"
-              value={Math.round(
-                (Number(coreClip.transform?.opacity ?? coreClip.opacity) || 1) * 100,
-              )}
-              onChange={(e) => updateOne({ opacity: (parseInt(e.target.value) || 0) / 100 })}
+              value={Math.round(getOpacity() * 100)}
+              onChange={(e) =>
+                updateOne({
+                  transform: { ...transform, opacity: (parseInt(e.target.value) || 0) / 100 },
+                })
+              }
               className="text-sm p-0 text-center"
             />
             <InputGroupAddon align="inline-end" className="p-0 pr-2">
