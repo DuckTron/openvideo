@@ -11,6 +11,7 @@ import { core } from "@/lib/project";
 import { editorFont } from "./constants";
 import { CUSTOM_TRANSITIONS } from "./transition-custom";
 import { CUSTOM_EFFECTS } from "./effect-custom";
+import { useStudioContextMenu, StudioContextMenuProvider } from "./studio-canvas-context-menu";
 
 const STUDIO_CONFIG = {
   fps: 30,
@@ -37,6 +38,8 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
   useEffect(() => {
     onReadyRef.current = onReady;
   }, [onReady]);
+
+  const { state: contextMenuState, openContextMenu, closeContextMenu } = useStudioContextMenu();
 
   // Handle dimension changes
   useEffect(() => {
@@ -104,6 +107,22 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
       resizeObserver.observe(parentElement);
     }
 
+    // Handle right-click for context menu
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const selectedIds = core.store.getState().selectedIds;
+      const hasSelection = selectedIds.length > 0;
+
+      // Check if clicking on a selected object vs background
+      // For now, we'll show object menu if there's a selection
+      openContextMenu({ x: e.clientX, y: e.clientY }, hasSelection ? "object" : "background");
+    };
+
+    parentElement?.addEventListener("contextmenu", handleContextMenu, { capture: true });
+    console.log("Studio context menu listener attached to:", parentElement);
+
     // Cleanup function
     return () => {
       // Disconnect ResizeObserver
@@ -111,6 +130,9 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
         resizeObserver.unobserve(parentElement);
         resizeObserver.disconnect();
       }
+
+      // Remove context menu listener
+      parentElement?.removeEventListener("contextmenu", handleContextMenu, { capture: true });
 
       // Destroy Studio instance
       if (studioRef.current) {
@@ -132,17 +154,19 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-card rounded-sm relative">
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: "block",
-          width: "100%",
-          height: "100%",
-          outline: "none", // Avoid focus outline on canvas click
-        }}
-        tabIndex={0}
-      />
-    </div>
+    <StudioContextMenuProvider state={contextMenuState} onClose={closeContextMenu}>
+      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-card rounded-sm relative">
+        <canvas
+          ref={canvasRef}
+          style={{
+            display: "block",
+            width: "100%",
+            height: "100%",
+            outline: "none", // Avoid focus outline on canvas click
+          }}
+          tabIndex={0}
+        />
+      </div>
+    </StudioContextMenuProvider>
   );
 }

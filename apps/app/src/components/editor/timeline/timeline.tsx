@@ -27,6 +27,7 @@ import { useTimelineOffsetX } from "../hooks/use-timeline-offset";
 import { addStudioSync } from "./studio-to-store-sync";
 import { TIMELINE_SCALE_CHANGED } from "@openvideo/timeline";
 import Effect from "./items/effect";
+import { useTimelineContextMenu, TimelineContextMenuProvider } from "./timeline-context-menu";
 
 CanvasTimeline.registerItems({
   Text,
@@ -66,6 +67,9 @@ const Timeline = () => {
   const onMouseOut = () => {};
 
   const [timeline, setTimeline] = useState<CanvasTimeline | null>(null);
+
+  // Context menu state
+  const { state: contextMenuState, openContextMenu, closeContextMenu } = useTimelineContextMenu();
 
   // Keyboard shortcuts
   useEditorHotkeys({
@@ -237,6 +241,61 @@ const Timeline = () => {
     };
   }, [studio, timeline]);
 
+  // Separate effect for context menu - attach to container to avoid Fabric.js interception
+  useEffect(() => {
+    const container = timelineContainerRef.current;
+    if (!container || !timeline) return;
+
+    const handleContextMenu = (e: MouseEvent) => {
+      // Only handle if clicking on canvas area (not header/ruler)
+      const target = e.target as HTMLElement;
+      if (!target.closest("canvas")) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      console.log("Container context menu triggered at:", e.clientX, e.clientY);
+
+      // Get objects at click position using canvas
+      const pointer = timeline.getScenePoint(e);
+      const trackItems = timeline.itemsManager.getTrackItems();
+
+      // Check if clicking on a track item
+      const clickedItem = trackItems.find((item: any) => {
+        const bounds = item.getBoundingRect();
+        return (
+          pointer.x >= bounds.left &&
+          pointer.x <= bounds.left + bounds.width &&
+          pointer.y >= bounds.top &&
+          pointer.y <= bounds.top + bounds.height
+        );
+      });
+
+      if (clickedItem) {
+        // Select the item if not already selected
+        const itemId = (clickedItem as any).id as string;
+        const selectedIds = projectStore.getState().selectedIds;
+        if (!selectedIds.includes(itemId)) {
+          timeline.setActiveIds([itemId]);
+          projectStore.getState().select([itemId]);
+        }
+
+        openContextMenu({ x: e.clientX, y: e.clientY }, "clip", itemId);
+      } else {
+        // Timeline background context menu
+        openContextMenu({ x: e.clientX, y: e.clientY }, "timeline");
+      }
+    };
+
+    // Attach to container with capture to intercept before anything else
+    container.addEventListener("contextmenu", handleContextMenu, { capture: true });
+    console.log("Context menu listener attached to container:", container);
+
+    return () => {
+      container.removeEventListener("contextmenu", handleContextMenu, { capture: true });
+    };
+  }, [timeline, openContextMenu]);
+
   const onClickRuler = (units: number) => {
     const timeUs = unitsToTimeUs(units, scale.zoom);
     projectStore.getState().seek(timeUs);
@@ -305,32 +364,34 @@ const Timeline = () => {
   }, [scale, timelineContainerRef, scrollLeft, onRulerScroll]);
 
   return (
-    <div
-      ref={timelineContainerRef}
-      id="timeline-container"
-      data-timeline="true"
-      className="flex flex-col relative w-full h-full overflow-hidden bg-card border-t border-transparent"
-      onMouseDown={onMouseDown}
-      onMouseMove={onMouseMove}
-      onMouseOut={onMouseOut}
-    >
-      <Header scale={scale} setScale={setScale} />
-      <Ruler
-        scale={scale}
-        onClick={onClickRuler}
-        scrollLeft={scrollLeft}
-        onScroll={onRulerScroll}
-      />
-      <Playhead scale={scale} scrollLeft={scrollLeft} />
+    <TimelineContextMenuProvider state={contextMenuState} onClose={closeContextMenu}>
+      <div
+        ref={timelineContainerRef}
+        id="timeline-container"
+        data-timeline="true"
+        className="flex flex-col relative w-full h-full overflow-hidden bg-card border-t border-transparent"
+        onMouseDown={onMouseDown}
+        onMouseMove={onMouseMove}
+        onMouseOut={onMouseOut}
+      >
+        <Header scale={scale} setScale={setScale} />
+        <Ruler
+          scale={scale}
+          onClick={onClickRuler}
+          scrollLeft={scrollLeft}
+          onScroll={onRulerScroll}
+        />
+        <Playhead scale={scale} scrollLeft={scrollLeft} />
 
-      {/* Container for Tracks and Canvas */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
-        <div style={{ width: timelineOffsetX }} className="relative flex-none" />
-        <div className="relative flex-1 min-h-0 overflow-hidden">
-          <canvas id="designcombo-timeline-canvas" ref={canvasElRef} />
+        {/* Container for Tracks and Canvas */}
+        <div className="flex flex-1 min-h-0 overflow-hidden">
+          <div style={{ width: timelineOffsetX }} className="relative flex-none" />
+          <div className="relative flex-1 min-h-0 overflow-hidden">
+            <canvas id="designcombo-timeline-canvas" ref={canvasElRef} />
+          </div>
         </div>
       </div>
-    </div>
+    </TimelineContextMenuProvider>
   );
 };
 
