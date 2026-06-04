@@ -2,7 +2,6 @@ import {
   type Application,
   SplitBitmapText,
   TextStyle,
-  type LineJoin,
   RenderTexture,
   Color,
   FillGradient,
@@ -11,6 +10,7 @@ import {
   Graphics,
   CanvasTextMetrics,
 } from "pixi.js";
+import { CartoonTextFilter } from "../filters/cartoon-filter/cartooontextfilter";
 import { Log } from "../utils/log";
 import { BaseClip } from "./base-clip";
 import type { IClip } from "./iclip";
@@ -212,9 +212,6 @@ export class Text extends BaseClip<ITextEvents> {
     });
   }
 
-  private _lastContentWidth = 0;
-  private _lastContentHeight = 0;
-
   private _text: string = "";
 
   /**
@@ -333,6 +330,7 @@ export class Text extends BaseClip<ITextEvents> {
   private textStyle: TextStyle;
   private textStyleBase: TextStyle;
   private renderTexture: RenderTexture | null = null;
+  private cartoonTextFilter: CartoonTextFilter | null = null;
   // External renderer (preferred) - provided via constructor or setRenderer()
   // If not provided, Text will create its own minimal renderer as fallback
   private externalRenderer: Application["renderer"] | null = null;
@@ -753,6 +751,56 @@ export class Text extends BaseClip<ITextEvents> {
       return wordText;
     });
 
+    // Apply CartoonTextFilter for stroke effect
+    const strokeOpt = this.originalOpts.stroke;
+    // Check for width in stroke object or as separate strokeWidth property
+    const strokeWidth =
+      (typeof strokeOpt === "object" && "width" in strokeOpt ? strokeOpt.width : undefined) ??
+      this.originalOpts.strokeWidth ??
+      0;
+    const hasStroke = strokeOpt !== undefined && strokeWidth > 0;
+
+    if (hasStroke) {
+      // Determine stroke color
+      let strokeColor = 0x000000; // default black
+      if (typeof strokeOpt === "object" && "color" in strokeOpt) {
+        const parsed = parseColor(strokeOpt.color);
+        if (parsed !== undefined) strokeColor = parsed;
+      } else if (typeof strokeOpt === "string" || typeof strokeOpt === "number") {
+        const parsed = parseColor(strokeOpt);
+        if (parsed !== undefined) strokeColor = parsed;
+      }
+
+      // Create or update CartoonTextFilter
+      if (this.cartoonTextFilter) {
+        this.cartoonTextFilter.thickness = strokeWidth;
+        // Update border color by accessing uniforms
+        const uniforms = this.cartoonTextFilter.resources.cartoonTextUniforms.uniforms;
+        uniforms.uBorderColor = new Color(strokeColor);
+      } else {
+        this.cartoonTextFilter = new CartoonTextFilter({
+          thickness: strokeWidth,
+          borderColor: strokeColor,
+          // Use text fill color for gradient to maintain text appearance
+          topColor: typeof style.fill === "number" ? style.fill : 0xffffff,
+          bottomColor: typeof style.fill === "number" ? style.fill : 0xffffff,
+        });
+      }
+
+      // Apply filter to all word texts
+      this.wordTexts.forEach((wordText) => {
+        wordText.filters = [this.cartoonTextFilter!];
+      });
+    } else {
+      // Remove filter if no stroke
+      if (this.cartoonTextFilter) {
+        this.wordTexts.forEach((wordText) => {
+          wordText.filters = [];
+        });
+        this.cartoonTextFilter = null;
+      }
+    }
+
     // 4. Calculate Layout (Lines) - mostly following CaptionClip logic
     const decoration = this.originalOpts.textDecoration || (this.originalOpts as any).verticalAlign;
     const lineHeightMultiplier = this.originalOpts.lineHeight ?? 1;
@@ -828,16 +876,13 @@ export class Text extends BaseClip<ITextEvents> {
     }
     const contentHeight = textHeight;
 
-    const isAutoWidth = this.width === 0 || Math.abs(this.width - this._lastContentWidth) < 0.1;
-    const isAutoHeight = this.height === 0 || Math.abs(this.height - this._lastContentHeight) < 0.1;
+    const isAutoWidth = this.width === 0;
+    const isAutoHeight = this.height === 0;
 
     const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, this.width || 0);
     const containerHeight = isAutoHeight
       ? contentHeight
       : Math.max(contentHeight, this.height || 0);
-
-    this._lastContentWidth = contentWidth;
-    this._lastContentHeight = contentHeight;
 
     // 6. Positioning words within the container
     let startY = 0;
@@ -914,13 +959,16 @@ export class Text extends BaseClip<ITextEvents> {
     // The clip bounding box / selection handles are unaffected — they use _width/_height
     // which remain the logical (unpadded) content dimensions.
     const ANIM_PAD = 300;
-    const paddedWidth = containerWidth + ANIM_PAD * 2;
-    const paddedHeight = containerHeight + ANIM_PAD * 2;
+    // Add filter padding to prevent stroke from being cropped in the render texture
+    const filterPadding = strokeWidth > 0 ? strokeWidth * 2.1 : 0;
+    const totalPad = ANIM_PAD + filterPadding;
+    const paddedWidth = containerWidth + totalPad * 2;
+    const paddedHeight = containerHeight + totalPad * 2;
 
     // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
     if (this.pixiTextContainer) {
-      this.pixiTextContainer.x = ANIM_PAD;
-      this.pixiTextContainer.y = ANIM_PAD;
+      this.pixiTextContainer.x = totalPad;
+      this.pixiTextContainer.y = totalPad;
     }
 
     // Reuse or resize render texture efficiently
@@ -933,7 +981,7 @@ export class Text extends BaseClip<ITextEvents> {
     });
 
     // Store the padding so PixiSpriteRenderer can compensate the sprite anchor offset
-    this.renderTexturePadding = ANIM_PAD;
+    this.renderTexturePadding = totalPad;
 
     // Update clip dimensions — these are the LOGICAL (unpadded) dimensions used for
     // selection handles, layout, and transforms. Do NOT use paddedWidth/Height here.
@@ -992,30 +1040,8 @@ export class Text extends BaseClip<ITextEvents> {
       }
     }
 
-    // Handle stroke - can be color or advanced stroke object
-    if (opts.stroke && typeof opts.stroke === "object" && "color" in opts.stroke) {
-      // Advanced stroke object
-      const strokeColor = parseColor(opts.stroke.color);
-      if (strokeColor !== undefined) {
-        styleOptions.stroke = {
-          color: strokeColor,
-          width: opts.stroke.width,
-          join: opts.stroke.join as LineJoin,
-          cap: opts.stroke.cap,
-          miterLimit: opts.stroke.miterLimit,
-        };
-      }
-    } else {
-      // Simple stroke color
-      const strokeColor = parseColor(opts.stroke);
-      const strokeWidth = opts.strokeWidth ?? 0;
-      if (strokeColor !== undefined && strokeWidth > 0) {
-        styleOptions.stroke = { color: strokeColor, width: strokeWidth };
-      } else if (opts.strokeWidth && opts.strokeWidth > 0) {
-        // If strokeWidth is provided but no color, use black as default
-        styleOptions.stroke = { color: 0x000000, width: opts.strokeWidth };
-      }
-    }
+    // Handle stroke - using CartoonTextFilter instead of native PixiJS stroke
+    // Native stroke is skipped here; filter is applied in refreshText()
 
     // Only add dropShadow if provided
     if (opts.shadow) {
