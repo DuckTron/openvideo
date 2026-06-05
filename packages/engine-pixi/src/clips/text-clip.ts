@@ -10,7 +10,7 @@ import {
   Graphics,
   CanvasTextMetrics,
 } from "pixi.js";
-import { OutlineFilter } from "../filters/cartoon-filter/outline-filter";
+import { OutlineFilter } from "../filters/outline-filter";
 import { DropShadowFilter } from "pixi-filters";
 import { Log } from "../utils/log";
 import { BaseClip } from "./base-clip";
