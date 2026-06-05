@@ -11,6 +11,7 @@ import {
   CanvasTextMetrics,
 } from "pixi.js";
 import { OutlineFilter } from "../filters/cartoon-filter/outline-filter";
+import { DropShadowFilter } from "pixi-filters";
 import { Log } from "../utils/log";
 import { BaseClip } from "./base-clip";
 import type { IClip } from "./iclip";
@@ -331,6 +332,7 @@ export class Text extends BaseClip<ITextEvents> {
   private textStyleBase: TextStyle;
   private renderTexture: RenderTexture | null = null;
   private outlineFilter: OutlineFilter | null = null;
+  private dropShadowFilter: DropShadowFilter | null = null;
   // External renderer (preferred) - provided via constructor or setRenderer()
   // If not provided, Text will create its own minimal renderer as fallback
   private externalRenderer: Application["renderer"] | null = null;
@@ -734,18 +736,16 @@ export class Text extends BaseClip<ITextEvents> {
 
     // Split text into words for SplitBitmapText
     const words = textToRender.split(/\s+/).filter((v) => v.length > 0);
-    let distanceDropShadow = 0;
 
-    if (this.textStyle.dropShadow) {
-      distanceDropShadow = this.textStyle.dropShadow.distance;
-    }
+    // Use textStyle for words (includes fill color), shadow handled separately via DropShadowFilter
+    const styleForWords = this.textStyle;
 
     // Cleanup old word texts
     this.wordTexts.forEach((w) => w.destroy());
     this.wordTexts = words.map((wordStr) => {
       const wordText = new SplitBitmapText({
         text: wordStr,
-        style: this.textStyle,
+        style: styleForWords,
       });
       this.pixiTextContainer!.addChild(wordText);
       return wordText;
@@ -795,6 +795,40 @@ export class Text extends BaseClip<ITextEvents> {
           wordText.filters = [];
         });
         this.outlineFilter = null;
+      }
+    }
+
+    // Apply DropShadowFilter to container (not individual words) to avoid conflicts with OutlineFilter
+    const shadowOpt = this.originalOpts.shadow;
+    if (shadowOpt) {
+      const offsetX = shadowOpt.offsetX ?? 0;
+      const offsetY = shadowOpt.offsetY ?? 0;
+      const shadowColor = parseColor(shadowOpt.color ?? "#000000");
+      const shadowAlpha = shadowOpt.alpha ?? 0.5;
+      const shadowBlur = shadowOpt.blur ?? 4;
+
+      if (shadowColor !== undefined) {
+        if (this.dropShadowFilter) {
+          this.dropShadowFilter.color = shadowColor;
+          this.dropShadowFilter.alpha = shadowAlpha;
+          this.dropShadowFilter.blur = shadowBlur;
+          this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
+        } else {
+          this.dropShadowFilter = new DropShadowFilter({
+            color: shadowColor,
+            alpha: shadowAlpha,
+            blur: shadowBlur,
+            offset: { x: offsetX, y: offsetY },
+          });
+        }
+
+        this.pixiTextContainer.filters = [this.dropShadowFilter];
+      }
+    } else {
+      // Remove shadow filter if no shadow
+      if (this.dropShadowFilter) {
+        this.pixiTextContainer.filters = [];
+        this.dropShadowFilter = null;
       }
     }
 
@@ -907,7 +941,7 @@ export class Text extends BaseClip<ITextEvents> {
 
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
-        wordText.y = Math.round(currentY - distanceDropShadow);
+        wordText.y = Math.round(currentY);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
@@ -958,7 +992,17 @@ export class Text extends BaseClip<ITextEvents> {
     const ANIM_PAD = 300;
     // Add filter padding to prevent stroke from being cropped in the render texture
     const filterPadding = strokeWidth > 0 ? strokeWidth * 2.1 : 0;
-    const totalPad = ANIM_PAD + filterPadding;
+    // Add shadow padding to prevent shadow blur from being cropped
+    let shadowPadding = 0;
+    if (this.dropShadowFilter) {
+      const shadowBlur = this.dropShadowFilter.blur ?? 0;
+      const shadowOffset = this.dropShadowFilter.offset;
+      const shadowDistance = shadowOffset
+        ? Math.sqrt(shadowOffset.x ** 2 + shadowOffset.y ** 2)
+        : 0;
+      shadowPadding = shadowBlur + shadowDistance;
+    }
+    const totalPad = ANIM_PAD + filterPadding + shadowPadding;
     const paddedWidth = containerWidth + totalPad * 2;
     const paddedHeight = containerHeight + totalPad * 2;
 
@@ -1040,21 +1084,8 @@ export class Text extends BaseClip<ITextEvents> {
     // Handle stroke - using OutlineFilter instead of native PixiJS stroke
     // Native stroke is skipped here; filter is applied in refreshText()
 
-    // Add dropShadow if provided (using native PixiJS dropShadow)
-    if (opts.shadow) {
-      const shadowColor = parseColor(opts.shadow.color);
-      if (shadowColor !== undefined) {
-        const dx = opts.shadow.offsetX ?? 0;
-        const dy = opts.shadow.offsetY ?? 0;
-        styleOptions.dropShadow = {
-          color: shadowColor,
-          alpha: opts.shadow.alpha ?? 0.5,
-          blur: opts.shadow.blur ?? 4,
-          angle: Math.atan2(dy, dx),
-          distance: Math.sqrt(dx * dx + dy * dy),
-        };
-      }
-    }
+    // Shadow is handled via DropShadowFilter on container, not TextStyle
+    // This prevents bounding box issues with native TextStyle shadow
 
     return styleOptions;
   }

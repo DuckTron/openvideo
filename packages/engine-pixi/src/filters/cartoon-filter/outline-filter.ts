@@ -17,15 +17,15 @@ const float PI = 3.14159265359;
 float getOutlineAlpha(vec2 pos) {
     vec2 thickness = vec2(uThickness) / uInputSize.xy;
     float maxAlpha = 0.0;
-    
-    // Sample 8 directions for outline
-    for (int i = 0; i < 8; i++) {
-        float angle = float(i) * (PI * 0.25);
+
+    // Sample 16 directions for smoother outline
+    for (int i = 0; i < 16; i++) {
+        float angle = float(i) * (PI * 0.125);
         vec2 offset = thickness * vec2(cos(angle), sin(angle));
         vec4 sample = texture(uTexture, clamp(pos + offset, uInputClamp.xy, uInputClamp.zw));
         maxAlpha = max(maxAlpha, sample.a);
     }
-    
+
     return maxAlpha;
 }
 
@@ -106,15 +106,15 @@ const PI: f32 = 3.14159265359;
 fn getOutlineAlpha(pos: vec2<f32>) -> f32 {
     let thickness = vec2<f32>(outlineUniforms.uThickness) / gfu.uInputSize.xy;
     var maxAlpha: f32 = 0.0;
-    
-    // Sample 8 directions for outline
-    for (var i: i32 = 0; i < 8; i++) {
-        let angle = f32(i) * (PI * 0.25);
+
+    // Sample 16 directions for smoother outline
+    for (var i: i32 = 0; i < 16; i++) {
+        let angle = f32(i) * (PI * 0.125);
         let offset = thickness * vec2<f32>(cos(angle), sin(angle));
         let sample = textureSample(uTexture, uSampler, clamp(pos + offset, gfu.uInputClamp.xy, gfu.uInputClamp.zw));
         maxAlpha = max(maxAlpha, sample.a);
     }
-    
+
     return maxAlpha;
 }
 
