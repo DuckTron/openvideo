@@ -49,22 +49,26 @@ src/
 ### Installation
 
 1. Clone the repository and navigate to the indexer directory:
+
 ```bash
 cd apps/indexer-modal
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Configure environment variables:
+
 ```bash
 cp .env.example .env
 # Edit .env with your API keys and database URL
 ```
 
 4. Set up Modal secrets:
+
 ```bash
 modal secret create openvideo-db DATABASE_URL=your_database_url
 modal secret create openvideo-ai GOOGLE_API_KEY=your_google_api_key
@@ -115,6 +119,7 @@ print(status)
 ### `index_asset(asset_id: str)`
 
 Indexes a single asset and returns:
+
 ```json
 {
   "success": true,
@@ -127,6 +132,7 @@ Indexes a single asset and returns:
 ### `index_bulk_assets(space_id: str, asset_ids: list[str])`
 
 Indexes multiple assets in parallel and returns:
+
 ```json
 {
   "space_id": "space-id",
@@ -141,6 +147,7 @@ Indexes multiple assets in parallel and returns:
 ### `get_indexing_status(asset_id: str)`
 
 Returns current indexing status:
+
 ```json
 {
   "asset_id": "asset-id",
@@ -154,6 +161,7 @@ Returns current indexing status:
 ### `health_check()`
 
 Returns service health status:
+
 ```json
 {
   "status": "healthy",
@@ -184,19 +192,25 @@ Returns service health status:
 ## SOLID Principles Implementation
 
 ### Single Responsibility Principle
+
 Each class has one responsibility:
+
 - `VideoDownloader`: Only downloads assets
 - `SceneDetector`: Only detects scenes
 - `AudioTranscriber`: Only transcribes audio
 - etc.
 
 ### Open/Closed Principle
+
 Interfaces are closed for modification but open for extension:
+
 - New transcription providers can implement `AudioTranscriber`
 - New vision analyzers can implement `VisionAnalyzer`
 
 ### Dependency Inversion Principle
+
 High-level modules depend on abstractions:
+
 - `VideoIndexer` depends on interfaces, not concrete classes
 - Dependencies are injected via constructor
 
@@ -241,6 +255,7 @@ python3 -m modal deploy -m src.api.main
 ```
 
 Modal will automatically:
+
 - Build a new container image if dependencies changed
 - Update the deployed functions
 - Route new requests to the updated version
@@ -248,6 +263,7 @@ Modal will automatically:
 ### View Deployment Logs
 
 Monitor function executions in the Modal dashboard:
+
 - URL: `https://modal.com/apps/[username]/main/deployed/openvideo-indexer`
 - Or via CLI: `modal app logs openvideo-indexer`
 
@@ -272,6 +288,7 @@ python -m src.api.main
 ### Monitoring
 
 Monitor function executions in the Modal dashboard or via CLI:
+
 ```bash
 modal app list
 modal function list openvideo-indexer
