@@ -1345,6 +1345,70 @@ function createSpritesRender(opts: {
       // This updates rect.x, rect.y, rect.angle, opacity, etc. based on animation keyframes
       sprite.animate(spriteTime);
 
+      // ── Text / Caption fast-path ─────────────────────────────────────────────
+      // Studio uses getTexture() which returns the RenderTexture directly and lets
+      // PixiJS apply the DropShadowFilter at GPU composite time.
+      // The generic getFrame() path (below) calls tick() which extracts an ImageBitmap
+      // from the WebGL framebuffer — a readback that loses the filter output entirely.
+      // Mirror the Studio behaviour here so exports match the preview.
+      if (
+        hasVideoTrack &&
+        pixiApp != null &&
+        clipsNormalContainer != null &&
+        (sprite.type === "Text" || sprite.type === "Caption")
+      ) {
+        // Caption clips need their highlighting state updated before rendering
+        if (sprite.type === "Caption" && typeof (sprite as any).updateState === "function") {
+          (sprite as any).updateState(relativeTime * sprite.playbackRate);
+        }
+
+        // Ensure the clip renders into the compositor's WebGL context
+        if (typeof (sprite as any).setRenderer === "function") {
+          (sprite as any).setRenderer(pixiApp.renderer);
+        }
+
+        // Get or create a PixiSpriteRenderer for this clip
+        let textRenderer = spriteRenderers.get(sprite);
+        if (textRenderer == null) {
+          textRenderer = new PixiSpriteRenderer(pixiApp, sprite, clipsNormalContainer);
+          spriteRenderers.set(sprite, textRenderer);
+        }
+
+        const claimedByTransition = clipsClaimedByTransition.has(sprite.id);
+        if (!claimedByTransition) {
+          // getTexture() renders pixiTextContainer → RenderTexture WITH the filter applied
+          // and returns the RenderTexture directly (no pixel readback needed)
+          const textTexture: Texture | null = await (sprite as any).getTexture();
+          if (textTexture != null) {
+            hasVideo = true;
+            const tRoot = textRenderer.getRoot();
+            if (tRoot) tRoot.visible = true;
+            await textRenderer.updateFrame(textTexture);
+          }
+        } else {
+          const tRoot = textRenderer.getRoot();
+          if (tRoot) tRoot.visible = false;
+          await textRenderer.updateFrame(null);
+        }
+        textRenderer.updateTransforms();
+
+        // Text/Caption clips carry no audio
+        audios.push([]);
+
+        // Handle expiry the same way as the generic path
+        const exceededDuration = sprite.duration > 0 && relativeTime > sprite.duration;
+        const exceededDisplayToAfter = sprite.display.to > 0 && timestamp >= sprite.display.to;
+        if (exceededDuration || exceededDisplayToAfter) {
+          if (sprite.main) mainSprDone = true;
+          sprite.expired = true;
+          const tRoot = textRenderer.getRoot();
+          if (tRoot) tRoot.visible = false;
+        }
+
+        continue; // Skip the generic getFrame() / ImageBitmap path below
+      }
+      // ── End Text / Caption fast-path ─────────────────────────────────────────
+
       // Get video frame and audio from sprite (using cache)
       const { video, audio, done } = await getFrameCached(sprite, relativeTime);
 

@@ -806,19 +806,22 @@ export class Text extends BaseClip<ITextEvents> {
       const shadowColor = parseColor(shadowOpt.color ?? "#000000");
       const shadowAlpha = shadowOpt.alpha ?? 1;
       const shadowBlur = shadowOpt.blur ?? 4;
-      console.log({
-        shadowColor,
-        shadowAlpha,
-        shadowBlur,
-        offsetX,
-        offsetY,
-      });
+
+      // The filter's internal render pass needs enough padding to fit the blurred shadow.
+      // Without this, high blur values cause the shadow to be clipped at the filter boundary.
+      // padding must be >= blur * 2 + the max offset so the blurred shadow is never cut off.
+      const shadowFilterPadding = Math.ceil(
+        shadowBlur * 2 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+      );
+
       if (shadowColor !== undefined) {
         if (this.dropShadowFilter) {
           this.dropShadowFilter.color = shadowColor;
           this.dropShadowFilter.alpha = shadowAlpha;
           this.dropShadowFilter.blur = shadowBlur;
           this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
+          // padding is a base Filter property — set after construction
+          this.dropShadowFilter.padding = shadowFilterPadding;
         } else {
           this.dropShadowFilter = new DropShadowFilter({
             color: shadowColor,
@@ -826,6 +829,8 @@ export class Text extends BaseClip<ITextEvents> {
             blur: shadowBlur,
             offset: { x: offsetX, y: offsetY },
           });
+          // padding is a base Filter property — set after construction
+          this.dropShadowFilter.padding = shadowFilterPadding;
         }
 
         this.pixiTextContainer.filters = [this.dropShadowFilter];
