@@ -67,8 +67,10 @@ export function applyClipStylesAndFilters(opts: {
   const baseScaleY =
     !isCaption && clip.height && clip.height !== 0 ? Math.abs(clip.height) / textureHeight : 1;
 
-  const combinedScaleX = baseScaleX * scaleMultiplier * scaleXMultiplier;
-  const combinedScaleY = baseScaleY * scaleMultiplier * scaleYMultiplier;
+  // Multiply by export scale so the sprite fills the correct fraction of the
+  // full-resolution render target (the rootContainer has no parent container scale).
+  const combinedScaleX = baseScaleX * scaleMultiplier * scaleXMultiplier * scaleX;
+  const combinedScaleY = baseScaleY * scaleMultiplier * scaleYMultiplier * scaleY;
 
   // Scale positions from original project dimensions to export dimensions
   rootContainer.x = (clip.center.x + xOffset) * scaleX;

@@ -194,12 +194,17 @@ export class TransitionManager {
       clipsNormalContainer.addChild(transSprite);
     }
 
+    // Size the sprite in project-space units because clipsNormalContainer has
+    // scale.set(scaleX, scaleY) applied — dividing undoes the double-scaling.
+    const projectW = this.pixiApp.renderer.width / this.scaleX;
+    const projectH = this.pixiApp.renderer.height / this.scaleY;
+
     transSprite.texture = transTexture;
     transSprite.visible = true;
     transSprite.x = 0;
     transSprite.y = 0;
-    transSprite.width = this.pixiApp.renderer.width;
-    transSprite.height = this.pixiApp.renderer.height;
+    transSprite.width = projectW;
+    transSprite.height = projectH;
     transSprite.anchor.set(0, 0);
     transSprite.zIndex = sprite.zIndex;
 
