@@ -191,7 +191,6 @@ export class Audio extends BaseClip implements IPlaybackCapable {
       });
     }
 
-    const tStart = performance.now();
     const pcm =
       dataSource instanceof ReadableStream
         ? await parseStream2PCM(dataSource, Audio.ctx)

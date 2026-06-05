@@ -2,7 +2,6 @@ import {
   type Application,
   SplitBitmapText,
   TextStyle,
-  type LineJoin,
   RenderTexture,
   Color,
   FillGradient,
@@ -11,6 +10,8 @@ import {
   Graphics,
   CanvasTextMetrics,
 } from "pixi.js";
+import { OutlineFilter } from "../filters/cartoon-filter/outline-filter";
+import { DropShadowFilter } from "pixi-filters";
 import { Log } from "../utils/log";
 import { BaseClip } from "./base-clip";
 import type { IClip } from "./iclip";
@@ -212,9 +213,6 @@ export class Text extends BaseClip<ITextEvents> {
     });
   }
 
-  private _lastContentWidth = 0;
-  private _lastContentHeight = 0;
-
   private _text: string = "";
 
   /**
@@ -333,6 +331,8 @@ export class Text extends BaseClip<ITextEvents> {
   private textStyle: TextStyle;
   private textStyleBase: TextStyle;
   private renderTexture: RenderTexture | null = null;
+  private outlineFilter: OutlineFilter | null = null;
+  private dropShadowFilter: DropShadowFilter | null = null;
   // External renderer (preferred) - provided via constructor or setRenderer()
   // If not provided, Text will create its own minimal renderer as fallback
   private externalRenderer: Application["renderer"] | null = null;
@@ -736,22 +736,112 @@ export class Text extends BaseClip<ITextEvents> {
 
     // Split text into words for SplitBitmapText
     const words = textToRender.split(/\s+/).filter((v) => v.length > 0);
-    let distanceDropShadow = 0;
 
-    if (this.textStyle.dropShadow) {
-      distanceDropShadow = this.textStyle.dropShadow.distance;
-    }
+    // Use textStyle for words (includes fill color), shadow handled separately via DropShadowFilter
+    const styleForWords = this.textStyle;
 
     // Cleanup old word texts
     this.wordTexts.forEach((w) => w.destroy());
     this.wordTexts = words.map((wordStr) => {
       const wordText = new SplitBitmapText({
         text: wordStr,
-        style: this.textStyle,
+        style: styleForWords,
       });
       this.pixiTextContainer!.addChild(wordText);
       return wordText;
     });
+
+    // Apply OutlineFilter for outline effect only
+    const strokeOpt = this.originalOpts.stroke;
+
+    // Check for width in stroke object or as separate strokeWidth property
+    const strokeWidth =
+      (typeof strokeOpt === "object" && "width" in strokeOpt ? strokeOpt.width : undefined) ??
+      this.originalOpts.strokeWidth ??
+      0;
+    const hasStroke = strokeOpt !== undefined && strokeWidth > 0;
+
+    if (hasStroke) {
+      // Determine stroke color
+      let strokeColor = 0x000000; // default black
+      if (typeof strokeOpt === "object" && "color" in strokeOpt) {
+        const parsed = parseColor(strokeOpt.color);
+        if (parsed !== undefined) strokeColor = parsed;
+      } else if (typeof strokeOpt === "string" || typeof strokeOpt === "number") {
+        const parsed = parseColor(strokeOpt);
+        if (parsed !== undefined) strokeColor = parsed;
+      }
+
+      // Create or update OutlineFilter for outline
+      if (this.outlineFilter) {
+        this.outlineFilter.thickness = strokeWidth;
+        const uniforms = this.outlineFilter.resources.outlineUniforms.uniforms;
+        uniforms.uBorderColor = new Color(strokeColor);
+      } else {
+        this.outlineFilter = new OutlineFilter({
+          thickness: strokeWidth,
+          borderColor: strokeColor,
+        });
+      }
+
+      // Apply filter to all word texts
+      this.wordTexts.forEach((wordText) => {
+        wordText.filters = [this.outlineFilter!];
+      });
+    } else {
+      // Remove filter if no stroke
+      if (this.outlineFilter) {
+        this.wordTexts.forEach((wordText) => {
+          wordText.filters = [];
+        });
+        this.outlineFilter = null;
+      }
+    }
+
+    // Apply DropShadowFilter to container (not individual words) to avoid conflicts with OutlineFilter
+    const shadowOpt = this.originalOpts.shadow;
+    if (shadowOpt) {
+      const offsetX = shadowOpt.offsetX ?? 0;
+      const offsetY = shadowOpt.offsetY ?? 0;
+      const shadowColor = parseColor(shadowOpt.color ?? "#000000");
+      const shadowAlpha = shadowOpt.alpha ?? 1;
+      const shadowBlur = shadowOpt.blur ?? 4;
+
+      // The filter's internal render pass needs enough padding to fit the blurred shadow.
+      // Without this, high blur values cause the shadow to be clipped at the filter boundary.
+      // padding must be >= blur * 2 + the max offset so the blurred shadow is never cut off.
+      const shadowFilterPadding = Math.ceil(
+        shadowBlur * 2 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+      );
+
+      if (shadowColor !== undefined) {
+        if (this.dropShadowFilter) {
+          this.dropShadowFilter.color = shadowColor;
+          this.dropShadowFilter.alpha = shadowAlpha;
+          this.dropShadowFilter.blur = shadowBlur;
+          this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
+          // padding is a base Filter property — set after construction
+          this.dropShadowFilter.padding = shadowFilterPadding;
+        } else {
+          this.dropShadowFilter = new DropShadowFilter({
+            color: shadowColor,
+            alpha: shadowAlpha,
+            blur: shadowBlur,
+            offset: { x: offsetX, y: offsetY },
+          });
+          // padding is a base Filter property — set after construction
+          this.dropShadowFilter.padding = shadowFilterPadding;
+        }
+
+        this.pixiTextContainer.filters = [this.dropShadowFilter];
+      }
+    } else {
+      // Remove shadow filter if no shadow
+      if (this.dropShadowFilter) {
+        this.pixiTextContainer.filters = [];
+        this.dropShadowFilter = null;
+      }
+    }
 
     // 4. Calculate Layout (Lines) - mostly following CaptionClip logic
     const decoration = this.originalOpts.textDecoration || (this.originalOpts as any).verticalAlign;
@@ -828,16 +918,13 @@ export class Text extends BaseClip<ITextEvents> {
     }
     const contentHeight = textHeight;
 
-    const isAutoWidth = this.width === 0 || Math.abs(this.width - this._lastContentWidth) < 0.1;
-    const isAutoHeight = this.height === 0 || Math.abs(this.height - this._lastContentHeight) < 0.1;
+    const isAutoWidth = this.width === 0;
+    const isAutoHeight = this.height === 0;
 
     const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, this.width || 0);
     const containerHeight = isAutoHeight
       ? contentHeight
       : Math.max(contentHeight, this.height || 0);
-
-    this._lastContentWidth = contentWidth;
-    this._lastContentHeight = contentHeight;
 
     // 6. Positioning words within the container
     let startY = 0;
@@ -865,7 +952,7 @@ export class Text extends BaseClip<ITextEvents> {
 
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
-        wordText.y = Math.round(currentY - distanceDropShadow);
+        wordText.y = Math.round(currentY);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
@@ -914,13 +1001,26 @@ export class Text extends BaseClip<ITextEvents> {
     // The clip bounding box / selection handles are unaffected — they use _width/_height
     // which remain the logical (unpadded) content dimensions.
     const ANIM_PAD = 300;
-    const paddedWidth = containerWidth + ANIM_PAD * 2;
-    const paddedHeight = containerHeight + ANIM_PAD * 2;
+    // Add filter padding to prevent stroke from being cropped in the render texture
+    const filterPadding = strokeWidth > 0 ? strokeWidth * 2.1 : 0;
+    // Add shadow padding to prevent shadow blur from being cropped
+    let shadowPadding = 0;
+    if (this.dropShadowFilter) {
+      const shadowBlur = this.dropShadowFilter.blur ?? 0;
+      const shadowOffset = this.dropShadowFilter.offset;
+      const shadowDistance = shadowOffset
+        ? Math.sqrt(shadowOffset.x ** 2 + shadowOffset.y ** 2)
+        : 0;
+      shadowPadding = shadowBlur + shadowDistance;
+    }
+    const totalPad = ANIM_PAD + filterPadding + shadowPadding;
+    const paddedWidth = containerWidth + totalPad * 2;
+    const paddedHeight = containerHeight + totalPad * 2;
 
     // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
     if (this.pixiTextContainer) {
-      this.pixiTextContainer.x = ANIM_PAD;
-      this.pixiTextContainer.y = ANIM_PAD;
+      this.pixiTextContainer.x = totalPad;
+      this.pixiTextContainer.y = totalPad;
     }
 
     // Reuse or resize render texture efficiently
@@ -933,7 +1033,7 @@ export class Text extends BaseClip<ITextEvents> {
     });
 
     // Store the padding so PixiSpriteRenderer can compensate the sprite anchor offset
-    this.renderTexturePadding = ANIM_PAD;
+    this.renderTexturePadding = totalPad;
 
     // Update clip dimensions — these are the LOGICAL (unpadded) dimensions used for
     // selection handles, layout, and transforms. Do NOT use paddedWidth/Height here.
@@ -992,46 +1092,11 @@ export class Text extends BaseClip<ITextEvents> {
       }
     }
 
-    // Handle stroke - can be color or advanced stroke object
-    if (opts.stroke && typeof opts.stroke === "object" && "color" in opts.stroke) {
-      // Advanced stroke object
-      const strokeColor = parseColor(opts.stroke.color);
-      if (strokeColor !== undefined) {
-        styleOptions.stroke = {
-          color: strokeColor,
-          width: opts.stroke.width,
-          join: opts.stroke.join as LineJoin,
-          cap: opts.stroke.cap,
-          miterLimit: opts.stroke.miterLimit,
-        };
-      }
-    } else {
-      // Simple stroke color
-      const strokeColor = parseColor(opts.stroke);
-      const strokeWidth = opts.strokeWidth ?? 0;
-      if (strokeColor !== undefined && strokeWidth > 0) {
-        styleOptions.stroke = { color: strokeColor, width: strokeWidth };
-      } else if (opts.strokeWidth && opts.strokeWidth > 0) {
-        // If strokeWidth is provided but no color, use black as default
-        styleOptions.stroke = { color: 0x000000, width: opts.strokeWidth };
-      }
-    }
+    // Handle stroke - using OutlineFilter instead of native PixiJS stroke
+    // Native stroke is skipped here; filter is applied in refreshText()
 
-    // Only add dropShadow if provided
-    if (opts.shadow) {
-      const shadowColor = parseColor(opts.shadow.color);
-      if (shadowColor !== undefined) {
-        const dx = opts.shadow.offsetX ?? 0;
-        const dy = opts.shadow.offsetY ?? 0;
-        styleOptions.dropShadow = {
-          color: shadowColor,
-          alpha: opts.shadow.alpha ?? 0.5,
-          blur: opts.shadow.blur ?? 4,
-          angle: Math.atan2(dy, dx),
-          distance: Math.sqrt(dx * dx + dy * dy),
-        };
-      }
-    }
+    // Shadow is handled via DropShadowFilter on container, not TextStyle
+    // This prevents bounding box issues with native TextStyle shadow
 
     return styleOptions;
   }

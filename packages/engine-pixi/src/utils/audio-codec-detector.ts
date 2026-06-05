@@ -31,21 +31,6 @@ const CODEC_PREFERENCES = [
 let cachedCodec: AudioCodecConfig | null = null;
 
 /**
- * Detect operating system
- */
-function detectOS(): "linux" | "macos" | "windows" | "unknown" {
-  if (typeof navigator === "undefined") return "unknown";
-
-  const userAgent = navigator.userAgent.toLowerCase();
-
-  if (userAgent.includes("linux")) return "linux";
-  if (userAgent.includes("mac")) return "macos";
-  if (userAgent.includes("win")) return "windows";
-
-  return "unknown";
-}
-
-/**
  * Test if a specific audio codec configuration is supported
  */
 async function isCodecSupported(config: AudioCodecConfig): Promise<boolean> {
@@ -76,8 +61,6 @@ export async function getDefaultAudioCodec(): Promise<AudioCodecConfig> {
   if (cachedCodec !== null) {
     return cachedCodec;
   }
-
-  const os = detectOS();
 
   // Test codecs in order of preference
   for (const config of CODEC_PREFERENCES) {
