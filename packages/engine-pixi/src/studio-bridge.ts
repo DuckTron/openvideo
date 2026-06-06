@@ -493,6 +493,24 @@ export class StudioBridge {
           changed = true;
         }
       }
+      if (t.fadeIn !== undefined) {
+        if (JSON.stringify(clip.timing.fadeIn) !== JSON.stringify(t.fadeIn)) {
+          clip.timing.fadeIn = t.fadeIn;
+          changed = true;
+        }
+      } else if (clip.timing.fadeIn !== undefined) {
+        delete clip.timing.fadeIn;
+        changed = true;
+      }
+      if (t.fadeOut !== undefined) {
+        if (JSON.stringify(clip.timing.fadeOut) !== JSON.stringify(t.fadeOut)) {
+          clip.timing.fadeOut = t.fadeOut;
+          changed = true;
+        }
+      } else if (clip.timing.fadeOut !== undefined) {
+        delete clip.timing.fadeOut;
+        changed = true;
+      }
     } else {
       // Fallback legacy support
       const d = coreClip.display;
