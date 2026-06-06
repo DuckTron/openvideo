@@ -8,7 +8,7 @@
 <div align="center">
   
   
-A high-performance video rendering and processing library for the web, built with WebCodecs and PixiJS.
+An AI-native video editing platform with browser-based 4K rendering, semantic search, and an intuitive API for building next-generation video applications.
 
 <p align="center">
     <a href="https://openvideo.dev/">OpenVideo</a>
@@ -19,74 +19,75 @@ A high-performance video rendering and processing library for the web, built wit
 </p>
 </div>
 
-[![](https://cdn.scenify.io/openvideo-editor.png)](https://github.com/openvideodev/openvideo)
-
-## Official Editors
-
-The editor has been removed from this core repository and moved to dedicated repositories. We now offer two official, open-source video editors built on top of OpenVideo:
-
-- **React Video Editor**: [GitHub Repository](https://github.com/openvideodev/video-editor) | [Live Demo](https://editor.openvideo.dev/)
-- **Vue Video Editor**: [GitHub Repository](https://github.com/openvideodev/vue-video-editor) | [Live Demo](https://vue-video-editor.vercel.app/)
+[![](https://cdn.scenify.io/openpreview1.png)](https://github.com/openvideodev/openvideo)
 
 ## Features
 
-- **Browser-Based Rendering**: Leverages modern WebCodecs for efficient video encoding and decoding directly in the browser.
-- **Advanced Composition**: Powered by [PixiJS](https://pixijs.com/) for complex multi-track layering, transforms, and real-time previews.
-- **Universal Clip Support**: Built-in support for Video, Audio, Image, Text, and Captions.
-- **Dynamic Effects & Transitions**: Extensible GLSL-based effects (Chromakey, etc.) and transitions.
-- **JSON Serialization**: Full project state can be serialized to and from JSON for easy persistence and cloud rendering.
-- **Low Latency**: Optimized for interactive video editing experiences.
+- **Browser-Based 4K Rendering**: Hardware-accelerated video processing entirely in the browser using WebCodecs and PixiJS. Export up to 4K resolution without server-side rendering.
+- **Semantic Search**: AI-powered search across your video assets using vector embeddings and pgvector similarity search. Find clips by content, not just filenames.
+- **Multi-Track Timeline**: Professional-grade timeline editor with support for multiple video, audio, and overlay tracks. Drag, drop, and arrange clips with precision.
+- **Automatic Captions**: Generate and edit captions for your videos with AI-powered transcription. Support for multiple languages and custom styling.
+- **AI-Native Architecture**: Built for AI integration from the ground up. Easy API for embedding AI features like semantic search, auto-editing, and intelligent asset organization.
+- **Intuitive API**: Clean, type-safe API built with tRPC and TypeScript. Easy to extend and integrate into your own applications.
+- **Transitions & Effects**: Smooth transitions between clips and a library of visual effects powered by GLSL shaders.
+- **Real-Time Preview**: Instant playback feedback with hardware-accelerated rendering.
+- **Cloud Storage**: Upload and manage assets in the cloud with Cloudflare R2 integration.
+- **AI Director**: Intelligent assistant that helps organize and edit your video content automatically.
+- **Project Organization**: Create spaces to organize multiple video projects and collaborate with team members.
+- **Background Processing**: Efficient background indexing and processing using BullMQ and Trigger.dev for heavy tasks.
+- **Real-Time Collaboration**: WebSocket-based real-time updates for collaborative editing sessions.
+
+## Architecture
+
+OpenVideo is built as a modern monorepo using pnpm and Turborepo:
+
+- **Frontend**: Next.js 15 with App Router for the web interface
+- **Backend**: NestJS Fastify API server handling REST endpoints, WebSocket gateway, and background workers
+- **Database**: PostgreSQL with Drizzle ORM for unified data management
+- **Communication**: tRPC for type-safe internal API calls
+- **Authentication**: Better Auth with magic link and GitHub OAuth support
+- **Rendering**: PixiJS-based compositor engine for video processing
+- **AI**: Gemini API integration for semantic search and intelligent features
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- pnpm
+- PostgreSQL database
+- Redis (for background queues)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/openvideodev/openvideo.git
+cd openvideo
+
+# Install dependencies
+pnpm install
+
+# Set up environment variables
+cp apps/app/.env.sample apps/app/.env.local
+cp apps/director/.env.example apps/director/.env
+
+# Run database migrations
+pnpm --filter @openvideo/db db:push
+
+# Start the development servers
+pnpm dev
+```
+
+The application will be available at `http://localhost:3000`.
 
 ## Documentation
 
 Comprehensive documentation is available at [docs.openvideo.dev](https://docs.openvideo.dev).
 
-## Installation
+## Contributing
 
-```bash
-npm install openvideo
-```
-
-## Quick Start
-
-### Basic Composition
-
-```typescript
-import { Studio, Video } from "openvideo";
-
-// 1. Initialize the Studio (Project State & Preview)
-const studio = new Studio({
-  width: 1920,
-  height: 1080,
-  fps: 30,
-  canvas: document.getElementById("preview-canvas") as HTMLCanvasElement,
-  spacing: 20,
-});
-
-// 2. Load and add a Video Clip
-const video = await Video.fromUrl("https://example.com/video.mp4");
-await studio.addClip(video);
-
-// 3. Start Preview
-studio.play();
-```
-
-## Core Components
-
-- **`Studio`**: Manages the project state, including tracks, clips, and timeline configuration.
-- **`Compositor`**: The rendering engine that handles playback, seeking, and final export using WebCodecs.
-- **`Clips`**: Specialized objects for different media types (`Video`, `Audio`, `Text`, `Image`, `Caption`, etc.).
-- **`JsonSerialization`**: Utilities to convert your entire project into a portable JSON format.
-
-## Technology Stack
-
-- **WebCodecs**: For ultra-fast, hardware-accelerated video processing.
-- **PixiJS**: For a robust and performant 2D/3D rendering engine.
-- **wrapbox**: Internal utility for low-level MP4 box manipulation and muxing.
-
-## Contact
-
-For inquiries, support, or custom solutions, reach out to us at [hello@openvideo.dev](mailto:hello@openvideo.dev).
+We welcome contributions! Please read our contributing guidelines before submitting pull requests.
 
 ## License
 
