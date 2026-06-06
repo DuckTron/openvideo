@@ -173,8 +173,8 @@ export function SharedAudioProperties({ clip }: SharedAudioPropertiesProps) {
                   <IconEar className="size-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-foreground">Noise Reduction</span>
-                  <span className="text-[10px] text-muted-foreground">Reduce background noise</span>
+                  <span className="text-sm font-medium text-foreground">Noise Reduction</span>
+                  <span className="text-xs text-muted-foreground">Reduce background noise</span>
                 </div>
               </div>
               <Switch
@@ -192,10 +192,8 @@ export function SharedAudioProperties({ clip }: SharedAudioPropertiesProps) {
                   <IconMicrophone className="size-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-foreground">Enhance Voice</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    Clarify spoken frequencies
-                  </span>
+                  <span className="text-sm font-medium text-foreground">Enhance Voice</span>
+                  <span className="text-xs text-muted-foreground">Clarify spoken frequencies</span>
                 </div>
               </div>
               <Switch
@@ -213,10 +211,8 @@ export function SharedAudioProperties({ clip }: SharedAudioPropertiesProps) {
                   <IconActivity className="size-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-medium text-foreground">Beats Detection</span>
-                  <span className="text-[10px] text-muted-foreground">
-                    Detect and snap to beats
-                  </span>
+                  <span className="text-sm font-medium text-foreground">Beats Detection</span>
+                  <span className="text-xs text-muted-foreground">Detect and snap to beats</span>
                 </div>
               </div>
               <Switch

@@ -799,6 +799,79 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
 
       {/* ── Uploads area (scrollable) ── */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+        {/* Search, Filter, Generate, Upload Row (always visible) */}
+        <div className="flex items-center gap-2 w-full px-4 py-3">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-0">
+            <IconSearch
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <input
+              placeholder="Search assets..."
+              className="w-full h-9 pl-9 pr-3 text-[13px] bg-secondary/50 border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border focus:bg-background transition-all"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Filter Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
+              >
+                <IconFilter size={15} />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="border-border bg-popover text-popover-foreground rounded-xl w-36"
+            >
+              {[
+                { value: "all", label: "All Assets" },
+                { value: "image", label: "Images" },
+                { value: "video", label: "Videos" },
+                { value: "audio", label: "Audio" },
+              ].map((option) => (
+                <DropdownMenuItem
+                  key={option.value}
+                  onClick={() => setFilterType(option.value as any)}
+                  className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
+                >
+                  <span>{option.label}</span>
+                  {filterType === option.value && (
+                    <div className="size-1.5 rounded-full bg-foreground" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {/* Generate Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
+            onClick={() => setIsGeneratorModalOpen(true)}
+          >
+            <IconSparkles size={14} />
+            <span>Generate</span>
+          </Button>
+
+          {/* Upload Button */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <IconUpload size={14} />
+            <span>Upload</span>
+          </Button>
+        </div>
+
         {files.length === 0 ? (
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
@@ -806,108 +879,33 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
               <IconPhoto size={24} strokeWidth={1.5} />
             </div>
             <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] mb-5">
-              Get started by uploading your own files or generating new ones using AI.
+            <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px]">
+              Drag and drop your assets here, or use the buttons above to upload or generate.
             </p>
           </div>
         ) : (
-          /* With assets: search + grid */
-          <>
-            {/* Search, Filter, Generate, Upload Row */}
-            <div className="flex items-center gap-2 w-full px-4 py-3">
-              {/* Search Input */}
-              <div className="relative flex-1 min-w-0">
-                <IconSearch
-                  size={14}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                />
-                <input
-                  placeholder="Search assets..."
-                  className="w-full h-9 pl-9 pr-3 text-[13px] bg-secondary/50 border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border focus:bg-background transition-all"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          /* With assets: grid */
+          <ScrollArea className="flex-1 px-4">
+            {filteredAssets.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+                <IconPhoto size={28} className="opacity-40" />
+                <span className="text-xs">No matches found.</span>
               </div>
-
-              {/* Filter Dropdown */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
-                  >
-                    <IconFilter size={15} />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="border-border bg-popover text-popover-foreground rounded-xl w-36"
-                >
-                  {[
-                    { value: "all", label: "All Assets" },
-                    { value: "image", label: "Images" },
-                    { value: "video", label: "Videos" },
-                    { value: "audio", label: "Audio" },
-                  ].map((option) => (
-                    <DropdownMenuItem
-                      key={option.value}
-                      onClick={() => setFilterType(option.value as any)}
-                      className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
-                    >
-                      <span>{option.label}</span>
-                      {filterType === option.value && (
-                        <div className="size-1.5 rounded-full bg-foreground" />
-                      )}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-
-              {/* Generate Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-                onClick={() => setIsGeneratorModalOpen(true)}
-              >
-                <IconSparkles size={14} />
-                <span>Generate</span>
-              </Button>
-
-              {/* Upload Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <IconUpload size={14} />
-                <span>Upload</span>
-              </Button>
-            </div>
-
-            <ScrollArea className="flex-1 px-4">
-              {filteredAssets.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                  <IconPhoto size={28} className="opacity-40" />
-                  <span className="text-xs">No matches found.</span>
-                </div>
-              ) : (
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3 pb-4">
-                  {filteredAssets.map((asset) => (
-                    <AssetCard
-                      key={asset.id}
-                      asset={asset}
-                      onAdd={addItemToCanvas}
-                      onSelect={(asset) => setSelectedAssetId(asset.id)}
-                      onDelete={handleDelete}
-                      onDownload={handleDownload}
-                    />
-                  ))}
-                </div>
-              )}
-            </ScrollArea>
-          </>
+            ) : (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3 pb-4">
+                {filteredAssets.map((asset) => (
+                  <AssetCard
+                    key={asset.id}
+                    asset={asset}
+                    onAdd={addItemToCanvas}
+                    onSelect={(asset) => setSelectedAssetId(asset.id)}
+                    onDelete={handleDelete}
+                    onDownload={handleDownload}
+                  />
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         )}
       </div>
       {/* Asset Generator Modal */}

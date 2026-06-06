@@ -11,6 +11,9 @@ import {
   IconSparkles,
   IconMessageCircle,
   IconChevronRight,
+  IconKeyboard,
+  IconUpload,
+  IconPalette,
 } from "@tabler/icons-react";
 import { fontManager, Log } from "@openvideo/engine-pixi";
 import type { AnyClip } from "@openvideo/core";
@@ -421,46 +424,76 @@ export default function PanelCaptions() {
             </ScrollArea>
           </div>
         ) : (
-          <div className="flex flex-1 flex-col items-center justify-center p-6 text-center select-none gap-6">
-            <div className="relative group">
-              <div className="absolute -inset-1.5 rounded-full bg-linear-to-r from-primary/30 to-violet-500/30 blur-md opacity-75 group-hover:opacity-100 transition duration-500" />
-              <div className="relative p-5 rounded-full bg-card border border-white/[0.08] text-white flex items-center justify-center">
-                <IconMessageCircle className="size-8 text-primary" />
-              </div>
-            </div>
+          <div className="flex flex-1 flex-col gap-3 p-4">
+            {/* Caption Options List */}
+            <div className="flex flex-col gap-2">
+              {/* Auto-Generate (works) */}
+              <Button
+                onClick={handleGenerateCaptions}
+                disabled={isGenerating}
+                variant="outline"
+                className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground justify-start"
+              >
+                {isGenerating ? (
+                  <IconLoader2 className="size-5 animate-spin shrink-0" />
+                ) : (
+                  <IconSparkles className="size-5 shrink-0" />
+                )}
+                <div className="flex flex-col items-start gap-0.5 flex-1">
+                  <span className="text-sm font-medium">
+                    {isGenerating ? "Generating..." : "Auto Captions"}
+                  </span>
+                  <span className="text-xs text-muted-foreground leading-tight">
+                    Generate captions automatically with AI
+                  </span>
+                </div>
+              </Button>
 
-            <div className="space-y-2 max-w-[280px]">
-              <h4 className="text-sm font-semibold text-foreground tracking-tight">
-                Auto-Generate Captions
-              </h4>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Recognize speech automatically using advanced AI transcription and sync text
-                perfectly with your video timeline.
-              </p>
-            </div>
+              {/* Manual Input (UI only) */}
+              <Button
+                variant="outline"
+                disabled
+                className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
+              >
+                <IconKeyboard className="size-5 shrink-0" />
+                <div className="flex flex-col items-start gap-0.5 flex-1">
+                  <span className="text-sm font-medium">Manual Captions</span>
+                  <span className="text-xs text-muted-foreground leading-tight">
+                    Add captions manually by typing
+                  </span>
+                </div>
+              </Button>
 
-            <Button
-              onClick={handleGenerateCaptions}
-              disabled={isGenerating}
-              className={cn(
-                "w-full max-w-[220px] font-semibold text-xs tracking-wide uppercase transition-all duration-300 rounded-lg shadow-md h-9.5",
-                isGenerating
-                  ? "bg-secondary/40 text-muted-foreground border border-white/[0.04]"
-                  : "bg-white text-black hover:bg-white/90 hover:scale-[1.02] active:scale-[0.98] shadow-white/5",
-              )}
-            >
-              {isGenerating ? (
-                <>
-                  <IconLoader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
-                  Transcribing...
-                </>
-              ) : (
-                <>
-                  Generate Captions
-                  <IconChevronRight className="ml-1 h-3.5 w-3.5" />
-                </>
-              )}
-            </Button>
+              {/* Import Captions (UI only) */}
+              <Button
+                variant="outline"
+                disabled
+                className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
+              >
+                <IconUpload className="size-5 shrink-0" />
+                <div className="flex flex-col items-start gap-0.5 flex-1">
+                  <span className="text-sm font-medium">Upload Caption File</span>
+                  <span className="text-xs text-muted-foreground leading-tight">
+                    Import captions from SRT or VTT files
+                  </span>
+                </div>
+              </Button>
+
+              {/* Templates (UI only) */}
+              <Button
+                variant="outline"
+                disabled
+                className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
+              >
+                <IconPalette className="size-5 shrink-0" />
+                <div className="flex flex-col items-start gap-0.5 flex-1">
+                  <span className="text-sm font-medium">Auto Lyrics</span>
+                  <span className="text-xs text-muted-foreground leading-tight">
+                    Generate synced lyrics from audio
+                  </span>
+                </div>
+              </Button>
+            </div>
           </div>
         )}
       </div>
