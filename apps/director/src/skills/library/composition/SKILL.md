@@ -194,9 +194,11 @@ Extract:
 
 ---
 
-#### Step 3 — Discover assets
+#### Step 3 — Discover assets (get canonical URLs)
 
 Call `get_space_state`. Note each asset's `id`, `name`, `type`, `src`, and `duration`.
+
+**Important**: The `src` URLs from `get_space_state` are the **authoritative, current URLs**. RAG search results may contain stale URLs if assets were re-uploaded. Always use the `src` from this step when generating clip.add commands.
 
 ---
 
@@ -214,6 +216,8 @@ Example chapter → query mapping for an employee highlight reel:
 - `"Innovation and Impact"` → `"innovation impact change building shipping product solving challenges creative ideas"`
 - `"Employee Authenticity"` → `"authentic real genuine personal story real talk honest moment candid"`
 - `"Quick Employee Introductions"` → `"employee introduction name role team greeting hi hello I am my name"`
+  - For introduction queries, add **content validation**: verify `pageContent` actually contains self-introduction patterns like "I'm [Name]", "I work as [Role]", "my name is", "I joined [Company]"
+  - **Per-person targeted search**: If you need to find an introduction for a specific person, include their name in the query: `"RJ Banez introduction name role team"`
 - `"What They Enjoy Most"` → `"enjoy love best part favorite meaningful rewarding proud accomplishment"`
 - `"Why the Culture Stands Out"` → `"why I love working here culture stands out different unique special proud"`
 
@@ -225,7 +229,20 @@ Adapt the queries to match the actual chapter names from the prompt. Collect all
 
 This is where quality is determined. For each section, go through the results and apply ALL of the following filters before selecting a segment:
 
-**A. Sentence boundary check (never cut mid-sentence)**
+**A. Timestamp validation (CRITICAL — must have valid timing)**
+
+- **REJECT any RAG result where `startMs` or `endMs` is missing/undefined.**
+- Only use segments with valid timestamps: `typeof startMs === 'number' && typeof endMs === 'number'`
+- Layers that typically have timestamps: `asset-transcript`, `asset-chapters`, `video-chunk`, `transcript`
+- Layers that do NOT have timestamps (reject these): `asset-summary`, `asset-topics`, `asset-description`
+- Without valid `startMs`/`endMs`, you cannot calculate `trim.from` and `trim.to` — these segments cannot be used for video clips.
+
+**⚠️ CRITICAL: Source URL Verification**
+- RAG results may contain stale `src` URLs (asset may have been re-uploaded after indexing).
+- **ALWAYS get the authoritative `src` URL from `get_space_state`** using the `assetId` from the RAG result.
+- Never use the `src` directly from RAG metadata — use it only to identify which asset, then look up the current URL from the canonical asset list.
+
+**B. Sentence boundary check (never cut mid-sentence)**
 
 - Examine the `pageContent` field of each RAG result.
 - Only select segments where the `pageContent` text **starts at the beginning of a sentence or phrase** (begins with a capital letter or a name) and **ends at a natural pause** (ends with `.`, `?`, `!`, `—`, or a complete phrase).
@@ -233,7 +250,7 @@ This is where quality is determined. For each section, go through the results an
 - Discard any segment that cannot be completed by merging (no following segment from same asset available).
 - If the segment text is a complete, self-contained thought or soundbite, it is a good candidate.
 
-**B. Duration floor and cutPace guidance**
+**C. Duration floor and cutPace guidance**
 
 - The natural duration of the segment = `(endMs - startMs)` from the RAG result (or the merged span).
 - Discard any segment shorter than **2000ms** (2 seconds). Too short to feel complete.
@@ -245,14 +262,14 @@ This is where quality is determined. For each section, go through the results an
 - If only long segments (>10s) are available and the pace is `"fast"`, it is acceptable to use them whole rather than cut mid-sentence. Video length is secondary to content integrity.
 
 
-**C. Global deduplication (critical — prevents repeated clips)**
+**D. Global deduplication (critical — prevents repeated clips)**
 
 - Maintain a mental set of all used segments: `usedSegments = Set` of `"assetId::startMs"` strings.
 - Before selecting any segment, check: if `"assetId::startMs"` is already in `usedSegments`, **skip it entirely** — do not use it even if it scores well for the current section.
 - After selecting a segment, immediately add it to `usedSegments`.
 - This applies **across all sections** — a segment used in "introductions" must never appear again in "collaboration" or any other section.
 
-**D. Speaker & Asset Variety (No Back-to-Back Same Speaker/Person)**
+**E. Speaker & Asset Variety (No Back-to-Back Same Speaker/Person)**
 
 - **Speaker Identification**: Identify the speaker/person for each asset. Group assets by speaker based on the asset filename (e.g., `john_doe_intro.mp4` -> "John Doe"), metadata, or transcript content.
 - **No Back-to-Back Same Speaker**: Never place two clips featuring the same speaker back-to-back on the timeline, even if they are from different files (assets). Always alternate speakers between consecutive clips (e.g., Speaker A → Speaker B → Speaker A → Speaker C).
@@ -260,10 +277,32 @@ This is where quality is determined. For each section, go through the results an
 - **Asset ID Limit**: Within a single section, do not use the same `Asset ID` more than once.
 - **If only 1 or 2 speakers/assets exist**: You may repeat them, but still enforce a minimum 15 seconds of source timeline distance between uses of the same asset (i.e., `|startMs_B - startMs_A| >= 15000`).
 
-**E. Relevance threshold**
+**F. Strict relevance validation (CRITICAL — prevent off-topic clips)**
 
-- If a result's `pageContent` is clearly off-topic (e.g. a "culture" section gets a result about technical onboarding), skip it.
-- Prefer results whose `Topics` metadata includes keywords matching the section theme.
+This filter prevents the "weird content" problem where an off-topic clip gets selected just to "fill a slot" or because it's from the right person/asset.
+
+**The Golden Rule: Content must serve the narrative.**
+
+Every clip must earn its place in the video. Ask: "Does this clip directly serve the section's purpose?" If not, skip it.
+
+**Relevance Score (apply to each RAG result):**
+
+| Score | Definition | Example for "Adventure Vlog" | Example for "Product Demo" | Example for "Employee Intros" |
+|-------|------------|------------------------------|----------------------------|-------------------------------|
+| **HIGH** | Content explicitly matches the section's core intent | Cliff jumping, trail hiking, mountain scenery | Feature walkthrough, user interaction, benefit explanation | "I'm [Name]", "I work as [Role]", self-introduction language |
+| **MEDIUM** | Related but not core to the section's purpose | Packing gear, driving to location, meal break | Company history, team culture, general talking | Daily routine, collaboration footage, but not introducing self |
+| **LOW** | Off-topic or tangential only | Hotel room tour, unrelated conversation, someone else's footage | Competitor mention, off-topic anecdote, technical troubleshooting | Weekend plans, technical deep-dive, talking about others |
+
+**Universal Rules (apply to ALL formats):**
+1. **ONLY use HIGH relevance clips.** Skip MEDIUM and LOW.
+2. **Never force a clip** to hit a "one per person/asset" quota. If the content doesn't serve the narrative, skip it.
+3. **Never pad with "best available" weak clips.** A shorter, cohesive video beats a longer one with jarring content.
+4. Check `Topics` metadata — if it doesn't align with the section theme, treat as LOW relevance.
+
+**When an asset/person lacks HIGH relevance clips:**
+- **Skip them entirely.** Do not include their off-topic content.
+- Note in summary: "Found 3 strong adventure clips; 2 assets had no relevant content for this section."
+- The final video includes only assets that serve the narrative purpose.
 
 After filtering, **rank candidates by**: completeness of sentence → natural duration in target range → asset variety. Pick the top N for the section based on the section's allocated time.
 
@@ -279,9 +318,11 @@ perSectionSeconds = targetDuration / numberOfSections
 ```
 
 Then for each section, calculate how many clips fit:
+Then for each section, estimate the number of clips:
 
 ```
-clipsPerSection = floor(perSectionSeconds / avgClipDuration)
+// Select clips first to determine actual total section duration
+// clipsPerSection is dynamic based on available content quality
 ```
 
 - If a section has fewer valid candidates than `clipsPerSection`, reduce that section's clips and redistribute to adjacent sections.
@@ -297,12 +338,27 @@ For each selected segment:
 
 1. Set `trim.from = segmentStartMs * 1000` (convert to µs)
 2. Set `trim.to = segmentEndMs * 1000` — **always use the full natural segment end from RAG**. Never cap or shorten this.
-3. Set `display.from = cursor`
-4. Set `display.to = cursor + (trim.to - trim.from)`
-5. Advance `cursor = display.to`
-6. Use `objectFit: "cover"` for all video clips
+3. Compute `clipDuration = trim.to - trim.from`
+4. Set `display.from = cursor`
+5. Set `display.to = cursor + clipDuration` ← **this MUST always equal display.from + (trim.to - trim.from)**
+6. Advance `cursor = display.to`
+7. Use `objectFit: "cover"` for all video clips
 
-> ⚠️ **No hard cuts allowed.** If the RAG segment says a speaker talks from 4200ms to 9800ms, use exactly `trim: { from: 4200000, to: 9800000 }`. Do not cap it at 7500ms or any other value. The total video may be longer than the target duration — that is acceptable. Content integrity always wins over hitting an exact runtime.
+> 🚨 **CRITICAL — `display.to - display.from` MUST equal `trim.to - trim.from`.**
+> The display window is the on-screen duration of the clip. The trim window is which portion of the source video plays.
+> They must be the same length. A clip with `trim: { from: 1200000, to: 7800000 }` has a natural duration of **6,600,000 µs**.
+> Its `display` must therefore span exactly **6,600,000 µs**: e.g. `{ from: 14000000, to: 20600000 }`.
+> **NEVER set `display.to = cursor + 5000000` or any other fixed number.** Always compute from the trim span.
+
+> Worked example:
+> RAG segment → `startMs: 1200, endMs: 7800` (milliseconds from RAG)
+> → `trim.from = 1200 * 1000 = 1200000`
+> → `trim.to   = 7800 * 1000 = 7800000`
+> → `clipDuration = 7800000 - 1200000 = 6600000` (6.6 seconds)
+> → If cursor is at 14000000: `display = { from: 14000000, to: 20600000 }`
+> → cursor advances to 20600000
+
+> ⚠️ **No hard cuts allowed.** If the RAG segment says a speaker talks from 4200ms to 9800ms, use exactly `trim: { from: 4200000, to: 9800000 }`. Do not cap it at 7500000 or any other value. The total video may be longer than the target duration — that is acceptable. Content integrity always wins over hitting an exact runtime.
 
 ```json
 {
@@ -327,6 +383,49 @@ For each selected segment:
 ```
 
 > ⚠️ All timing values are in **microseconds**. RAG returns milliseconds — always multiply by 1000.
+
+---
+
+#### Step 7b — Template Formula (COPY THIS PATTERN)
+
+When generating `clip.add` commands, use this exact template and substitute the RAG values:
+
+```json
+{
+  "type": "command",
+  "description": "Add video clip — <brief description>",
+  "command": {
+    "type": "clip.add",
+    "payload": {
+      "clip": {
+        "type": "Video",
+        "src": "<asset.src from get_space_state>",
+        "name": "<asset.name>",
+        "objectFit": "cover",
+        "timing": {
+          "trim": {
+            "from": <segmentStartMs * 1000>,
+            "to": <segmentEndMs * 1000>
+          },
+          "display": {
+            "from": <cursor>,
+            "to": <cursor + ((segmentEndMs - segmentStartMs) * 1000)>
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Template Rules:**
+1. **`src` MUST come from `get_space_state`** — RAG may have stale URLs. Use RAG only for `assetId`, `segmentStartMs`, `segmentEndMs` and content. Look up the current `asset.src` from the canonical asset list.
+2. `trim.to` MUST equal `segmentEndMs * 1000` — never calculate it as `trim.from + 5000000`
+3. `display.to - display.from` MUST equal `trim.to - trim.from` (same duration)
+4. Advance cursor: `cursor = display.to` for the next clip
+
+**Anti-Pattern Detection:**
+If you find yourself writing `trim.to = trim.from + 5000000` or any fixed number, **STOP**. Use `segmentEndMs * 1000` instead.
 
 ---
 
@@ -553,35 +652,46 @@ If chapter cards are enabled:
 3. `search_all_context("morning routine daily work desk laptop office", topK=20)` → for Daily Routines
 4. `search_all_context("authentic real genuine personal honest candid", topK=20)` → for Employee Authenticity
 
-**Steps** (cursor tracked in microseconds):
+**Steps** (cursor tracked in microseconds, all clip durations derived from RAG segment boundaries):
+
+> In this example, RAG returned segments with these natural durations (endMs - startMs):
+> - John Doe team clip: 3200ms → 3,200,000 µs
+> - Sarah K team clip: 4700ms → 4,700,000 µs
+> - Maria L routine clip: 5100ms → 5,100,000 µs
+> - John Doe routine clip: 3800ms → 3,800,000 µs
+> - Sarah K authentic clip: 6200ms → 6,200,000 µs
+> - Maria L authentic clip: 4400ms → 4,400,000 µs
+
 ```
 cursor = 0
 
 [Chapter: Team Collaboration]
 1.  command: project.updateSettings (1080×1920, black bg)  ← always first
 2.  command: clip.add Text ("Team Collaboration", 0–2s)     cursor → 2,000,000
-3.  command: clip.add Video (John Doe — team clip, 2s–6s)    cursor → 6,000,000
-4.  command: clip.add Text (lower third: "John Doe", 2s–6s)
-5.  command: clip.add Video (Sarah K — team clip, 6s–10s)   cursor → 10,000,000
-6.  command: clip.add Text (lower third: "Sarah K", 6s–10s)
+3.  command: clip.add Video (John Doe — team clip, display: 2s–5.2s, trim derived from RAG startMs/endMs)    cursor → 5,200,000
+4.  command: clip.add Text (lower third: "John Doe", display: 2s–5.2s)
+5.  command: clip.add Video (Sarah K — team clip, display: 5.2s–9.9s, trim derived from RAG startMs/endMs)   cursor → 9,900,000
+6.  command: clip.add Text (lower third: "Sarah K", display: 5.2s–9.9s)
 
 [Chapter: Daily Routines]
-7.  command: clip.add Text ("Daily Routines", 10s–12s)       cursor → 12,000,000
-8.  command: clip.add Video (Maria L — routine clip, 12s–16s) cursor → 16,000,000
-9.  command: clip.add Text (lower third: "Maria L", 12s–16s)
-10. command: clip.add Video (John Doe — routine clip, 16s–20s) cursor → 20,000,000
-11. command: clip.add Text (lower third: "John Doe", 16s–20s)
+7.  command: clip.add Text ("Daily Routines", 9.9s–11.9s)   cursor → 11,900,000
+8.  command: clip.add Video (Maria L — routine clip, display: 11.9s–17s, trim derived from RAG startMs/endMs) cursor → 17,000,000
+9.  command: clip.add Text (lower third: "Maria L", display: 11.9s–17s)
+10. command: clip.add Video (John Doe — routine clip, display: 17s–20.8s, trim derived from RAG startMs/endMs) cursor → 20,800,000
+11. command: clip.add Text (lower third: "John Doe", display: 17s–20.8s)
 
 [Chapter: Employee Authenticity]
-12. command: clip.add Text ("Employee Authenticity", 20s–22s) cursor → 22,000,000
-13. command: clip.add Video (Sarah K — authentic clip, 22s–26s) cursor → 26,000,000
-14. command: clip.add Text (lower third: "Sarah K", 22s–26s)
-15. command: clip.add Video (Maria L — authentic clip, 26s–30s) cursor → 30,000,000
-16. command: clip.add Text (lower third: "Maria L", 26s–30s)
+12. command: clip.add Text ("Employee Authenticity", 20.8s–22.8s) cursor → 22,800,000
+13. command: clip.add Video (Sarah K — authentic clip, display: 22.8s–29s, trim derived from RAG startMs/endMs) cursor → 29,000,000
+14. command: clip.add Text (lower third: "Sarah K", display: 22.8s–29s)
+15. command: clip.add Video (Maria L — authentic clip, display: 29s–33.4s, trim derived from RAG startMs/endMs) cursor → 33,400,000
+16. command: clip.add Text (lower third: "Maria L", display: 29s–33.4s)
 
 [Audio]
-17. generate: generate-background-music (30s, upbeat warm human acoustic)
+17. generate: generate-background-music (33.4s, upbeat warm human acoustic)
 ```
+
+> ⚠️ NOTE: Every clip duration above comes from the RAG segment's (endMs - startMs). None are rounded to 4s or 5s.
 
 ---
 
@@ -598,18 +708,88 @@ cursor = 0
 ```
 1. command: project.updateSettings (1920×1080 horizontal, black bg)
 2. command: clip.add Text (Q1 Title Card, 0s to 2s)
-3. command: clip.add Video (Q1 Answer clip 1, 2s to 8s)
-4. command: clip.add Text (lower third: Speaker Name, 2s to 8s)
-5. command: clip.add Video (Q1 Answer clip 2, 8s to 14s)
-6. command: clip.add Text (lower third: Speaker Name, 8s to 14s)
-7. command: clip.add Text (Q2 Title Card, 14s to 16s)
-8. command: clip.add Video (Q2 Answer clip 1, 16s to 23s)
-9. command: clip.add Text (lower third: Speaker Name, 16s to 23s)
-10. command: clip.add Video (Q2 Answer clip 2, 23s to 30s)
-11. command: clip.add Text (lower third: Speaker Name, 23s to 30s)
+   cursor = 2,000,000
+3. command: clip.add Video (Q1 Answer clip 1 — RAG: startMs=1800, endMs=7300 → trim: 1800000–7300000, clipDuration=5500000)
+   display: { from: 2000000, to: 7500000 }   cursor = 7,500,000
+4. command: clip.add Text (lower third: Speaker Name, display: 2s–7.5s)
+5. command: clip.add Video (Q1 Answer clip 2 — RAG: startMs=400, endMs=6100 → trim: 400000–6100000, clipDuration=5700000)
+   display: { from: 7500000, to: 13200000 }  cursor = 13,200,000
+6. command: clip.add Text (lower third: Speaker Name, display: 7.5s–13.2s)
+7. command: clip.add Text (Q2 Title Card, 13.2s to 15.2s)
+   cursor = 15,200,000
+8. command: clip.add Video (Q2 Answer clip 1 — RAG: startMs=2100, endMs=8900 → trim: 2100000–8900000, clipDuration=6800000)
+   display: { from: 15200000, to: 22000000 } cursor = 22,000,000
+9. command: clip.add Text (lower third: Speaker Name, display: 15.2s–22s)
+10. command: clip.add Video (Q2 Answer clip 2 — RAG: startMs=500, endMs=5800 → trim: 500000–5800000, clipDuration=5300000)
+    display: { from: 22000000, to: 27300000 } cursor = 27,300,000
+11. command: clip.add Text (lower third: Speaker Name, display: 22s–27.3s)
 12. skill: transition-editing (between adjacent video clips only, skip text clips)
-13. generate: generate-background-music (30s, slow cinematic orchestral pad)
+13. generate: generate-background-music (27.3s, slow cinematic orchestral pad)
 ```
+
+> Each clip's display window = trim span. No fixed 5s or 6s slots — every duration is computed from (segmentEndMs - segmentStartMs) × 1000.
+
+---
+
+## Example Plan (Employee Introductions — Strict Relevance Pattern)
+
+> **Note**: This example illustrates the universal "strict relevance" principle. The same pattern applies to ALL formats:
+> - **Adventure vlog**: Skip scenic shots that don't show adventure/action, even from the right location
+> - **Product demo**: Skip testimonials about company culture, even from the right customer
+> - **Wedding film**: Skip generic reception footage, keep only emotional/key moments
+> - **Documentary**: Skip tangential B-roll, keep only content serving the narrative arc
+
+**User prompt**: "Using my assets, create a short video composition that introduces all company employees."
+
+**Assets**: 30 short videos from 5 employees (RJ Banez, Mina Moriguchi, Elizabeth Santandreu, Blessiva Johnson, Carden Jung). Some videos contain introductions, others contain daily routines, collaboration, or general commentary.
+
+**Strategy**: Search per person to find their best introduction clip. Skip anyone without a clear self-introduction segment.
+
+**Tool calls**:
+1. `get_space_state` → identify all assets and their speakers from filenames
+2. `search_all_context("RJ Banez introduction name role I am my name")` → find RJ's intro
+3. `search_all_context("Mina Moriguchi introduction name role I am my name")` → find Mina's intro
+4. `search_all_context("Elizabeth Santandreu introduction name role I am")` → find Elizabeth's intro
+5. `search_all_context("Blessiva Johnson introduction name role I am")` → find Blessiva's intro
+6. `search_all_context("Carden Jung introduction name role I am")` → find Carden's intro
+
+**Step 5 Filtering (Critical):**
+For each person's results, apply strict relevance check:
+- **HIGH relevance**: pageContent contains "I'm [Name]", "My name is", "I work as", "I'm a [role]"
+- **MEDIUM/LOW**: pageContent is about daily work, collaboration, but NOT self-introduction
+- **Action**: Only select HIGH relevance. If none found, **skip that person entirely**.
+
+**Example outcome after filtering:**
+- ✅ RJ Banez: Found strong introduction (pageContent: "I'm RJ Banez, I work as a hospitality intern...")
+- ✅ Mina Moriguchi: Found strong introduction (pageContent: "My name is Mina, I'm on the marketing team...")
+- ✅ Elizabeth Santandreu: Found strong introduction
+- ❌ Blessiva Johnson: **No HIGH relevance clip found** (her clips are about daily routines, not self-introduction)
+- ✅ Carden Jung: Found strong introduction
+
+**Decision**: Include 4 employees. Skip Blessiva. Note in summary: "Found strong introduction clips for 4 of 5 employees; Blessiva Johnson did not have a clear self-introduction segment."
+
+**Steps**:
+```
+1. command: project.updateSettings (1080×1920, black bg)
+2. command: clip.add Text ("Meet the Team", 0s–2s)              cursor → 2,000,000
+3. command: clip.add Video (RJ Banez intro, display: 2s–7.5s, trim: startMs/endMs from RAG, src: from get_space_state)
+   cursor → 7,500,000
+4. command: clip.add Text (lower third: "RJ Banez", display: 2s–7.5s)
+5. command: clip.add Video (Mina Moriguchi intro, display: 7.5s–13s, trim from RAG, src from get_space_state)
+   cursor → 13,000,000
+6. command: clip.add Text (lower third: "Mina Moriguchi", display: 7.5s–13s)
+7. command: clip.add Video (Elizabeth Santandreu intro, display: 13s–19.2s, trim from RAG, src from get_space_state)
+   cursor → 19,200,000
+8. command: clip.add Text (lower third: "Elizabeth Santandreu", display: 13s–19.2s)
+9. command: clip.add Video (Carden Jung intro, display: 19.2s–25.8s, trim from RAG, src from get_space_state)
+   cursor → 25,800,000
+10. command: clip.add Text (lower third: "Carden Jung", display: 19.2s–25.8s)
+11. generate: generate-background-music (25.8s, warm upbeat team welcome acoustic)
+```
+
+> ⚠️ **Note 1**: Blessiva Johnson is intentionally skipped. Her clips were about daily routines, not self-introduction. A 25-second cohesive video with 4 strong introductions is better than a 35-second video with 1 weak, off-topic clip.
+>
+> ⚠️ **Note 2**: **Source URL pattern**: `trim` timing comes from RAG search results (segment startMs/endMs), but `src` URL comes from `get_space_state` (authoritative current URL). RAG may have stale URLs if assets were re-uploaded.
 
 ---
 
