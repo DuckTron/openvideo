@@ -174,43 +174,60 @@ export class RetrieverService {
   }
 
   async search(projectId: string, query: string, topK = 10): Promise<string> {
-    this.logger.debug(`Retrieving context for query: "${query}" in project ${projectId}`);
+    this.logger.log(`[RAG SEARCH] Query: "${query}" | topK: ${topK} | spaceId: ${projectId}`);
 
     let docs: any[] = [];
     try {
       docs = await this.vectorStore.similaritySearch(query, topK, projectId);
     } catch (err) {
       // RAG is optional — if no content is indexed yet, just return empty context
-      this.logger.debug(`RAG search skipped (no indexed content yet): ${err.message}`);
+      this.logger.warn(`[RAG SEARCH] No indexed content available: ${err.message}`);
       return "No project context indexed yet.";
     }
 
+    this.logger.log(`[RAG SEARCH] Raw results count: ${docs.length}`);
+
     if (docs.length === 0) {
+      this.logger.warn(`[RAG SEARCH] No results found for query: "${query}"`);
       return "No relevant project context found.";
     }
+
+    // Log all raw results before filtering
+    docs.forEach((doc, i) => {
+      const meta = doc.metadata || {};
+      this.logger.debug(
+        `[RAG RAW] Result ${i + 1}: assetId=${meta.assetId}, layer=${meta.layer}, ` +
+          `startMs=${meta.startMs}, endMs=${meta.endMs}, ` +
+          `content="${doc.pageContent?.substring(0, 80)?.replace(/\n/g, " ")}..."`,
+      );
+    });
 
     // Filter out results without valid timestamps (asset-summary, asset-topics layers don't have timing)
     const validDocs = docs.filter((doc) => {
       const meta = doc.metadata || {};
       const hasTimestamps = typeof meta.startMs === "number" && typeof meta.endMs === "number";
       if (!hasTimestamps) {
-        this.logger.debug(
-          `[RAG FILTER] Excluding result without timestamps: ${meta.assetId}, layer=${meta.layer}`,
+        this.logger.log(
+          `[RAG FILTER] Excluding result without timestamps: assetId=${meta.assetId}, layer=${meta.layer}`,
         );
       }
       return hasTimestamps;
     });
 
     this.logger.log(
-      `[RAG DEBUG] Query: "${query}" | Found ${docs.length} total, ${validDocs.length} with valid timestamps:`,
+      `[RAG SEARCH] Query: "${query}" | Results: ${docs.length} total, ${validDocs.length} with valid timestamps`,
     );
+
     validDocs.forEach((doc, i) => {
       const meta = doc.metadata || {};
+      const durationMs = meta.endMs - meta.startMs;
       this.logger.log(
-        `[RAG DEBUG] Result ${i + 1}: assetId=${meta.assetId}, startMs=${meta.startMs}, endMs=${meta.endMs}, durationMs=${meta.endMs - meta.startMs}, layer=${meta.layer}`,
+        `[RAG RESULT ${i + 1}] assetId=${meta.assetId}, ` +
+          `timeRange=${meta.startMs}ms-${meta.endMs}ms (${(durationMs / 1000).toFixed(1)}s), ` +
+          `layer=${meta.layer}`,
       );
       this.logger.log(
-        `[RAG DEBUG] Result ${i + 1} content: ${doc.pageContent?.substring(0, 100)}...`,
+        `[RAG RESULT ${i + 1}] content: ${doc.pageContent?.substring(0, 120)?.replace(/\n/g, " ")}...`,
       );
     });
 

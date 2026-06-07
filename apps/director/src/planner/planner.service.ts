@@ -47,8 +47,14 @@ export class PlannerService {
 
     const searchContextTool = tool(
       async ({ query, topK }: { query: string; topK?: number }) => {
-        this.logger.debug(`[Tool] search_space_context("${query}", topK=${topK ?? 10})`);
-        return this.retriever.search(spaceId, query, topK ?? 10);
+        this.logger.log(`[Tool] search_space_context("${query}", topK=${topK ?? 10})`);
+        const startTime = Date.now();
+        const result = await this.retriever.search(spaceId, query, topK ?? 10);
+        const duration = Date.now() - startTime;
+        this.logger.log(
+          `[Tool] search_space_context completed in ${duration}ms, result length: ${result.length}`,
+        );
+        return result;
       },
       {
         name: "search_space_context",
@@ -181,8 +187,14 @@ export class PlannerService {
 
     const searchAllTool = tool(
       async ({ query }: { query: string }) => {
-        this.logger.debug(`[Tool] search_all_context("${query}")`);
-        return this.retriever.searchAll(spaceId, query);
+        this.logger.log(`[Tool] search_all_context("${query}")`);
+        const startTime = Date.now();
+        const result = await this.retriever.searchAll(spaceId, query);
+        const duration = Date.now() - startTime;
+        this.logger.log(
+          `[Tool] search_all_context completed in ${duration}ms, result length: ${result.length}`,
+        );
+        return result;
       },
       {
         name: "search_all_context",
