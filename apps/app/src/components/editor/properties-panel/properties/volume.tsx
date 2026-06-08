@@ -19,7 +19,6 @@ export function VolumeProperty({ value, onChange }: VolumePropertyProps) {
         Volume
       </label>
       <div className="flex items-center gap-4">
-        <IconVolume className="size-4 text-muted-foreground flex-shrink-0" />
         <Slider
           value={[percentage]}
           onValueChange={(v) => onChange(v[0] / 100)}
@@ -27,7 +26,7 @@ export function VolumeProperty({ value, onChange }: VolumePropertyProps) {
           step={1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-24">
           <NumberInput
             value={percentage}
             onChange={(val) => onChange((val || 0) / 100)}

@@ -13,7 +13,6 @@ interface FadePropertyProps {
 }
 
 export function FadeProperty({ type, duration, onChange, max = 5000 }: FadePropertyProps) {
-  const Icon = type === "in" ? IconTrendingUp : IconTrendingDown;
   const label = type === "in" ? "Fade In" : "Fade Out";
 
   return (
@@ -22,7 +21,6 @@ export function FadeProperty({ type, duration, onChange, max = 5000 }: FadePrope
         {label}
       </label>
       <div className="flex items-center gap-4">
-        <Icon className="size-4 text-muted-foreground flex-shrink-0" />
         <Slider
           value={[duration]}
           onValueChange={(v) => onChange(v[0])}

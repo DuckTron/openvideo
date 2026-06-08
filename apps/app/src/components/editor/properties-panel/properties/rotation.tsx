@@ -1,6 +1,4 @@
 "use client";
-
-import { IconRotate } from "@tabler/icons-react";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
@@ -18,7 +16,6 @@ export function RotationProperty({ value, onChange, max = 360 }: RotationPropert
         Rotation
       </label>
       <div className="flex items-center gap-4">
-        <IconRotate className="size-4 text-muted-foreground" />
         <Slider
           value={[Math.round(value)]}
           onValueChange={(v) => onChange(v[0])}
@@ -26,10 +23,10 @@ export function RotationProperty({ value, onChange, max = 360 }: RotationPropert
           step={1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-24">
           <NumberInput value={Math.round(value)} onChange={onChange} className="p-0 text-center" />
           <InputGroupAddon align="inline-end" className="p-0 pr-2">
-            <span className="text-[10px] text-muted-foreground">°</span>
+            <span className="text-xs text-muted-foreground">°</span>
           </InputGroupAddon>
         </InputGroup>
       </div>

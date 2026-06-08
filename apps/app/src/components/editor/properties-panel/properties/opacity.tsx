@@ -13,12 +13,11 @@ export function OpacityProperty({ value, onChange }: OpacityPropertyProps) {
   const percentage = Math.round(value * 100);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
         Opacity
       </label>
       <div className="flex items-center gap-4">
-        <div className="size-4 rounded-full border border-muted-foreground/30" />
         <Slider
           value={[percentage]}
           onValueChange={(v) => onChange(v[0] / 100)}
@@ -26,14 +25,14 @@ export function OpacityProperty({ value, onChange }: OpacityPropertyProps) {
           step={1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-24">
           <NumberInput
             value={percentage}
             onChange={(val) => onChange(val / 100)}
             className="p-0 text-center"
           />
           <InputGroupAddon align="inline-end" className="p-0 pr-2">
-            <span className="text-[10px] text-muted-foreground">%</span>
+            <span className="text-xs text-muted-foreground">%</span>
           </InputGroupAddon>
         </InputGroup>
       </div>

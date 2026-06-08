@@ -17,7 +17,6 @@ export function CornerRadiusProperty({ value, onChange, max = 500 }: CornerRadiu
         Corner Radius
       </label>
       <div className="flex items-center gap-4">
-        <div className="size-4 border border-muted-foreground/30 rounded-sm" />
         <Slider
           value={[value || 0]}
           onValueChange={(v) => onChange(v[0])}
@@ -25,7 +24,7 @@ export function CornerRadiusProperty({ value, onChange, max = 500 }: CornerRadiu
           step={1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-24">
           <NumberInput value={value || 0} onChange={onChange} className="p-0 text-center" />
           <InputGroupAddon align="inline-end" className="p-0 pr-2">
             <span className="text-[10px] text-muted-foreground">px</span>

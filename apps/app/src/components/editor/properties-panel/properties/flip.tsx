@@ -2,6 +2,8 @@
 
 import { IconFlipHorizontal, IconFlipVertical } from "@tabler/icons-react";
 
+import { Toggle } from "@/components/ui/toggle";
+
 export interface FlipValues {
   x: boolean;
   y: boolean;
@@ -21,28 +23,26 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
         Flip
       </label>
       <div className="flex items-center gap-2 mt-1">
-        <button
-          onClick={() => onChange({ ...value, x: !x })}
-          className={`flex items-center justify-center flex-1 py-1.5 rounded-md border transition-colors ${
-            x
-              ? "bg-primary/20 border-primary text-primary"
-              : "bg-secondary/30 border-transparent text-muted-foreground hover:text-white"
-          }`}
+        <Toggle
+          pressed={x}
+          onPressedChange={(pressed) => onChange({ ...value, x: pressed })}
+          variant="outline"
+          size="sm"
+          className="flex-1 h-8"
         >
           <IconFlipHorizontal className="size-4 mr-2" />
           <span className="text-xs">Flip X</span>
-        </button>
-        <button
-          onClick={() => onChange({ ...value, y: !y })}
-          className={`flex items-center justify-center flex-1 py-1.5 rounded-md border transition-colors ${
-            y
-              ? "bg-primary/20 border-primary text-primary"
-              : "bg-secondary/30 border-transparent text-muted-foreground hover:text-white"
-          }`}
+        </Toggle>
+        <Toggle
+          pressed={y}
+          onPressedChange={(pressed) => onChange({ ...value, y: pressed })}
+          variant="outline"
+          size="sm"
+          className="flex-1 h-8"
         >
           <IconFlipVertical className="size-4 mr-2" />
           <span className="text-xs">Flip Y</span>
-        </button>
+        </Toggle>
       </div>
     </div>
   );
