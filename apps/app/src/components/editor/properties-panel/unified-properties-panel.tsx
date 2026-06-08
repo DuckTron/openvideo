@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import useLayoutStore from "../store/use-layout-store";
 import { PropertyKey, getPropertiesForType } from "./property-registry";
 import * as Properties from "./properties";
+import { EffectProperties } from "./effect-properties";
 import { getFontByPostScriptName, getGroupedFonts } from "@/utils/font-utils";
 
 const GROUPED_FONTS = getGroupedFonts();
@@ -562,20 +563,9 @@ export function UnifiedPropertiesPanel({ clip }: UnifiedPropertiesPanelProps) {
       //   );
       // }
 
-      // Effect properties - placeholder for effect config
+      // Effect properties - uses the dedicated EffectProperties component
       case "effectConfig":
-        // Effect clips have complex configs that vary by effect type
-        // For now, return a placeholder that shows effect type
-        return (
-          <div key={key} className="flex flex-col gap-2">
-            <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              Effect
-            </label>
-            <div className="p-3 rounded-lg bg-secondary/30 border text-sm">
-              Effect configuration for: {coreClip.effect?.name || "Unknown"}
-            </div>
-          </div>
-        );
+        return <EffectProperties key={key} clip={clip} />;
 
       // Transition properties
       case "transitionDuration": {
