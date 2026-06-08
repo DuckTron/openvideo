@@ -1,7 +1,7 @@
 "use client";
 
+import { useState } from "react";
 import { IconLineHeight } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   ColorPicker,
@@ -11,7 +11,12 @@ import {
   ColorPickerOutput,
   ColorPickerSelection,
 } from "@/components/ui/color-picker";
-import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+  InputGroupButton,
+} from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SectionHeader } from "./section-header";
@@ -36,50 +41,59 @@ export function StrokeProperty({
   onColorChange,
   onWidthChange,
 }: StrokePropertyProps) {
+  const [colorOpen, setColorOpen] = useState(false);
+
   return (
     <Collapsible open={open}>
       <SectionHeader title="Stroke" hasContent={open} onAdd={onAdd} onRemove={onRemove} />
       <CollapsibleContent>
         <div className="pb-2 flex flex-col gap-2">
           <div className="flex gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-10 h-9 p-0 border-input shrink-0"
-                  style={{ backgroundColor: strokeColor || "#FFFFFF" }}
-                />
-              </PopoverTrigger>
-              <PopoverContent className="w-64" align="start">
-                <ColorPicker
-                  value={color(strokeColor || "#FFFFFF")
-                    .hsv()
-                    .array()}
-                  onChange={(val) => {
-                    const [h, s, v] = val as number[];
-                    const rgb = color({ h, s, v }).rgb().array();
-                    onColorChange(
-                      `rgb(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])})`,
-                    );
-                  }}
-                  className="w-full"
-                >
-                  <div className="flex flex-col gap-3">
-                    <ColorPickerSelection className="min-h-32 w-full rounded-md shadow-sm" />
-                    <div className="flex flex-col gap-2">
-                      <ColorPickerHue />
-                      <ColorPickerEyeDropper />
-                    </div>
-                    <div className="flex gap-1">
-                      <ColorPickerFormat />
-                      <ColorPickerFormat />
-                      <ColorPickerFormat />
-                    </div>
-                    <ColorPickerOutput className="text-center" />
-                  </div>
-                </ColorPicker>
-              </PopoverContent>
-            </Popover>
+            <InputGroup className="flex-1">
+              <InputGroupAddon align="inline-start" className="relative p-0">
+                <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
+                  <PopoverTrigger asChild>
+                    <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8">
+                      <div
+                        className="h-4 ml-2 w-4 border border-white/10 shadow-sm"
+                        style={{
+                          backgroundColor: strokeColor || "#FFFFFF",
+                        }}
+                      />
+                    </InputGroupButton>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-3" align="start">
+                    <ColorPicker
+                      onChange={(colorValue) => {
+                        const hexColor = color.rgb(colorValue as number[]).hex();
+                        onColorChange(hexColor);
+                      }}
+                      className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                    >
+                      <ColorPickerSelection />
+                      <div className="flex items-center gap-4">
+                        <ColorPickerEyeDropper />
+                        <div className="grid w-full gap-1">
+                          <ColorPickerHue />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <ColorPickerOutput />
+                        <ColorPickerFormat />
+                      </div>
+                    </ColorPicker>
+                  </PopoverContent>
+                </Popover>
+              </InputGroupAddon>
+              <InputGroupInput
+                value={(strokeColor || "#FFFFFF").toUpperCase()}
+                onChange={(e) => onColorChange(e.target.value)}
+                className="text-sm p-0 text-[10px] font-mono"
+              />
+              <InputGroupAddon align="inline-end" className="border-l border-white/5 pl-2">
+                <span className="text-[10px]">100%</span>
+              </InputGroupAddon>
+            </InputGroup>
 
             <InputGroup className="flex-1">
               <InputGroupAddon align="inline-start">
