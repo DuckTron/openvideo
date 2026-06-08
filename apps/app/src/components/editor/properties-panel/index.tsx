@@ -1,14 +1,17 @@
-import { useEffect, useState } from "react";
-import { TextProperties } from "./text-properties";
-import { ImageProperties } from "./image-properties";
-import { VideoProperties } from "./video-properties";
-import { AudioProperties } from "./audio-properties";
-import { CaptionProperties } from "./caption-properties";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { IClip } from "@openvideo/engine-pixi";
+import { cn } from "@/lib/utils";
+import { UnifiedPropertiesPanel } from "./unified-properties-panel";
+
+// Legacy imports - to be removed after full migration
+import { TextProperties } from "./text-properties";
+import { CaptionProperties } from "./caption-properties";
 import { EffectProperties } from "./effect-properties";
 import { TransitionProperties } from "./transition-properties";
-import { cn } from "@/lib/utils";
+import { AudioProperties } from "./audio-properties";
+
+// Feature flag: Set to false to use legacy panels during testing
+const USE_UNIFIED_PANEL = true; // Now all types are migrated
 
 export function PropertiesPanel({ selectedClips }: { selectedClips: IClip[] }) {
   if (selectedClips.length > 1) {
@@ -24,15 +27,17 @@ export function PropertiesPanel({ selectedClips }: { selectedClips: IClip[] }) {
   const clip = selectedClips[0];
 
   const renderSpecificProperties = () => {
+    // Use unified panel for all clip types
+    if (USE_UNIFIED_PANEL) {
+      return <UnifiedPropertiesPanel clip={clip} />;
+    }
+
+    // Legacy fallback (kept for emergency use)
     switch (clip.type) {
       case "Text":
         return <TextProperties clip={clip} />;
       case "Caption":
         return <CaptionProperties clip={clip} />;
-      case "Image":
-        return <ImageProperties clip={clip} />;
-      case "Video":
-        return <VideoProperties clip={clip} />;
       case "Audio":
         return <AudioProperties clip={clip} />;
       case "Effect":
@@ -40,7 +45,7 @@ export function PropertiesPanel({ selectedClips }: { selectedClips: IClip[] }) {
       case "Transition":
         return <TransitionProperties clip={clip} />;
       default:
-        return null;
+        return <UnifiedPropertiesPanel clip={clip} />;
     }
   };
 

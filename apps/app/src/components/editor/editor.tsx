@@ -18,6 +18,7 @@ import { IProject } from "@openvideo/core";
 import { trpc } from "@/lib/trpc";
 import type { schema } from "@openvideo/db";
 import { useProjectStore } from "@/stores/project-store";
+import { data } from "./data";
 
 // Infer Space type from the Drizzle schema (matches what tRPC returns)
 type Space = typeof schema.space.$inferSelect;
@@ -57,10 +58,10 @@ export default function Editor({
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    if (initialDesign) {
-      core.project.import(initialDesign);
-    }
-  }, [initialDesign]);
+    setTimeout(() => {
+      core.project.import(data);
+    }, 1000);
+  }, []);
 
   // tRPC query for project data
   const { data: projectData } = trpc.space.getById.useQuery(
