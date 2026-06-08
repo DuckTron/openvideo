@@ -185,11 +185,13 @@ Returns service health status:
 ### `conform_asset(asset_id: str, max_fps: int = 60)`
 
 Conforms video to browser-optimized format for smooth playback. Automatically:
+
 - Detects if frame rate > 60fps and conforms down
 - Re-encodes to H.264 with yuv420p (hardware-accelerated playback)
 - Uploads to R2 and updates asset src URL
 
 **Conform triggers when:**
+
 - Frame rate > 60fps
 - Codec is not H.264 (e.g., HEVC, VP9)
 - Pixel format is not yuv420p
@@ -231,18 +233,19 @@ print(result)
 
 For **extremely performant** video playback in the OpenVideo studio, use this format:
 
-| Property | Recommended Value | Why |
-|----------|-------------------|-----|
-| **Container** | MP4 (MPEG-4) | Universal browser support |
-| **Video Codec** | H.264 (AVC) | Hardware accelerated in all browsers |
-| **Pixel Format** | yuv420p | Required for hardware acceleration |
-| **Profile** | High or Main | Broad compatibility |
-| **Level** | 4.1 or lower | Max for most devices |
-| **Frame Rate** | 60fps max | Matches display refresh rate |
-| **Audio Codec** | AAC | Universal support |
-| **Audio Sample Rate** | 48kHz | Standard for video |
+| Property              | Recommended Value | Why                                  |
+| --------------------- | ----------------- | ------------------------------------ |
+| **Container**         | MP4 (MPEG-4)      | Universal browser support            |
+| **Video Codec**       | H.264 (AVC)       | Hardware accelerated in all browsers |
+| **Pixel Format**      | yuv420p           | Required for hardware acceleration   |
+| **Profile**           | High or Main      | Broad compatibility                  |
+| **Level**             | 4.1 or lower      | Max for most devices                 |
+| **Frame Rate**        | 60fps max         | Matches display refresh rate         |
+| **Audio Codec**       | AAC               | Universal support                    |
+| **Audio Sample Rate** | 48kHz             | Standard for video                   |
 
 **Conform command (FFmpeg):**
+
 ```bash
 ffmpeg -i input.mp4 -c:v libx264 -preset fast -crf 23 -profile:v high \
   -level 4.1 -pix_fmt yuv420p -r 60 -c:a aac -b:a 128k -ar 48000 \
@@ -250,6 +253,7 @@ ffmpeg -i input.mp4 -c:v libx264 -preset fast -crf 23 -profile:v high \
 ```
 
 **Why 60fps max?**
+
 - Most displays are 60Hz — higher frame rates are wasted
 - 1000fps videos cause HTMLVideoElement to thrash
 - Browser video decoders optimized for 24-60fps
@@ -402,13 +406,13 @@ logger = get_logger("video_reframer")
 
 class VideoReframer:
     """Reframes video to different aspect ratios using AI or fixed crops."""
-    
+
     def __init__(self, downloader: VideoDownloader):
         self.downloader = downloader
-    
+
     async def reframe(
-        self, 
-        asset: Asset, 
+        self,
+        asset: Asset,
         target_aspect: str = "16:9",
         method: str = "center"  # or "ai_smart"
     ) -> Dict[str, Any]:
@@ -433,7 +437,7 @@ Add a new function to `src/api/main.py`:
     secrets=[modal.Secret.from_name("openvideo-db")]
 )
 async def reframe_asset(
-    asset_id: str, 
+    asset_id: str,
     target_aspect: str = "16:9",
     method: str = "center"
 ) -> Dict[str, Any]:
@@ -442,14 +446,14 @@ async def reframe_asset(
     from ..services.video_reframer import VideoReframer
     from ..services.uploader import R2Uploader
     from ..services.database import PostgreSQLClient
-    
+
     # Implementation follows same pattern as conform_asset
     db = PostgreSQLClient()
     asset = await db.get_asset(asset_id)
-    
+
     downloader = HttpVideoDownloader()
     reframer = VideoReframer(downloader)
-    
+
     result = await reframer.reframe(asset, target_aspect, method)
     # ... upload to R2, update DB, return result
 ```
@@ -469,16 +473,16 @@ result = reframe.remote("asset-id", target_aspect="9:16", method="ai_smart")
 
 ### Planned Operations
 
-| Operation | Service File | Status |
-|-----------|--------------|--------|
-| **Format Conforming** | `video_conformer.py` | ✅ Implemented |
-| **Indexing** | `video_indexer.py` | ✅ Implemented |
-| **Reframing** | `video_reframer.py` | 📋 Planned |
-| **Noise Reduction** | `video_denoiser.py` | 📋 Planned |
-| **Stabilization** | `video_stabilizer.py` | 📋 Planned |
-| **Upscale** | `video_upscaler.py` | 📋 Planned |
-| **Thumbnail Gen** | `thumbnail_generator.py` | 📋 Planned |
-| **Proxy Generation** | `proxy_generator.py` | 📋 Planned |
+| Operation             | Service File             | Status         |
+| --------------------- | ------------------------ | -------------- |
+| **Format Conforming** | `video_conformer.py`     | ✅ Implemented |
+| **Indexing**          | `video_indexer.py`       | ✅ Implemented |
+| **Reframing**         | `video_reframer.py`      | 📋 Planned     |
+| **Noise Reduction**   | `video_denoiser.py`      | 📋 Planned     |
+| **Stabilization**     | `video_stabilizer.py`    | 📋 Planned     |
+| **Upscale**           | `video_upscaler.py`      | 📋 Planned     |
+| **Thumbnail Gen**     | `thumbnail_generator.py` | 📋 Planned     |
+| **Proxy Generation**  | `proxy_generator.py`     | 📋 Planned     |
 
 ## Migration from Trigger.dev
 

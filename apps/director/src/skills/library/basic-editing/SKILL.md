@@ -101,6 +101,31 @@ Use the `clip.update` command to modify an existing clip. First, use `get_projec
 }
 ```
 
+**Example: Centering a Clip on the Canvas**
+
+To center a clip, set its `x` and `y` to the canvas center minus half the clip's dimensions. For a 1080x1920 canvas with center at (540, 960) and a clip with width=200, height=100:
+
+```json
+{
+  "type": "command",
+  "description": "Centering the clip on canvas",
+  "command": {
+    "type": "clip.update",
+    "payload": {
+      "id": "clip_abc123",
+      "updates": {
+        "transform": {
+          "x": 440,
+          "y": 910
+        }
+      }
+    }
+  }
+}
+```
+
+> Center formula: `x = canvasCenterX - width/2`, `y = canvasCenterY - height/2`
+
 **Example: Changing Text Content and Style**
 
 ```json
@@ -212,7 +237,7 @@ Use the `track.remove` command to delete an entire track by its ID. This will au
 - `text`: The string content (only for Text clips).
 - `src`: The media URL (only for Image, Video, Audio).
 - `transform`: Coordinates, size, rotation, opacity, and layering.
-  - `x` / `y`: Position in pixels. 1920x1080 is the default canvas resolution. Center is (960, 540).
+  - `x` / `y`: Position in pixels (reference point; the clip's visual center will be at `x + width/2`, `y + height/2`). 1920x1080 is the default canvas resolution. Center is (960, 540).
   - `width` / `height`: Dimensions in pixels.
   - `opacity`: Number from 0 (transparent) to 1 (opaque).
   - `angle`: Rotation in degrees (e.g., 90, 180).

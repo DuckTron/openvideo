@@ -21,6 +21,7 @@ import {
   IconTextSize,
   IconRotate,
   IconPlus,
+  IconMinus,
   IconTrash,
   IconCircle,
   IconMovie,
@@ -42,6 +43,8 @@ import { getGroupedFonts, getFontByPostScriptName } from "@/utils/font-utils";
 
 import useLayoutStore from "../store/use-layout-store";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { NumberInput } from "@/components/ui/number-input";
 import { useStore } from "zustand";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
@@ -50,6 +53,32 @@ import { useCaptionUpdate } from "@/hooks/use-caption-update";
 import { nanoid } from "nanoid";
 
 const GROUPED_FONTS = getGroupedFonts();
+
+// Section Header Component
+interface SectionHeaderProps {
+  title: string;
+  hasContent: boolean;
+  onAdd: () => void;
+  onRemove: () => void;
+}
+
+function SectionHeader({ title, hasContent, onAdd, onRemove }: SectionHeaderProps) {
+  return (
+    <div className="flex items-center justify-between py-1 h-12">
+      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+        {title}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="size-6 rounded-sm"
+        onClick={hasContent ? onRemove : onAdd}
+      >
+        {hasContent ? <IconMinus className="size-4" /> : <IconPlus className="size-4" />}
+      </Button>
+    </div>
+  );
+}
 
 interface CaptionPropertiesProps {
   clip: IClip;
@@ -428,33 +457,24 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
         </div>
       </div>
 
-      {/* Animations Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Animations
-          </label>
-          <button
-            onClick={() =>
-              setFloatingControl("animation-properties-picker", {
-                clipId: coreClip.id,
-                mode: "add",
-              })
-            }
-            className="text-muted-foreground hover:text-white transition-colors"
-          >
-            <IconPlus className="size-3.5" />
-          </button>
-        </div>
+      <Separator className="bg-white/5" />
 
-        <div className="flex flex-col gap-2">
-          {animations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-4 border border-dashed rounded-md bg-white/5 opacity-50">
-              <IconMovie className="size-6 mb-1" />
-              <span className="text-[10px]">No animations applied</span>
-            </div>
-          ) : (
-            animations.map((anim: any) => (
+      {/* Animations Section */}
+      <Collapsible open={animations.length > 0}>
+        <SectionHeader
+          title="Animations"
+          hasContent={animations.length > 0}
+          onAdd={() =>
+            setFloatingControl("animation-properties-picker", {
+              clipId: coreClip.id,
+              mode: "add",
+            })
+          }
+          onRemove={() => handleAnimationRemove(animations[0]?.id)}
+        />
+        <CollapsibleContent>
+          <div className="pb-2 flex flex-col gap-2">
+            {animations.map((anim: any) => (
               <div
                 key={anim.options?.id ?? anim.id}
                 className="flex items-center justify-between p-2 bg-secondary/30 rounded-md group"
@@ -466,7 +486,10 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 opacity-0 group-hover:opacity-100"
                     onClick={() =>
                       setFloatingControl("animation-properties-picker", {
                         clipId: coreClip.id,
@@ -474,22 +497,25 @@ export function CaptionProperties({ clip }: CaptionPropertiesProps) {
                         mode: "edit",
                       })
                     }
-                    className="p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-all"
                   >
                     <IconEdit className="size-3.5" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400"
                     onClick={() => handleAnimationRemove(anim.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"
                   >
                     <IconTrash className="size-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
+
+      <Separator className="bg-white/5" />
 
       {/* Caption presets */}
       <div className="flex flex-col gap-2">

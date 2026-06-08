@@ -154,28 +154,30 @@ export async function processAssetWorkflow(input: ProcessAssetInput) {
       throw new Error(`Asset ${assetId} not found`);
     }
 
-    // Only videos need processing
-    if (assetData.type !== "video") {
-      console.log(`[Workflow] Asset ${assetId} is not video, skipping`);
-      await updateProcessingStatusStep(assetId, "completed");
-      return { success: true, assetId, wasProcessed: false };
+    // Only videos need conforming; all asset types need indexing
+    const isVideo = assetData.type === "video";
+    let wasConformed = false;
+
+    if (isVideo) {
+      // Check if conform is needed (fps > 60)
+      const needsConform = assetData.fps && assetData.fps > 60;
+
+      if (needsConform) {
+        wasConformed = true;
+        // Step 1: Conform
+        // Capture original src BEFORE triggering conform (Modal call is synchronous)
+        const originalSrc = assetData.src;
+        console.log(`[Workflow] Captured original src before conform: ${originalSrc.slice(0, 50)}`);
+
+        await updateProcessingStatusStep(assetId, "conforming");
+        await triggerConformStep(assetId, spaceId);
+        await waitForConformCompletion(assetId, originalSrc, CONFORM_TIMEOUT_MS);
+      }
+    } else {
+      console.log(`[Workflow] Asset ${assetId} is ${assetData.type}, skipping conform`);
     }
 
-    // Check if conform is needed (fps > 60)
-    const needsConform = assetData.fps && assetData.fps > 60;
-
-    if (needsConform) {
-      // Step 1: Conform
-      // Capture original src BEFORE triggering conform (Modal call is synchronous)
-      const originalSrc = assetData.src;
-      console.log(`[Workflow] Captured original src before conform: ${originalSrc.slice(0, 50)}`);
-
-      await updateProcessingStatusStep(assetId, "conforming");
-      await triggerConformStep(assetId, spaceId);
-      await waitForConformCompletion(assetId, originalSrc, CONFORM_TIMEOUT_MS);
-    }
-
-    // Step 2: Index (Modal indexer has fallback to originalSrc if conformed URL fails)
+    // Step 2: Index (all asset types: video, audio, image)
     await updateProcessingStatusStep(assetId, "indexing");
     let indexAttempts = 0;
     const maxIndexAttempts = 3;
@@ -207,7 +209,7 @@ export async function processAssetWorkflow(input: ProcessAssetInput) {
       success: true,
       assetId,
       wasProcessed: true,
-      wasConformed: needsConform,
+      wasConformed,
     };
   } catch (error: any) {
     console.error(`[Workflow] Failed to process asset ${assetId}:`, error);

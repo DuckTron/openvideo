@@ -135,7 +135,7 @@ Switch to Narrative Mode when the prompt includes ANY of:
 - A tone descriptor ("authentic", "energetic", "inspiring", "warm")
 - Multiple content themes to cover in sequence
 - Output format requirements (vertical, LinkedIn, Reels, TikTok)
-- A `Highlight:` bullet list (e.g. "* Team collaboration", "* Daily routines")
+- A `Highlight:` bullet list (e.g. "_ Team collaboration", "_ Daily routines")
 
 ### Chapter Detection from Highlight Lists
 
@@ -238,6 +238,7 @@ This is where quality is determined. For each section, go through the results an
 - Without valid `startMs`/`endMs`, you cannot calculate `trim.from` and `trim.to` — these segments cannot be used for video clips.
 
 **⚠️ CRITICAL: Source URL Verification**
+
 - RAG results may contain stale `src` URLs (asset may have been re-uploaded after indexing).
 - **ALWAYS get the authoritative `src` URL from `get_space_state`** using the `assetId` from the RAG result.
 - Never use the `src` directly from RAG metadata — use it only to identify which asset, then look up the current URL from the canonical asset list.
@@ -260,7 +261,6 @@ This is where quality is determined. For each section, go through the results an
   - `"medium"` pace → prefer segments whose natural duration is **4s–10s** (pick more developed thoughts)
 - If a segment naturally ends at 8s, use the full 8s — do **not** cut it to 3.5s.
 - If only long segments (>10s) are available and the pace is `"fast"`, it is acceptable to use them whole rather than cut mid-sentence. Video length is secondary to content integrity.
-
 
 **D. Global deduplication (critical — prevents repeated clips)**
 
@@ -287,19 +287,21 @@ Every clip must earn its place in the video. Ask: "Does this clip directly serve
 
 **Relevance Score (apply to each RAG result):**
 
-| Score | Definition | Example for "Adventure Vlog" | Example for "Product Demo" | Example for "Employee Intros" |
-|-------|------------|------------------------------|----------------------------|-------------------------------|
-| **HIGH** | Content explicitly matches the section's core intent | Cliff jumping, trail hiking, mountain scenery | Feature walkthrough, user interaction, benefit explanation | "I'm [Name]", "I work as [Role]", self-introduction language |
-| **MEDIUM** | Related but not core to the section's purpose | Packing gear, driving to location, meal break | Company history, team culture, general talking | Daily routine, collaboration footage, but not introducing self |
-| **LOW** | Off-topic or tangential only | Hotel room tour, unrelated conversation, someone else's footage | Competitor mention, off-topic anecdote, technical troubleshooting | Weekend plans, technical deep-dive, talking about others |
+| Score      | Definition                                           | Example for "Adventure Vlog"                                    | Example for "Product Demo"                                        | Example for "Employee Intros"                                  |
+| ---------- | ---------------------------------------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- | -------------------------------------------------------------- |
+| **HIGH**   | Content explicitly matches the section's core intent | Cliff jumping, trail hiking, mountain scenery                   | Feature walkthrough, user interaction, benefit explanation        | "I'm [Name]", "I work as [Role]", self-introduction language   |
+| **MEDIUM** | Related but not core to the section's purpose        | Packing gear, driving to location, meal break                   | Company history, team culture, general talking                    | Daily routine, collaboration footage, but not introducing self |
+| **LOW**    | Off-topic or tangential only                         | Hotel room tour, unrelated conversation, someone else's footage | Competitor mention, off-topic anecdote, technical troubleshooting | Weekend plans, technical deep-dive, talking about others       |
 
 **Universal Rules (apply to ALL formats):**
+
 1. **ONLY use HIGH relevance clips.** Skip MEDIUM and LOW.
 2. **Never force a clip** to hit a "one per person/asset" quota. If the content doesn't serve the narrative, skip it.
 3. **Never pad with "best available" weak clips.** A shorter, cohesive video beats a longer one with jarring content.
 4. Check `Topics` metadata — if it doesn't align with the section theme, treat as LOW relevance.
 
 **When an asset/person lacks HIGH relevance clips:**
+
 - **Skip them entirely.** Do not include their off-topic content.
 - Note in summary: "Found 3 strong adventure clips; 2 assets had no relevant content for this section."
 - The final video includes only assets that serve the narrative purpose.
@@ -419,6 +421,7 @@ When generating `clip.add` commands, use this exact template and substitute the 
 ```
 
 **Template Rules:**
+
 1. **`src` MUST come from `get_space_state`** — RAG may have stale URLs. Use RAG only for `assetId`, `segmentStartMs`, `segmentEndMs` and content. Look up the current `asset.src` from the canonical asset list.
 2. `trim.to` MUST equal `segmentEndMs * 1000` — never calculate it as `trim.from + 5000000`
 3. `display.to - display.from` MUST equal `trim.to - trim.from` (same duration)
@@ -543,7 +546,7 @@ Music should sit **under** speech, not over it. The prompt should describe the e
 - **Never fabricate asset IDs or src URLs** — use only what `get_space_state` returns.
 - **🚫 NEVER cut mid-sentence** — always use the full `segmentEndMs` from the RAG result as `trim.to`. Do not cap a clip to a shorter duration. A speaker must finish their thought completely.
 - **🚫 NEVER artificially shorten a clip to hit a duration target** — the total video may run longer than the requested range. Content integrity always wins. A 95-second video where every clip is complete is better than a 75-second video that cuts speakers mid-word.
-- **cutPace is a selection preference, NOT a trim instruction** — use it to choose *which* naturally-complete segments to prefer (shorter for fast pace, longer for medium pace), never to truncate a chosen segment.
+- **cutPace is a selection preference, NOT a trim instruction** — use it to choose _which_ naturally-complete segments to prefer (shorter for fast pace, longer for medium pace), never to truncate a chosen segment.
 - **Never repeat a segment** — global dedup across all sections is mandatory.
 - **Never place the same asset back-to-back** — alternate speakers/scenes between consecutive clips.
 - **Never add a clip shorter than 2 seconds** — it will feel like a glitch, not an edit.
@@ -558,6 +561,7 @@ Music should sit **under** speech, not over it. The prompt should describe the e
 Adjust editing pacing, canvas settings, transitions, captions, and audio generation depending on the requested format:
 
 ### 1. Vlog (Video Log / Storytelling)
+
 - **Pacing**: Medium cuts (4.0s to 7.0s per clip). Emphasize speech and personal narratives.
 - **Layout & Tracks**: Place talking-head clips on the base track. Overlay contextual images or b-roll footage on top (higher `zIndex`).
 - **Transitions**: Direct cuts (no transitions) or short crossfades (max 400ms).
@@ -565,6 +569,7 @@ Adjust editing pacing, canvas settings, transitions, captions, and audio generat
 - **Audio**: Low-volume, friendly, conversational instrumental background music.
 
 ### 2. Travel Montage
+
 - **Pacing**: Fast-paced, high-energy cuts (2.0s to 3.5s per clip).
 - **Visuals**: Focus on diverse landscapes, activity, or landmarks matching visual descriptions.
 - **Transitions**: Crossfades or slides (800ms) between adjacent video clips. Invoke `transition-editing` skill.
@@ -572,12 +577,14 @@ Adjust editing pacing, canvas settings, transitions, captions, and audio generat
 - **Audio**: Dynamic, energetic, or cinematic music. Captions are usually omitted unless voiceover exists.
 
 ### 3. Podcast
+
 - **Pacing**: Slower cuts (6.0s to 12.0s per clip) matching speaker changes.
 - **Layout**: Simple talking heads. Alternate clips based on active speaker segments.
 - **Captions**: Always enable subtitles via the `auto-caption` skill step.
 - **Audio**: Extremely low-volume, minimal ambient instrumental music.
 
 ### 4. Film (Cinematic / Atmospheric)
+
 - **Pacing**: Slow, cinematic pacing (6.0s to 10.0s per clip).
 - **Visuals**: Emphasize mood, color, lighting, and composition details.
 - **Transitions**: Long crossfades (800ms to 1200ms) or fade-to-black.
@@ -588,6 +595,7 @@ Adjust editing pacing, canvas settings, transitions, captions, and audio generat
 ## Chaptered Composition & Title Cards
 
 ### Deciding When to Add Title/Chapter Cards
+
 The addition of standalone title cards or chapter dividers is conditional and depends on the user's intent, the editing format, and asset structure:
 
 1. **YES — Add Chapter/Title Cards**:
@@ -623,6 +631,7 @@ The addition of standalone title cards or chapter dividers is conditional and de
 ### Timeline Math & Offsets (For Chaptered Mode)
 
 If chapter cards are enabled:
+
 1. Maintain a running timeline position variable: `cursor = 0` (in microseconds).
 2. For each chapter:
    - **Add Title Card**:
@@ -642,11 +651,12 @@ If chapter cards are enabled:
 
 ## Example Plan (Employee Highlight Reel with Highlight-Bullet Chapters)
 
-**User prompt**: _"Create a 60–90 second vertical highlight reel... Highlight: * Team collaboration * Daily routines * Employee authenticity..."_
+**User prompt**: _"Create a 60–90 second vertical highlight reel... Highlight: * Team collaboration * Daily routines \* Employee authenticity..."_
 
 **Detected**: Chaptered mode (Highlight list found). lowerThirds = true. outputFormat = vertical. cutPace = fast.
 
 **Tool calls**:
+
 1. `get_space_state` → build speakerMap from filenames
 2. `search_all_context("team meeting together working discussion collaboration", topK=20)` → for Team Collaboration
 3. `search_all_context("morning routine daily work desk laptop office", topK=20)` → for Daily Routines
@@ -655,6 +665,7 @@ If chapter cards are enabled:
 **Steps** (cursor tracked in microseconds, all clip durations derived from RAG segment boundaries):
 
 > In this example, RAG returned segments with these natural durations (endMs - startMs):
+>
 > - John Doe team clip: 3200ms → 3,200,000 µs
 > - Sarah K team clip: 4700ms → 4,700,000 µs
 > - Maria L routine clip: 5100ms → 5,100,000 µs
@@ -700,11 +711,13 @@ cursor = 0
 **User prompt**: "Answer these questions using my clips: Q1: What is the main goal? Q2: How do we get there? Format: Film. Add music."
 
 **Tool calls**:
+
 1. `get_space_state`
 2. `search_all_context("main goal mission vision objective")`
 3. `search_all_context("how to get there steps strategy action plan")`
 
 **Steps**:
+
 ```
 1. command: project.updateSettings (1920×1080 horizontal, black bg)
 2. command: clip.add Text (Q1 Title Card, 0s to 2s)
@@ -734,6 +747,7 @@ cursor = 0
 ## Example Plan (Employee Introductions — Strict Relevance Pattern)
 
 > **Note**: This example illustrates the universal "strict relevance" principle. The same pattern applies to ALL formats:
+>
 > - **Adventure vlog**: Skip scenic shots that don't show adventure/action, even from the right location
 > - **Product demo**: Skip testimonials about company culture, even from the right customer
 > - **Wedding film**: Skip generic reception footage, keep only emotional/key moments
@@ -746,6 +760,7 @@ cursor = 0
 **Strategy**: Search per person to find their best introduction clip. Skip anyone without a clear self-introduction segment.
 
 **Tool calls**:
+
 1. `get_space_state` → identify all assets and their speakers from filenames
 2. `search_all_context("RJ Banez introduction name role I am my name")` → find RJ's intro
 3. `search_all_context("Mina Moriguchi introduction name role I am my name")` → find Mina's intro
@@ -755,11 +770,13 @@ cursor = 0
 
 **Step 5 Filtering (Critical):**
 For each person's results, apply strict relevance check:
+
 - **HIGH relevance**: pageContent contains "I'm [Name]", "My name is", "I work as", "I'm a [role]"
 - **MEDIUM/LOW**: pageContent is about daily work, collaboration, but NOT self-introduction
 - **Action**: Only select HIGH relevance. If none found, **skip that person entirely**.
 
 **Example outcome after filtering:**
+
 - ✅ RJ Banez: Found strong introduction (pageContent: "I'm RJ Banez, I work as a hospitality intern...")
 - ✅ Mina Moriguchi: Found strong introduction (pageContent: "My name is Mina, I'm on the marketing team...")
 - ✅ Elizabeth Santandreu: Found strong introduction
@@ -769,6 +786,7 @@ For each person's results, apply strict relevance check:
 **Decision**: Include 4 employees. Skip Blessiva. Note in summary: "Found strong introduction clips for 4 of 5 employees; Blessiva Johnson did not have a clear self-introduction segment."
 
 **Steps**:
+
 ```
 1. command: project.updateSettings (1080×1920, black bg)
 2. command: clip.add Text ("Meet the Team", 0s–2s)              cursor → 2,000,000
@@ -798,10 +816,12 @@ For each person's results, apply strict relevance check:
 **User prompt**: "Create a 30-second travel montage about exploring the mountains using my video assets. Add fast-paced music, transitions, and whoosh sounds."
 
 **Tool calls**:
+
 1. `get_space_state`
 2. `search_all_context("mountains climbing hiking peaks visual landscapes nature")`
 
 **Steps**:
+
 ```
 1. command: project.updateSettings (1920×1080, black bg)
 2. command: clip.add Text (Title card: "Mountain Exploration", 0s to 3s)

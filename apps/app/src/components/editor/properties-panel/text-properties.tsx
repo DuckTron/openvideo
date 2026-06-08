@@ -1,8 +1,7 @@
 import * as React from "react";
-import { useEffect, useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ColorPicker,
-  ColorPickerAlpha,
   ColorPickerEyeDropper,
   ColorPickerFormat,
   ColorPickerHue,
@@ -10,7 +9,7 @@ import {
   ColorPickerSelection,
 } from "@/components/ui/color-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { IClip, AnimationOptions, KeyframeData } from "@openvideo/engine-pixi";
+import type { IClip } from "@openvideo/engine-pixi";
 import {
   Select,
   SelectContent,
@@ -24,7 +23,6 @@ import {
   IconAlignRight,
   IconTextSize,
   IconLineHeight,
-  IconMinus,
   IconBlur,
   IconRotate,
   IconRuler2,
@@ -32,8 +30,8 @@ import {
   IconUnderline,
   IconStrikethrough,
   IconCircle,
-  IconMovie,
   IconPlus,
+  IconMinus,
   IconTrash,
   IconEdit,
   IconChevronDown,
@@ -51,6 +49,8 @@ import { Slider } from "@/components/ui/slider";
 import color from "color";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 import { fontManager } from "@openvideo/engine-pixi";
 import { getGroupedFonts, getFontByPostScriptName } from "@/utils/font-utils";
@@ -59,6 +59,8 @@ import useLayoutStore from "../store/use-layout-store";
 import { useStore } from "zustand";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
 import { projectStore, core } from "@/lib/project";
+
+import { SectionHeader, StrokeProperty, ShadowProperty } from "./shared-sections";
 
 const GROUPED_FONTS = getGroupedFonts();
 
@@ -234,6 +236,49 @@ export function TextProperties({ clip }: TextPropertiesProps) {
   };
 
   const animations = coreClip.animations || [];
+
+  // Check if sections have content
+  const hasStroke = style.stroke?.width > 0;
+  const hasShadow =
+    style.shadow &&
+    (style.shadow.blur > 0 || style.shadow.offsetX !== 0 || style.shadow.offsetY !== 0);
+
+  // Add/Remove handlers for sections
+  const handleAddStroke = () => {
+    handleUpdate({
+      style: {
+        ...style,
+        stroke: { color: "#ffffff", width: 2 },
+      },
+    });
+  };
+
+  const handleRemoveStroke = () => {
+    handleUpdate({
+      style: {
+        ...style,
+        stroke: undefined,
+      },
+    });
+  };
+
+  const handleAddShadow = () => {
+    handleUpdate({
+      style: {
+        ...style,
+        shadow: { color: "#000000", alpha: 1, blur: 4, offsetX: 2, offsetY: 2 },
+      },
+    });
+  };
+
+  const handleRemoveShadow = () => {
+    handleUpdate({
+      style: {
+        ...style,
+        shadow: undefined,
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col gap-5">
@@ -508,33 +553,50 @@ export function TextProperties({ clip }: TextPropertiesProps) {
         </div>
       </div>
 
-      {/* Animations Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Animations
-          </label>
-          <button
-            onClick={() => {
-              setFloatingControl("animation-properties-picker", {
-                clipId: coreClip.id,
-                mode: "add",
-              });
-            }}
-            className="text-muted-foreground hover:text-white transition-colors"
-          >
-            <IconPlus className="size-3.5" />
-          </button>
-        </div>
+      <StrokeProperty
+        open={hasStroke}
+        onAdd={handleAddStroke}
+        onRemove={handleRemoveStroke}
+        color={(style.stroke?.color as string) || "#000000"}
+        width={style.stroke?.width || 0}
+        onColorChange={(color) => handleStrokeUpdate({ color })}
+        onWidthChange={(width) => handleStrokeUpdate({ width })}
+      />
 
-        <div className="flex flex-col gap-2">
-          {animations.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-4 border border-dashed rounded-md bg-white/5 opacity-50">
-              <IconMovie className="size-6 mb-1" />
-              <span className="text-[10px]">No animations applied</span>
-            </div>
-          ) : (
-            animations.map((anim: any) => (
+      <Separator className="bg-white/5" />
+
+      <ShadowProperty
+        open={hasShadow}
+        onAdd={handleAddShadow}
+        onRemove={handleRemoveShadow}
+        offsetX={style.shadow?.offsetX || 0}
+        offsetY={style.shadow?.offsetY || 0}
+        blur={style.shadow?.blur || 0}
+        color={style.shadow?.color || "#000000"}
+        onOffsetXChange={(offsetX) => handleBlurUpdate({ offsetX })}
+        onOffsetYChange={(offsetY) => handleBlurUpdate({ offsetY })}
+        onBlurChange={(blur) => handleBlurUpdate({ blur })}
+        onColorChange={(color) => handleBlurUpdate({ color })}
+      />
+
+      <Separator className="bg-white/5" />
+
+      {/* Animations Section */}
+      <Collapsible open={animations.length > 0}>
+        <SectionHeader
+          title="Animations"
+          hasContent={animations.length > 0}
+          onAdd={() =>
+            setFloatingControl("animation-properties-picker", {
+              clipId: coreClip.id,
+              mode: "add",
+            })
+          }
+          onRemove={() => handleUpdate({ animations: [] })}
+        />
+        <CollapsibleContent>
+          <div className="pb-2 flex flex-col gap-2">
+            {animations.map((anim: any) => (
               <div
                 key={anim.options?.id ?? anim.id}
                 className="flex items-center justify-between p-2 bg-secondary/30 rounded-md group"
@@ -546,186 +608,46 @@ export function TextProperties({ clip }: TextPropertiesProps) {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => {
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 opacity-0 group-hover:opacity-100"
+                    onClick={() =>
                       setFloatingControl("animation-properties-picker", {
                         clipId: coreClip.id,
                         animationId: anim.id,
                         mode: "edit",
-                      });
-                    }}
-                    className="p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-white transition-all"
+                      })
+                    }
                   >
                     <IconEdit className="size-3.5" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400"
                     onClick={() => handleAnimationRemove(anim.id)}
-                    className="p-1 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-red-400 transition-all"
                   >
                     <IconTrash className="size-3.5" />
-                  </button>
+                  </Button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
-      {/* Stroke Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Stroke
-          </label>
-          <button className="text-muted-foreground hover:text-white transition-colors">
-            <IconMinus className="size-3" />
-          </button>
-        </div>
+      <Separator className="bg-white/5" />
 
-        <div className="flex gap-2">
-          <InputGroup className="flex-2">
-            <InputGroupAddon align="inline-start" className="relative p-0">
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8">
-                    <div
-                      className="h-4 w-4 rounded-full border border-white/10 shadow-sm"
-                      style={{
-                        backgroundColor: (style.stroke?.color as string) || "#000000",
-                      }}
-                    />
-                  </InputGroupButton>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3" align="start">
-                  <ColorPicker
-                    onChange={(colorValue) => {
-                      const hexColor = color.rgb(colorValue).hex();
-                      handleStrokeUpdate({ color: hexColor });
-                    }}
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                  >
-                    <ColorPickerSelection />
-                    <div className="flex items-center gap-4">
-                      <ColorPickerEyeDropper />
-                      <div className="grid w-full gap-1">
-                        <ColorPickerHue />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ColorPickerOutput />
-                      <ColorPickerFormat />
-                    </div>
-                  </ColorPicker>
-                </PopoverContent>
-              </Popover>
-            </InputGroupAddon>
-            <InputGroupInput
-              value={style.stroke?.color?.toUpperCase() || "#000000"}
-              onChange={(e) => handleStrokeUpdate({ color: e.target.value })}
-              className="text-sm p-0 text-[10px] font-mono"
-            />
-            <InputGroupAddon align="inline-end" className="border-l border-white/5 pl-2">
-              <span className="text-[10px]">100%</span>
-            </InputGroupAddon>
-          </InputGroup>
+      {/* Masks Section - Placeholder */}
+      <SectionHeader title="Masks" hasContent={false} onAdd={() => {}} onRemove={() => {}} />
 
-          <InputGroup className="flex-1">
-            <InputGroupAddon align="inline-start">
-              <IconLineHeight className="size-3.5" />
-            </InputGroupAddon>
-            <NumberInput
-              value={style.stroke?.width || 0}
-              onChange={(val) => handleStrokeUpdate({ width: val })}
-            />
-          </InputGroup>
-        </div>
-      </div>
+      <Separator className="bg-white/5" />
 
-      {/* Shadow Section */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center justify-between">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Shadow
-          </label>
-        </div>
+      {/* Effects Section - Placeholder */}
+      <SectionHeader title="Effects" hasContent={false} onAdd={() => {}} onRemove={() => {}} />
 
-        <div className="grid grid-cols-2 gap-2">
-          <InputGroup>
-            <InputGroupAddon align="inline-start">
-              <IconRuler2 className="size-3.5" />
-            </InputGroupAddon>
-            <NumberInput
-              value={Math.round(style.shadow?.offsetX || 0)}
-              onChange={(val) => handleBlurUpdate({ offsetX: val })}
-            />
-          </InputGroup>
-
-          <InputGroup>
-            <InputGroupAddon align="inline-start">
-              <IconRuler2 className="size-3.5" />
-            </InputGroupAddon>
-            <NumberInput
-              value={Math.round(style.shadow?.offsetY || 0)}
-              onChange={(val) => handleBlurUpdate({ offsetY: val })}
-            />
-          </InputGroup>
-        </div>
-
-        <div className="flex gap-2">
-          <InputGroup className="flex-1">
-            <InputGroupAddon align="inline-start">
-              <IconBlur className="size-3.5" />
-            </InputGroupAddon>
-            <NumberInput
-              value={style.shadow?.blur || 0}
-              onChange={(val) => handleBlurUpdate({ blur: val })}
-            />
-          </InputGroup>
-
-          <InputGroup className="flex-1">
-            <InputGroupAddon align="inline-start" className="relative p-0">
-              <Popover modal={true}>
-                <PopoverTrigger asChild>
-                  <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8">
-                    <div
-                      className="h-4 w-4 border border-white/10 shadow-sm"
-                      style={{
-                        backgroundColor: style.shadow?.color || "#000000",
-                      }}
-                    />
-                  </InputGroupButton>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3" align="start">
-                  <ColorPicker
-                    onChange={(colorValue) => {
-                      const hexColor = color.rgb(colorValue).hex();
-                      handleBlurUpdate({ color: hexColor });
-                    }}
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                  >
-                    <ColorPickerSelection />
-                    <div className="flex items-center gap-4">
-                      <ColorPickerEyeDropper />
-                      <div className="grid w-full gap-1">
-                        <ColorPickerHue />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ColorPickerOutput />
-                      <ColorPickerFormat />
-                    </div>
-                  </ColorPicker>
-                </PopoverContent>
-              </Popover>
-            </InputGroupAddon>
-            <InputGroupInput
-              value={style.shadow?.color?.toUpperCase() || "#000000"}
-              onChange={(e) => handleBlurUpdate({ color: e.target.value })}
-              className="text-sm p-0 text-[10px] font-mono"
-            />
-          </InputGroup>
-        </div>
-      </div>
+      <Separator className="bg-white/5" />
     </div>
   );
 }
