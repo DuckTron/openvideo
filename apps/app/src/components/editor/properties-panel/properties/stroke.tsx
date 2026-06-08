@@ -36,11 +36,9 @@ export function StrokeProperty({
   onColorChange,
   onWidthChange,
 }: StrokePropertyProps) {
-  const hasStroke = width > 0;
-
   return (
     <Collapsible open={open}>
-      <SectionHeader title="Stroke" hasContent={hasStroke} onAdd={onAdd} onRemove={onRemove} />
+      <SectionHeader title="Stroke" hasContent={open} onAdd={onAdd} onRemove={onRemove} />
       <CollapsibleContent>
         <div className="pb-2 flex flex-col gap-2">
           <div className="flex gap-2">

@@ -64,12 +64,12 @@ interface ShadowPropertyProps {
   open: boolean;
   onAdd: () => void;
   onRemove: () => void;
-  offsetX: number;
-  offsetY: number;
+  distance: number;
+  angle: number;
   blur: number;
   color: string;
-  onOffsetXChange: (val: number) => void;
-  onOffsetYChange: (val: number) => void;
+  onDistanceChange: (val: number) => void;
+  onAngleChange: (val: number) => void;
   onBlurChange: (val: number) => void;
   onColorChange: (val: string) => void;
 }
@@ -78,16 +78,16 @@ export function ShadowProperty({
   open,
   onAdd,
   onRemove,
-  offsetX,
-  offsetY,
+  distance,
+  angle,
   blur,
   color: shadowColor,
-  onOffsetXChange,
-  onOffsetYChange,
+  onDistanceChange,
+  onAngleChange,
   onBlurChange,
   onColorChange,
 }: ShadowPropertyProps) {
-  const hasShadow = blur > 0 || offsetX !== 0 || offsetY !== 0;
+  const hasShadow = blur > 0 || distance > 0;
 
   return (
     <Collapsible open={open}>
@@ -99,14 +99,17 @@ export function ShadowProperty({
               <InputGroupAddon align="inline-start">
                 <IconRuler2 className="size-3.5" />
               </InputGroupAddon>
-              <NumberInput value={Math.round(offsetX || 0)} onChange={onOffsetXChange} />
+              <NumberInput value={distance || 0} onChange={onDistanceChange} />
             </InputGroup>
 
             <InputGroup>
               <InputGroupAddon align="inline-start">
-                <IconRuler2 className="size-3.5" />
+                <IconRotate className="size-3.5" />
               </InputGroupAddon>
-              <NumberInput value={Math.round(offsetY || 0)} onChange={onOffsetYChange} />
+              <NumberInput
+                value={Math.round(((angle || 0) * 180) / Math.PI)}
+                onChange={onAngleChange}
+              />
             </InputGroup>
           </div>
 

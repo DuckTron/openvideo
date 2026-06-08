@@ -756,10 +756,12 @@ export class Text extends BaseClip<ITextEvents> {
 
     // Check for width in stroke object or as separate strokeWidth property
     const strokeWidth =
-      (typeof strokeOpt === "object" && "width" in strokeOpt ? strokeOpt.width : undefined) ??
+      (strokeOpt !== null && typeof strokeOpt === "object" && "width" in strokeOpt
+        ? strokeOpt.width
+        : undefined) ??
       this.originalOpts.strokeWidth ??
       0;
-    const hasStroke = strokeOpt !== undefined && strokeWidth > 0;
+    const hasStroke = strokeOpt != null && strokeWidth > 0;
 
     if (hasStroke) {
       // Determine stroke color

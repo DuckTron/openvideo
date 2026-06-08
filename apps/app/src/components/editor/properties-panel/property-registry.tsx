@@ -16,7 +16,6 @@ export type PropertyKey =
   | "opacity"
   | "stroke"
   | "shadow"
-  | "dropShadow"
   | "cornerRadius"
   | "chromaKey"
   | "animations"
@@ -58,7 +57,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "flip",
     "opacity",
     "stroke",
-    "dropShadow",
+    "shadow",
     "cornerRadius",
     "chromaKey",
     "animations",
@@ -71,7 +70,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "flip",
     "opacity",
     "stroke",
-    "dropShadow",
+    "shadow",
     "cornerRadius",
     "chromaKey",
     "animations",
@@ -114,7 +113,6 @@ export const PROPERTY_LABELS: Record<PropertyKey, string> = {
   opacity: "Opacity",
   stroke: "Stroke",
   shadow: "Shadow",
-  dropShadow: "Drop Shadow",
   cornerRadius: "Corner Radius",
   chromaKey: "Chroma Key",
   animations: "Animations",

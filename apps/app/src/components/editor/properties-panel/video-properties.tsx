@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import {
   SectionHeader,
   StrokeProperty,
-  DropShadowProperty,
+  ShadowProperty,
   AnimationsProperty,
   ChromaKeyProperty,
   RadiusProperty,
@@ -118,8 +118,7 @@ export function VideoProperties({ clip }: VideoPropertiesProps) {
 
   // Check if sections have content
   const hasStroke = style.stroke?.width > 0;
-  const hasShadow =
-    style.dropShadow && (style.dropShadow.blur > 0 || style.dropShadow.distance > 0);
+  const hasShadow = style.dropShadow?.blur > 0;
 
   // Add/Remove handlers for sections
   const handleAddStroke = () => {
@@ -144,7 +143,7 @@ export function VideoProperties({ clip }: VideoPropertiesProps) {
     handleUpdate({
       style: {
         ...style,
-        dropShadow: { color: "#000000", alpha: 1, blur: 4, distance: 4, angle: 45 },
+        dropShadow: { distance: 5, angle: Math.PI / 4, blur: 5, color: "#000000" },
       },
     });
   };
@@ -153,7 +152,7 @@ export function VideoProperties({ clip }: VideoPropertiesProps) {
     handleUpdate({
       style: {
         ...style,
-        dropShadow: undefined,
+        dropShadow: { blur: 0 },
       },
     });
   };
@@ -238,7 +237,7 @@ export function VideoProperties({ clip }: VideoPropertiesProps) {
         onWidthChange={(width) => handleStrokeUpdate({ width })}
       />
 
-      <DropShadowProperty
+      <ShadowProperty
         open={hasShadow}
         onAdd={handleAddShadow}
         onRemove={handleRemoveShadow}
@@ -246,10 +245,10 @@ export function VideoProperties({ clip }: VideoPropertiesProps) {
         angle={style.dropShadow?.angle || 0}
         blur={style.dropShadow?.blur || 0}
         color={style.dropShadow?.color || "#000000"}
-        onDistanceChange={(distance) => handleShadowUpdate({ distance })}
-        onAngleChange={(angle) => handleShadowUpdate({ angle })}
-        onBlurChange={(blur) => handleShadowUpdate({ blur })}
-        onColorChange={(color) => handleShadowUpdate({ color })}
+        onDistanceChange={(val: number) => handleShadowUpdate({ distance: val })}
+        onAngleChange={(val: number) => handleShadowUpdate({ angle: val })}
+        onBlurChange={(val) => handleShadowUpdate({ blur: val })}
+        onColorChange={(val) => handleShadowUpdate({ color: val })}
       />
     </div>
   );

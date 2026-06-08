@@ -107,14 +107,14 @@ export function UnifiedPropertiesPanel({ clip }: UnifiedPropertiesPanelProps) {
         );
 
       case "stroke": {
-        const hasStroke = style.stroke?.width > 0;
+        const hasStroke = style.stroke != null;
         return (
           <Properties.StrokeProperty
             key={key}
             open={hasStroke}
-            onAdd={() => handleStyleUpdate({ stroke: { color: "#FFFFFF", width: 2 } })}
-            onRemove={() => handleStyleUpdate({ stroke: { width: 0 } })}
-            color={style.stroke?.color || "#FFFFFF"}
+            onAdd={() => handleStyleUpdate({ stroke: { color: "#000000", width: 0 } })}
+            onRemove={() => handleStyleUpdate({ stroke: null })}
+            color={style.stroke?.color || "#000000"}
             width={style.stroke?.width || 0}
             onColorChange={(color: string) =>
               handleStyleUpdate({ stroke: { ...style.stroke, color } })
@@ -127,15 +127,15 @@ export function UnifiedPropertiesPanel({ clip }: UnifiedPropertiesPanelProps) {
       }
 
       case "shadow": {
-        const hasShadow = style.shadow?.blur > 0;
+        const hasShadow = style.shadow != null;
         return (
           <Properties.ShadowProperty
             key={key}
             open={hasShadow}
             onAdd={() =>
-              handleStyleUpdate({ shadow: { offsetX: 5, offsetY: 5, blur: 5, color: "#000000" } })
+              handleStyleUpdate({ shadow: { offsetX: 0, offsetY: 0, blur: 0, color: "#000000" } })
             }
-            onRemove={() => handleStyleUpdate({ shadow: { blur: 0 } })}
+            onRemove={() => handleStyleUpdate({ shadow: null })}
             offsetX={style.shadow?.offsetX || 0}
             offsetY={style.shadow?.offsetY || 0}
             blur={style.shadow?.blur || 0}
@@ -156,49 +156,12 @@ export function UnifiedPropertiesPanel({ clip }: UnifiedPropertiesPanelProps) {
         );
       }
 
-      case "dropShadow": {
-        const hasDropShadow =
-          style.dropShadow && (style.dropShadow.blur > 0 || style.dropShadow.distance > 0);
-        return (
-          <Properties.DropShadowProperty
-            key={key}
-            open={!!hasDropShadow}
-            onAdd={() =>
-              handleStyleUpdate({
-                dropShadow: { color: "#000000", alpha: 1, blur: 4, distance: 4, angle: 45 },
-              })
-            }
-            onRemove={() => handleStyleUpdate({ dropShadow: undefined })}
-            distance={style.dropShadow?.distance || 0}
-            angle={style.dropShadow?.angle || 45}
-            blur={style.dropShadow?.blur || 0}
-            color={style.dropShadow?.color || "#000000"}
-            alpha={style.dropShadow?.alpha ?? 1}
-            onDistanceChange={(val: number) =>
-              handleStyleUpdate({ dropShadow: { ...style.dropShadow, distance: val } })
-            }
-            onAngleChange={(val: number) =>
-              handleStyleUpdate({ dropShadow: { ...style.dropShadow, angle: val } })
-            }
-            onBlurChange={(val: number) =>
-              handleStyleUpdate({ dropShadow: { ...style.dropShadow, blur: val } })
-            }
-            onColorChange={(val: string) =>
-              handleStyleUpdate({ dropShadow: { ...style.dropShadow, color: val } })
-            }
-            onAlphaChange={(val: number) =>
-              handleStyleUpdate({ dropShadow: { ...style.dropShadow, alpha: val } })
-            }
-          />
-        );
-      }
-
       case "cornerRadius":
         return (
           <Properties.CornerRadiusProperty
             key={key}
-            value={style.cornerRadius || 0}
-            onChange={(val: number) => handleStyleUpdate({ cornerRadius: val })}
+            value={style.borderRadius || 0}
+            onChange={(val: number) => handleStyleUpdate({ borderRadius: val })}
           />
         );
 

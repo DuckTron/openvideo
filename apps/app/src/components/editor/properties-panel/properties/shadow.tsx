@@ -43,11 +43,9 @@ export function ShadowProperty({
   onBlurChange,
   onColorChange,
 }: ShadowPropertyProps) {
-  const hasShadow = blur > 0 || offsetX !== 0 || offsetY !== 0;
-
   return (
     <Collapsible open={open}>
-      <SectionHeader title="Shadow" hasContent={hasShadow} onAdd={onAdd} onRemove={onRemove} />
+      <SectionHeader title="Shadow" hasContent={open} onAdd={onAdd} onRemove={onRemove} />
       <CollapsibleContent>
         <div className="pb-2 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
