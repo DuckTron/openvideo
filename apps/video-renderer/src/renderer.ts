@@ -237,10 +237,12 @@ export class VideoRenderer {
         await page.exposeFunction("__onProgress__", (v: number) => onProgress(v));
       }
 
-      // Forward browser console → Node stdout (useful for debugging)
+      // Forward browser errors → Node stderr
       page.on("console", (msg) => {
         const type = msg.type();
-        process.stdout.write(`[browser:${type}] ${msg.text()}\n`);
+        if (type === "error" || type === "warning") {
+          process.stderr.write(`[browser:${type}] ${msg.text()}\n`);
+        }
       });
       page.on("pageerror", (err) => process.stderr.write(`[browser:pageerror] ${err.message}\n`));
 
