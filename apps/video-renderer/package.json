@@ -1,0 +1,17 @@
+{
+  "name": "@openvideo/video-renderer",
+  "version": "1.0.0",
+  "description": "Headless video renderer using Playwright + @openvideo/engine-pixi",
+  "type": "module",
+  "scripts": {
+    "render": "node simple-render.js"
+  },
+  "dependencies": {
+    "@openvideo/engine-pixi": "^1.1.4",
+    "playwright": "^1.44.0",
+    "express": "^4.18.3"
+  },
+  "keywords": ["video", "rendering", "playwright", "nodejs"],
+  "author": "OpenVideo",
+  "license": "MIT"
+}

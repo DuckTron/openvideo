@@ -494,6 +494,18 @@ importers:
         specifier: ~5.9.2
         version: 5.9.3
 
+  apps/video-renderer:
+    dependencies:
+      '@openvideo/engine-pixi':
+        specifier: ^1.1.4
+        version: 1.1.4(@types/react@19.2.8)(immer@10.2.0)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(yoga-layout@3.2.1)
+      express:
+        specifier: ^4.18.3
+        version: 4.22.2
+      playwright:
+        specifier: ^1.44.0
+        version: 1.60.0
+
   packages/api:
     dependencies:
       '@google/genai':
@@ -3060,6 +3072,12 @@ packages:
   '@opentelemetry/semantic-conventions@1.41.1':
     resolution: {integrity: sha512-/UhIkaZgPutTFmQ7RnIJGgDXZmtEJ7Dvi86xNTFWcnRxVRNk/aotsqDJYeEvDP+FSMB2SdW+pQzNMcWP0rwuNA==}
     engines: {node: '>=14'}
+
+  '@openvideo/core@1.1.4':
+    resolution: {integrity: sha512-qdUeHnA1w9Wkm2VS+h5bQDQBCfkIxsarTZ2p2FYwZTdB5exyhe8tb5M88azG2AdiUy/IOB51ciECCqX5kXoWcg==}
+
+  '@openvideo/engine-pixi@1.1.4':
+    resolution: {integrity: sha512-Y3u7P2RU0mfAr67GRYm6Fz2GsJi3uBXoizXLZLz2g3a6F4Q3Pk41vtfNutnSiEAxNkDEePLp9+P8iCeKUpHzag==}
 
   '@orama/orama@3.1.18':
     resolution: {integrity: sha512-a61ljmRVVyG5MC/698C8/FfFDw5a8LOIvyOLW5fztgUXqUpc1jOfQzOitSCbge657OgXXThmY3Tk8fpiDb4UcA==}
@@ -13133,6 +13151,42 @@ snapshots:
     optional: true
 
   '@opentelemetry/semantic-conventions@1.41.1': {}
+
+  '@openvideo/core@1.1.4(@types/react@19.2.8)(immer@10.2.0)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))':
+    dependencies:
+      '@types/lodash-es': 4.17.12
+      lodash-es: 4.18.1
+      nanoid: 5.1.11
+      typescript: 5.9.3
+      zustand: 5.0.13(@types/react@19.2.8)(immer@10.2.0)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - react
+      - use-sync-external-store
+
+  '@openvideo/engine-pixi@1.1.4(@types/react@19.2.8)(immer@10.2.0)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))(yoga-layout@3.2.1)':
+    dependencies:
+      '@openvideo/core': 1.1.4(@types/react@19.2.8)(immer@10.2.0)(react@19.2.6)(use-sync-external-store@1.6.0(react@19.2.6))
+      '@pixi/layout': 3.2.0(@types/react@19.2.8)(pixi.js@8.18.1)(react@19.2.6)(yoga-layout@3.2.1)
+      '@types/dom-webcodecs': 0.1.18
+      gl-transitions: 1.67.0
+      gsap: 3.15.0
+      mediabunny: 1.45.4
+      microdiff: 1.5.0
+      nanoid: 5.1.11
+      opfs-tools: 0.7.4
+      pixi-filters: 6.1.5(pixi.js@8.18.1)
+      pixi.js: 8.18.1
+      typescript: 5.9.3
+      wave-resampler: 1.0.0
+      wrapbox: 0.1.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - immer
+      - react
+      - use-sync-external-store
+      - yoga-layout
 
   '@orama/orama@3.1.18': {}
 
