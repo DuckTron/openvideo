@@ -34,6 +34,12 @@ export interface RenderOptions {
   onProgress?: (progress: number) => void;
   /** Maximum render time in ms before throwing. Default: 600_000 (10 min). */
   timeout?: number;
+  /**
+   * Prioritize rendering speed over quality.
+   * When true, may use lower encoding quality settings for faster output.
+   * Default: false.
+   */
+  prioritizeSpeed?: boolean;
 }
 
 // ---------------------------------------------------------------------------

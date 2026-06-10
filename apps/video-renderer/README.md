@@ -72,6 +72,132 @@ pnpm render project.json output.mp4
 npx @openvideo/video-renderer project.json output.mp4
 ```
 
+## Providing Parameters
+
+There are three ways to provide render parameters, in order of precedence (highest to lowest):
+
+### 1. Programmatic API Options (Highest Priority)
+
+Pass options as the second argument to `renderVideo()` or `renderer.render()`:
+
+```typescript
+import { renderVideo } from "@openvideo/video-renderer";
+
+const buffer = await renderVideo(project, {
+  // Video dimensions
+  width: 1080,
+  height: 1920,
+  fps: 30,
+  backgroundColor: "#111111",
+  
+  // Video encoding
+  format: "mp4",
+  videoCodec: "avc1.640033",
+  bitrate: 12_000_000,
+  
+  // Audio settings
+  audio: true,
+  audioCodec: "aac",
+  audioSampleRate: 48_000,
+  
+  // Performance
+  prioritizeSpeed: true,  // Reduces bitrate by 30% for faster encoding
+  
+  // Callbacks and timeout
+  onProgress: (progress) => console.log(`${(progress * 100).toFixed(1)}%`),
+  timeout: 600_000,
+  
+  // Output
+  outputPath: "./output.mp4",
+});
+```
+
+### 2. Project Settings (Medium Priority)
+
+Define settings in your project JSON. These are used as defaults when not overridden by API options:
+
+```json
+{
+  "settings": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "backgroundColor": "#111111",
+    "format": "mp4",
+    "videoCodec": "avc1.640033",
+    "bitrate": 12000000,
+    "audio": true,
+    "audioCodec": "aac",
+    "audioSampleRate": 48000
+  },
+  "clips": { ... }
+}
+```
+
+Then render with minimal options:
+
+```typescript
+// Uses all settings from project.settings
+const buffer = await renderVideo(project, {
+  outputPath: "./output.mp4",
+});
+
+// Or override specific settings
+const buffer = await renderVideo(project, {
+  bitrate: 8_000_000,  // Override project bitrate
+  outputPath: "./output.mp4",
+});
+```
+
+### 3. CLI with Project JSON (Lowest Priority)
+
+When using the CLI, all parameters come from the project JSON file:
+
+```bash
+# Reads settings from project.json, outputs to output.mp4
+pnpm render project.json output.mp4
+```
+
+**CLI does not accept individual render options as flags.** All configuration must be in the project JSON.
+
+### Complete Example
+
+```typescript
+import { renderVideo, VideoRenderer } from "@openvideo/video-renderer";
+
+// Single render with full options
+const buffer = await renderVideo(project, {
+  width: 1080,
+  height: 1920,
+  fps: 30,
+  backgroundColor: "#111111",
+  format: "mp4",
+  videoCodec: "avc1.640033",
+  bitrate: 12_000_000,
+  audio: true,
+  audioCodec: "aac",
+  audioSampleRate: 48_000,
+  prioritizeSpeed: true,
+  onProgress: (p) => process.stdout.write(`\r${(p * 100).toFixed(0)}%`),
+  timeout: 600_000,
+  outputPath: "./video.mp4",
+});
+
+// Batch rendering with shared browser instance
+const renderer = new VideoRenderer();
+await renderer.init();
+
+try {
+  // First render at 4K
+  const hd = await renderer.render(project, { width: 3840, height: 2160, bitrate: 25_000_000 });
+  
+  // Second render at 1080p (faster, reuses browser page from pool)
+  const fullHd = await renderer.render(project, { width: 1920, height: 1080, bitrate: 8_000_000 });
+} finally {
+  await renderer.destroy();
+}
+```
+
 ## API Reference
 
 ### `renderVideo(project, options)`
@@ -124,6 +250,7 @@ try {
 | `onProgress` | `(progress: number) => void` | — | Progress callback (0–1) |
 | `timeout` | `number` | `600_000` | Max render time in ms (10 min) |
 | `outputPath` | `string` | — | Optional path to write the file |
+| `prioritizeSpeed` | `boolean` | `false` | Prioritize speed over quality (reduces bitrate by 30%) |
 
 ## Project JSON Format
 

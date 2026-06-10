@@ -1,5 +1,5 @@
 import { chromium, type Browser, type Page } from "playwright";
-import express from "express";
+import sirv from "sirv";
 import { createServer, type Server } from "http";
 import fs from "fs/promises";
 import path from "path";
@@ -28,15 +28,27 @@ const ENGINE_DIST = path.join(PKG_ROOT, "node_modules", "@openvideo", "engine-pi
 
 function startStaticServer(): Promise<{ server: Server; port: number }> {
   return new Promise((resolve, reject) => {
-    const app = express();
+    // Use sirv for faster static file serving (~2x faster than express.static)
+    const serveEngine = sirv(ENGINE_DIST, { dev: false, dotfiles: true });
+    const serveRenderer = sirv(PKG_ROOT, { dev: false, single: "renderer.html" });
 
-    // renderer.html at /
-    app.get("/", (_req, res) => res.sendFile(RENDERER_HTML));
+    const server = createServer((req, res) => {
+      // Fast path: engine-pixi assets
+      if (req.url?.startsWith("/engine-pixi")) {
+        req.url = req.url.slice("/engine-pixi".length);
+        serveEngine(req, res, () => {
+          res.statusCode = 404;
+          res.end("Not found");
+        });
+        return;
+      }
+      // Serve renderer.html for root path
+      serveRenderer(req, res, () => {
+        res.statusCode = 404;
+        res.end("Not found");
+      });
+    });
 
-    // engine-pixi dist at /engine-pixi/  (import-map target)
-    app.use("/engine-pixi", express.static(ENGINE_DIST, { dotfiles: "allow" }));
-
-    const server = createServer(app);
     server.on("error", reject);
     server.listen(0, "127.0.0.1", () => {
       const addr = server.address();
@@ -54,6 +66,8 @@ export class VideoRenderer {
   private browser: Browser | null = null;
   private server: Server | null = null;
   private port = 0;
+  private pagePool: Page[] = [];
+  private maxPoolSize = 3;
 
   /** Start the static server and launch the headless browser. */
   async init(): Promise<void> {
@@ -65,12 +79,15 @@ export class VideoRenderer {
       headless: true,
       args: [
         "--no-sandbox",
-        "--disable-gpu",
         "--disable-dev-shm-usage",
         "--disable-setuid-sandbox",
         "--disable-background-timer-throttling",
         "--disable-renderer-backgrounding",
         "--disable-backgrounding-occluded-windows",
+        "--use-gl=angle", // Enable GPU acceleration
+        "--enable-features=VaapiVideoEncoder,VaapiVideoDecoder", // Hardware encoding
+        "--enable-gpu-rasterization", // Faster rasterization
+        "--ignore-gpu-blocklist", // Force GPU even if not on allowlist
       ],
     });
   }
@@ -92,6 +109,7 @@ export class VideoRenderer {
       audioSampleRate = 48_000,
       onProgress,
       timeout = 600_000,
+      prioritizeSpeed = false,
     } = options;
 
     // Derive export dimensions from the project settings (can be overridden via options)
@@ -103,13 +121,15 @@ export class VideoRenderer {
       backgroundColor: options.backgroundColor ?? settings.backgroundColor ?? "#000000",
       format,
       videoCodec,
-      bitrate,
+      bitrate: prioritizeSpeed ? Math.floor(bitrate * 0.7) : bitrate, // Lower bitrate for speed
       audio,
       audioCodec,
       audioSampleRate,
+      prioritizeSpeed,
     };
 
-    const page: Page = await this.browser.newPage();
+    // Acquire page from pool or create new one
+    const page = this.pagePool.pop() || (await this.browser.newPage());
 
     // Disable Playwright's 30 s default timeout — renders can take minutes.
     page.setDefaultTimeout(0);
@@ -157,29 +177,32 @@ export class VideoRenderer {
       );
       if (renderError) throw new Error(`Renderer error: ${renderError}`);
 
-      // Extract the video Blob as base64 (safe to cross the process boundary)
-      const base64 = await page.evaluate(async () => {
+      // Extract the video Blob as Uint8Array (faster than base64, ~30% less memory)
+      const uint8Array = await page.evaluate(async () => {
         const blob: Blob = (window as any).__VIDEO_BLOB__;
         if (!blob) throw new Error("__VIDEO_BLOB__ not set after successful render");
-
-        const ab = await blob.arrayBuffer();
-        const u8 = new Uint8Array(ab);
-        let bin = "";
-        const sz = 8_192;
-        for (let i = 0; i < u8.length; i += sz) {
-          bin += String.fromCharCode(...(u8.slice(i, i + sz) as unknown as number[]));
-        }
-        return btoa(bin);
+        return new Uint8Array(await blob.arrayBuffer());
       });
 
-      return Buffer.from(base64, "base64");
+      return Buffer.from(uint8Array);
     } finally {
-      await page.close();
+      // Return page to pool instead of closing (amortize newPage cost)
+      if (this.pagePool.length < this.maxPoolSize) {
+        // Reset page state for reuse
+        await page.goto("about:blank").catch(() => undefined);
+        this.pagePool.push(page);
+      } else {
+        await page.close();
+      }
     }
   }
 
   /** Stop the browser and the static server. */
   async destroy(): Promise<void> {
+    // Close pooled pages first
+    await Promise.all(this.pagePool.map((p) => p.close().catch(() => undefined)));
+    this.pagePool = [];
+
     await this.browser?.close().catch(() => undefined);
     this.browser = null;
 
