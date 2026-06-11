@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface OpacityPropertyProps {
   value: number;
@@ -11,7 +12,14 @@ interface OpacityPropertyProps {
 }
 
 export function OpacityProperty({ value, onChange }: OpacityPropertyProps) {
-  const percentage = Math.round(value * 100);
+  // Work in 0–100 percentage space internally
+  const toPercent = (v: number) => Math.round(v * 100);
+  const fromPercent = (v: number) => v / 100;
+
+  const { localValue, handleChange, handleCommit, handleDirectSet } = useSliderThrottle(
+    toPercent(value),
+    (pct) => onChange(fromPercent(pct)),
+  );
 
   return (
     <div className="flex flex-col">
@@ -32,16 +40,17 @@ export function OpacityProperty({ value, onChange }: OpacityPropertyProps) {
           <span className="text-xs text-muted-foreground">Opacity</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[percentage]}
-              onValueChange={(v) => onChange(v[0] / 100)}
+              value={[localValue]}
+              onValueChange={(v) => handleChange(v[0])}
+              onValueCommit={(v) => handleCommit(v[0])}
               max={100}
               step={1}
               className="flex-1"
             />
             <InputGroup className="w-14">
               <NumberInput
-                value={percentage}
-                onChange={(val) => onChange(val / 100)}
+                value={localValue}
+                onChange={(val) => handleDirectSet(val)}
                 className="pl-1 bg-transparent text-xs!"
               />
               <InputGroupAddon align="inline-end">

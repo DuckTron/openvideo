@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface CaptionStylePropertyProps {
   fontSize: number;
@@ -38,6 +39,9 @@ export function CaptionStyleProperty({
   onTextTransformChange,
   onLineHeightChange,
 }: CaptionStylePropertyProps) {
+  const fs = useSliderThrottle(fontSize || 24, onFontSizeChange);
+  const lh = useSliderThrottle(lineHeight || 1.4, onLineHeightChange);
+
   return (
     <div className="flex flex-col gap-3">
       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -48,8 +52,9 @@ export function CaptionStyleProperty({
       <div className="flex items-center gap-4">
         <IconTextSize className="size-4 text-muted-foreground" />
         <Slider
-          value={[fontSize || 24]}
-          onValueChange={(v) => onFontSizeChange(v[0])}
+          value={[fs.localValue]}
+          onValueChange={(v) => fs.handleChange(v[0])}
+          onValueCommit={(v) => fs.handleCommit(v[0])}
           min={12}
           max={72}
           step={1}
@@ -57,8 +62,8 @@ export function CaptionStyleProperty({
         />
         <InputGroup className="w-20">
           <NumberInput
-            value={fontSize || 24}
-            onChange={onFontSizeChange}
+            value={fs.localValue}
+            onChange={(val) => fs.handleDirectSet(val)}
             className="p-0 text-center"
           />
           <InputGroupAddon align="inline-end" className="p-0 pr-2">
@@ -71,8 +76,9 @@ export function CaptionStyleProperty({
       <div className="flex items-center gap-4">
         <IconLineHeight className="size-4 text-muted-foreground" />
         <Slider
-          value={[lineHeight || 1.4]}
-          onValueChange={(v) => onLineHeightChange(v[0])}
+          value={[lh.localValue]}
+          onValueChange={(v) => lh.handleChange(v[0])}
+          onValueCommit={(v) => lh.handleCommit(v[0])}
           min={1}
           max={2}
           step={0.1}
@@ -80,8 +86,8 @@ export function CaptionStyleProperty({
         />
         <InputGroup className="w-20">
           <NumberInput
-            value={lineHeight || 1.4}
-            onChange={onLineHeightChange}
+            value={lh.localValue}
+            onChange={(val) => lh.handleDirectSet(val)}
             step={0.1}
             className="p-0 text-center"
           />

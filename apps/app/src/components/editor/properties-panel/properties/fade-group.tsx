@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface FadeGroupPropertyProps {
   fadeInDuration: number;
@@ -20,6 +21,9 @@ export function FadeGroupProperty({
   onFadeOutChange,
   max = 5000,
 }: FadeGroupPropertyProps) {
+  const fadeIn = useSliderThrottle(fadeInDuration, onFadeInChange);
+  const fadeOut = useSliderThrottle(fadeOutDuration, onFadeOutChange);
+
   return (
     <div className="flex flex-col">
       {/* Section Header */}
@@ -40,8 +44,9 @@ export function FadeGroupProperty({
           <span className="text-xs text-muted-foreground">Fade-in</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[fadeInDuration]}
-              onValueChange={(v) => onFadeInChange(v[0])}
+              value={[fadeIn.localValue]}
+              onValueChange={(v) => fadeIn.handleChange(v[0])}
+              onValueCommit={(v) => fadeIn.handleCommit(v[0])}
               min={0}
               max={max}
               step={100}
@@ -49,8 +54,8 @@ export function FadeGroupProperty({
             />
             <InputGroup className="w-16">
               <NumberInput
-                value={fadeInDuration}
-                onChange={(val) => onFadeInChange(val || 0)}
+                value={fadeIn.localValue}
+                onChange={(val) => fadeIn.handleDirectSet(val || 0)}
                 className="pl-1 bg-transparent text-xs!"
                 step={100}
               />
@@ -66,8 +71,9 @@ export function FadeGroupProperty({
           <span className="text-xs text-muted-foreground">Fade-out</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[fadeOutDuration]}
-              onValueChange={(v) => onFadeOutChange(v[0])}
+              value={[fadeOut.localValue]}
+              onValueChange={(v) => fadeOut.handleChange(v[0])}
+              onValueCommit={(v) => fadeOut.handleCommit(v[0])}
               min={0}
               max={max}
               step={100}
@@ -75,8 +81,8 @@ export function FadeGroupProperty({
             />
             <InputGroup className="w-16">
               <NumberInput
-                value={fadeOutDuration}
-                onChange={(val) => onFadeOutChange(val || 0)}
+                value={fadeOut.localValue}
+                onChange={(val) => fadeOut.handleDirectSet(val || 0)}
                 className="pl-1 bg-transparent text-xs!"
                 step={100}
               />

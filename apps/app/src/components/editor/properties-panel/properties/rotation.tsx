@@ -1,8 +1,10 @@
 "use client";
+
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface RotationPropertyProps {
   value: number;
@@ -11,6 +13,11 @@ interface RotationPropertyProps {
 }
 
 export function RotationProperty({ value, onChange, max = 360 }: RotationPropertyProps) {
+  const { localValue, handleChange, handleCommit, handleDirectSet } = useSliderThrottle(
+    Math.round(value),
+    onChange,
+  );
+
   return (
     <div className="flex flex-col">
       {/* Section Header */}
@@ -30,16 +37,17 @@ export function RotationProperty({ value, onChange, max = 360 }: RotationPropert
           <span className="text-xs text-muted-foreground">Rotation</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[Math.round(value)]}
-              onValueChange={(v) => onChange(v[0])}
+              value={[localValue]}
+              onValueChange={(v) => handleChange(v[0])}
+              onValueCommit={(v) => handleCommit(v[0])}
               max={max}
               step={1}
               className="flex-1"
             />
             <InputGroup className="w-14">
               <NumberInput
-                value={Math.round(value)}
-                onChange={onChange}
+                value={localValue}
+                onChange={(val) => handleDirectSet(Math.round(val))}
                 className="pl-1 bg-transparent text-xs!"
               />
               <InputGroupAddon align="inline-end">

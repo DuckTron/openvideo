@@ -20,6 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import color from "color";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface ChromaKeyPropertyProps {
   enabled: boolean;
@@ -43,6 +44,14 @@ export function ChromaKeyProperty({
   onSpillChange,
 }: ChromaKeyPropertyProps) {
   const [open, setOpen] = useState(enabled);
+
+  const toPercent = (v: number) => Math.round((v ?? 0) * 100);
+  const fromPercent = (v: number) => v / 100;
+
+  const sim = useSliderThrottle(toPercent(similarity ?? 0.1), (pct) =>
+    onSimilarityChange(fromPercent(pct)),
+  );
+  const sp = useSliderThrottle(toPercent(spill ?? 0.05), (pct) => onSpillChange(fromPercent(pct)));
 
   return (
     <div className="flex flex-col">
@@ -118,16 +127,17 @@ export function ChromaKeyProperty({
             <span className="text-xs text-muted-foreground">Similarity</span>
             <div className="flex items-center gap-2 w-[130px]">
               <Slider
-                value={[(similarity ?? 0.1) * 100]}
-                onValueChange={(v) => onSimilarityChange(v[0] / 100)}
+                value={[sim.localValue]}
+                onValueChange={(v) => sim.handleChange(v[0])}
+                onValueCommit={(v) => sim.handleCommit(v[0])}
                 max={100}
                 step={1}
                 className="flex-1"
               />
               <InputGroup className="w-14">
                 <NumberInput
-                  value={Math.round((similarity ?? 0.1) * 100)}
-                  onChange={(val) => onSimilarityChange((val || 0) / 100)}
+                  value={sim.localValue}
+                  onChange={(val) => sim.handleDirectSet(val || 0)}
                   className="pl-1 bg-transparent text-xs!"
                 />
                 <InputGroupAddon align="inline-end">
@@ -142,16 +152,17 @@ export function ChromaKeyProperty({
             <span className="text-xs text-muted-foreground">Spill</span>
             <div className="flex items-center gap-2 w-[130px]">
               <Slider
-                value={[(spill ?? 0.05) * 100]}
-                onValueChange={(v) => onSpillChange(v[0] / 100)}
+                value={[sp.localValue]}
+                onValueChange={(v) => sp.handleChange(v[0])}
+                onValueCommit={(v) => sp.handleCommit(v[0])}
                 max={100}
                 step={1}
                 className="flex-1"
               />
               <InputGroup className="w-14">
                 <NumberInput
-                  value={Math.round((spill ?? 0.05) * 100)}
-                  onChange={(val) => onSpillChange((val || 0) / 100)}
+                  value={sp.localValue}
+                  onChange={(val) => sp.handleDirectSet(val || 0)}
                   className="pl-1 bg-transparent text-xs!"
                 />
                 <InputGroupAddon align="inline-end">

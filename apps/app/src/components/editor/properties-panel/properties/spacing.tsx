@@ -4,6 +4,7 @@ import { IconLineHeight } from "@tabler/icons-react";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface SpacingPropertyProps {
   lineHeight: number;
@@ -18,6 +19,9 @@ export function SpacingProperty({
   onLineHeightChange,
   onLetterSpacingChange,
 }: SpacingPropertyProps) {
+  const lh = useSliderThrottle(lineHeight || 1.2, onLineHeightChange);
+  const ls = useSliderThrottle(letterSpacing || 0, onLetterSpacingChange ?? (() => {}));
+
   return (
     <div className="flex flex-col gap-2">
       <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -28,8 +32,9 @@ export function SpacingProperty({
       <div className="flex items-center gap-4">
         <IconLineHeight className="size-4 text-muted-foreground" />
         <Slider
-          value={[lineHeight || 1.2]}
-          onValueChange={(v) => onLineHeightChange(v[0])}
+          value={[lh.localValue]}
+          onValueChange={(v) => lh.handleChange(v[0])}
+          onValueCommit={(v) => lh.handleCommit(v[0])}
           min={0.5}
           max={3}
           step={0.1}
@@ -37,8 +42,8 @@ export function SpacingProperty({
         />
         <InputGroup className="w-20">
           <NumberInput
-            value={lineHeight || 1.2}
-            onChange={onLineHeightChange}
+            value={lh.localValue}
+            onChange={(val) => lh.handleDirectSet(val)}
             step={0.1}
             className="p-0 text-center"
           />
@@ -50,8 +55,9 @@ export function SpacingProperty({
         <div className="flex items-center gap-4">
           <span className="text-[10px] text-muted-foreground w-4">A</span>
           <Slider
-            value={[letterSpacing || 0]}
-            onValueChange={(v) => onLetterSpacingChange(v[0])}
+            value={[ls.localValue]}
+            onValueChange={(v) => ls.handleChange(v[0])}
+            onValueCommit={(v) => ls.handleCommit(v[0])}
             min={-5}
             max={20}
             step={0.5}
@@ -59,8 +65,8 @@ export function SpacingProperty({
           />
           <InputGroup className="w-20">
             <NumberInput
-              value={letterSpacing || 0}
-              onChange={onLetterSpacingChange}
+              value={ls.localValue}
+              onChange={(val) => ls.handleDirectSet(val)}
               step={0.5}
               className="p-0 text-center"
             />

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface VolumePropertyProps {
   value: number;
@@ -11,7 +12,13 @@ interface VolumePropertyProps {
 }
 
 export function VolumeProperty({ value, onChange }: VolumePropertyProps) {
-  const percentage = Math.round((value ?? 1) * 100);
+  const toPercent = (v: number) => Math.round((v ?? 1) * 100);
+  const fromPercent = (v: number) => v / 100;
+
+  const { localValue, handleChange, handleCommit, handleDirectSet } = useSliderThrottle(
+    toPercent(value),
+    (pct) => onChange(fromPercent(pct)),
+  );
 
   return (
     <div className="flex flex-col">
@@ -32,16 +39,17 @@ export function VolumeProperty({ value, onChange }: VolumePropertyProps) {
           <span className="text-xs text-muted-foreground">Volume</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[percentage]}
-              onValueChange={(v) => onChange(v[0] / 100)}
+              value={[localValue]}
+              onValueChange={(v) => handleChange(v[0])}
+              onValueCommit={(v) => handleCommit(v[0])}
               max={100}
               step={1}
               className="flex-1"
             />
             <InputGroup className="w-14">
               <NumberInput
-                value={percentage}
-                onChange={(val) => onChange((val || 0) / 100)}
+                value={localValue}
+                onChange={(val) => handleDirectSet(val || 0)}
                 className="pl-1 bg-transparent text-xs!"
               />
               <InputGroupAddon align="inline-end">

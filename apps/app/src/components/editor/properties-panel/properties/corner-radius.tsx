@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
+import { useSliderThrottle } from "../hooks/use-slider-throttle";
 
 interface CornerRadiusPropertyProps {
   value: number;
@@ -12,6 +13,11 @@ interface CornerRadiusPropertyProps {
 }
 
 export function CornerRadiusProperty({ value, onChange, max = 500 }: CornerRadiusPropertyProps) {
+  const { localValue, handleChange, handleCommit, handleDirectSet } = useSliderThrottle(
+    value || 0,
+    onChange,
+  );
+
   return (
     <div className="flex flex-col">
       {/* Section Header */}
@@ -31,16 +37,17 @@ export function CornerRadiusProperty({ value, onChange, max = 500 }: CornerRadiu
           <span className="text-xs text-muted-foreground">Radius</span>
           <div className="flex items-center gap-2 w-[130px]">
             <Slider
-              value={[value || 0]}
-              onValueChange={(v) => onChange(v[0])}
+              value={[localValue]}
+              onValueChange={(v) => handleChange(v[0])}
+              onValueCommit={(v) => handleCommit(v[0])}
               max={max}
               step={1}
               className="flex-1"
             />
             <InputGroup className="w-14">
               <NumberInput
-                value={value || 0}
-                onChange={(val) => onChange(val || 0)}
+                value={localValue}
+                onChange={(val) => handleDirectSet(val || 0)}
                 className="pl-1 bg-transparent text-xs!"
               />
               <InputGroupAddon align="inline-end">
