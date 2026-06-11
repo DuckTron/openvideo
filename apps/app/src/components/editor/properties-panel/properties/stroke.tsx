@@ -46,19 +46,19 @@ export function StrokeProperty({
   return (
     <Collapsible open={open}>
       <SectionHeader title="Stroke" hasContent={open} onAdd={onAdd} onRemove={onRemove} />
-      <CollapsibleContent className="pb-4">
-        <div className="flex flex-col gap-2">
-          <div className="flex gap-2">
-            <InputGroup className="flex-1">
+      <CollapsibleContent>
+        <div className="py-1 flex flex-col">
+          {/* Color */}
+          <div className="flex items-center justify-between py-1 gap-4">
+            <span className="text-xs text-muted-foreground">Color</span>
+            <InputGroup className="w-[130px] h-7">
               <InputGroupAddon align="inline-start" className="relative p-0">
                 <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                   <PopoverTrigger asChild>
-                    <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8">
+                    <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                       <div
-                        className="h-4 ml-2 w-4 border border-white/10 shadow-sm"
-                        style={{
-                          backgroundColor: strokeColor || "#FFFFFF",
-                        }}
+                        className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                        style={{ backgroundColor: strokeColor || "#FFFFFF" }}
                       />
                     </InputGroupButton>
                   </PopoverTrigger>
@@ -88,18 +88,23 @@ export function StrokeProperty({
               <InputGroupInput
                 value={(strokeColor || "#FFFFFF").toUpperCase()}
                 onChange={(e) => onColorChange(e.target.value)}
-                className="text-sm p-0 text-[10px] font-mono"
+                className="text-xs p-0 font-mono"
               />
-              <InputGroupAddon align="inline-end" className="border-l border-white/5 pl-2">
-                <span className="text-[10px]">100%</span>
-              </InputGroupAddon>
             </InputGroup>
+          </div>
 
-            <InputGroup className="flex-1">
+          {/* Width */}
+          <div className="flex items-center justify-between py-1 gap-4">
+            <span className="text-xs text-muted-foreground">Width</span>
+            <InputGroup className="w-[130px]">
               <InputGroupAddon align="inline-start">
                 <IconLineHeight className="size-3.5" />
               </InputGroupAddon>
-              <NumberInput value={width || 0} onChange={onWidthChange} />
+              <NumberInput
+                value={width || 0}
+                onChange={onWidthChange}
+                className="pl-1 bg-transparent text-xs!"
+              />
             </InputGroup>
           </div>
         </div>

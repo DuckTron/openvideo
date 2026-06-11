@@ -42,17 +42,17 @@ export function AnimationsProperty({
         onRemove={onRemove}
       />
       <CollapsibleContent>
-        <div className="pb-2 flex flex-col gap-2">
+        <div className="py-1 flex flex-col gap-1.5">
           <Button
             variant="outline"
             size="sm"
-            className="w-full gap-1.5 text-xs h-8 hover:bg-secondary/60"
+            className="w-full gap-1.5 text-xs h-7 hover:bg-secondary/60"
             onClick={onAdd}
           >
             <IconPlus className="size-3.5" />
             Add Animation
           </Button>
-          <div className="flex flex-col gap-2 mt-1">
+          <div className="flex flex-col gap-1.5">
             {animations.map((anim, index) => {
               const durationMs = (anim.options?.duration ?? 0) / 1e6;
               const durationText =
@@ -63,10 +63,10 @@ export function AnimationsProperty({
               return (
                 <div
                   key={anim.options?.id ?? anim.id}
-                  className="flex items-center gap-2 p-2.5 bg-secondary/20 hover:bg-secondary/30 rounded-lg group border border-transparent hover:border-secondary/50 transition-colors"
+                  className="flex items-center gap-2 p-2 bg-secondary/20 hover:bg-secondary/30 rounded-md group border border-transparent hover:border-secondary/50 transition-colors"
                 >
-                  <div className="flex items-center justify-center size-8 rounded-md bg-primary/10 text-primary shrink-0">
-                    <IconKeyframe className="size-4" />
+                  <div className="flex items-center justify-center size-7 rounded bg-primary/10 text-primary shrink-0">
+                    <IconKeyframe className="size-3.5" />
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -81,18 +81,18 @@ export function AnimationsProperty({
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-7 hover:bg-secondary"
+                      className="size-6 hover:bg-secondary"
                       onClick={() => onEdit(anim.id)}
                     >
-                      <IconEdit className="size-3.5" />
+                      <IconEdit className="size-3" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-7 hover:bg-secondary text-muted-foreground hover:text-red-400"
+                      className="size-6 hover:bg-secondary text-muted-foreground hover:text-red-400"
                       onClick={() => onDelete(anim.id)}
                     >
-                      <IconTrash className="size-3.5" />
+                      <IconTrash className="size-3" />
                     </Button>
                   </div>
                 </div>

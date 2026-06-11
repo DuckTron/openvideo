@@ -12,10 +12,8 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ title, hasContent, onAdd, onRemove }: SectionHeaderProps) {
   return (
-    <div className="flex items-center justify-between py-1 h-12">
-      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-        {title}
-      </span>
+    <div className="flex items-center justify-between py-2">
+      <span className="text-xs font-semibold text-foreground">{title}</span>
       <Button
         variant="ghost"
         size="icon"

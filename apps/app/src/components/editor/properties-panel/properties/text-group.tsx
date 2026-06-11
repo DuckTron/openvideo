@@ -9,7 +9,7 @@ import {
   IconUnderline,
   IconOverline,
   IconStrikethrough,
-  IconChevronDown,
+  IconSelector,
   IconCheck,
 } from "@tabler/icons-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -79,10 +79,10 @@ const FontPicker = React.memo(
             variant="outline"
             role="combobox"
             aria-expanded={isOpen}
-            className="w-full h-9 justify-between px-3 border-input"
+            className="w-full h-8 justify-between px-3 border-input text-xs relative"
           >
             <span className="truncate">{currentFamily.family}</span>
-            <IconChevronDown className="size-4 opacity-50 shrink-0 ml-2" />
+            <IconSelector className="size-4 opacity-50 shrink-0 absolute right-2" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 gap-0" align="start">
@@ -149,20 +149,33 @@ export function TextGroupProperty({
   const [colorOpen, setColorOpen] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 pb-4">
-      {/* Font Section */}
-      <div className="flex flex-col gap-2">
-        <div className="h-12 flex items-center">
-          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-            Font
-          </label>
+    <div className="flex flex-col">
+      {/* Section Header */}
+      <div className="flex items-center justify-between py-2">
+        <span className="text-xs font-semibold text-foreground">Text</span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-5 text-muted-foreground hover:text-foreground"
+        >
+          <span className="text-base leading-none">+</span>
+        </Button>
+      </div>
+
+      <div className="py-1 flex flex-col">
+        {/* Font */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Font</span>
+          <div className="w-[130px]">
+            <FontPicker currentFamily={{ family: currentFamily }} handleFontChange={onFontChange} />
+          </div>
         </div>
 
-        <FontPicker currentFamily={{ family: currentFamily }} handleFontChange={onFontChange} />
-
-        <div className="grid grid-cols-2 gap-2">
+        {/* Style */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Style</span>
           <Select value={currentFont.postScriptName} onValueChange={onFontStyleChange}>
-            <SelectTrigger className="border h-9 w-full overflow-hidden">
+            <SelectTrigger className="w-[130px] h-7 bg-secondary border rounded-md text-xs!">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
             <SelectContent>
@@ -173,136 +186,147 @@ export function TextGroupProperty({
               ))}
             </SelectContent>
           </Select>
+        </div>
 
-          <InputGroup>
-            <NumberInput value={fontSize} onChange={onFontSizeChange} className="pl-2" />
+        {/* Size */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Size</span>
+          <InputGroup className="w-[130px]">
+            <NumberInput
+              value={fontSize}
+              onChange={onFontSizeChange}
+              className="pl-2 bg-transparent text-xs!"
+            />
             <InputGroupAddon align="inline-end">
-              <IconTextSize className="size-4" />
+              <IconTextSize className="size-3.5" />
             </InputGroupAddon>
           </InputGroup>
         </div>
-      </div>
 
-      {/* Alignment Section */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Text Align */}
-        <div className="flex bg-input/30 rounded-md p-1 gap-1">
-          {[
-            { icon: IconAlignLeft, value: "left" },
-            { icon: IconAlignCenter, value: "center" },
-            { icon: IconAlignRight, value: "right" },
-          ].map((item) => (
-            <button
-              key={item.value}
-              onClick={() => onTextAlignChange(item.value as "left" | "center" | "right")}
-              className={cn(
-                "flex-1 flex items-center justify-center rounded-sm py-1 transition-colors",
-                textAlign === item.value
-                  ? "bg-white/10 text-white"
-                  : "text-muted-foreground hover:bg-white/5",
-              )}
-            >
-              <item.icon className="size-3.5" />
-            </button>
-          ))}
+        {/* Align */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Align</span>
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+            {[
+              { icon: IconAlignLeft, value: "left" },
+              { icon: IconAlignCenter, value: "center" },
+              { icon: IconAlignRight, value: "right" },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => onTextAlignChange(item.value as "left" | "center" | "right")}
+                className={cn(
+                  "flex-1 flex items-center justify-center h-6 rounded-sm transition-colors",
+                  textAlign === item.value
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <item.icon className="size-3.5" />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Decorations */}
-        <div className="flex bg-input/30 rounded-md p-1 gap-1">
-          {[
-            { icon: IconUnderline, value: "underline", active: underline },
-            { icon: IconOverline, value: "overline", active: overline },
-            { icon: IconStrikethrough, value: "strikethrough", active: linethrough },
-          ].map((item) => (
-            <button
-              key={item.value}
-              onClick={() => {
-                if (item.value === "underline") onUnderlineChange(!underline);
-                if (item.value === "overline") onOverlineChange(!overline);
-                if (item.value === "strikethrough") onLinethroughChange(!linethrough);
-              }}
-              className={cn(
-                "flex-1 flex items-center justify-center rounded-sm py-1 transition-colors",
-                item.active ? "bg-white/10 text-white" : "text-muted-foreground hover:bg-white/5",
-              )}
-            >
-              <item.icon className="size-3.5" />
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Case & Color Section */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Text Case */}
-        <div className="flex bg-secondary/30 rounded-md p-1 gap-1">
-          {[
-            { label: "aA", value: "none" },
-            { label: "AA", value: "uppercase" },
-            { label: "aa", value: "lowercase" },
-          ].map((item) => (
-            <button
-              key={item.value}
-              onClick={() => onTextCaseChange(item.value as "none" | "uppercase" | "lowercase")}
-              className={cn(
-                "flex-1 text-[10px] font-medium flex items-center justify-center rounded-sm py-1 transition-colors",
-                textCase === item.value
-                  ? "bg-white/10 text-white"
-                  : "text-muted-foreground hover:bg-white/5",
-              )}
-            >
-              {item.label}
-            </button>
-          ))}
+        {/* Decoration */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Decoration</span>
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+            {[
+              { icon: IconUnderline, value: "underline", active: underline },
+              { icon: IconOverline, value: "overline", active: overline },
+              { icon: IconStrikethrough, value: "strikethrough", active: linethrough },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => {
+                  if (item.value === "underline") onUnderlineChange(!underline);
+                  if (item.value === "overline") onOverlineChange(!overline);
+                  if (item.value === "strikethrough") onLinethroughChange(!linethrough);
+                }}
+                className={cn(
+                  "flex-1 flex items-center justify-center h-6 rounded-sm transition-colors",
+                  item.active
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <item.icon className="size-3.5" />
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* Color Picker */}
-        <InputGroup className="flex-1">
-          <InputGroupAddon align="inline-start" className="relative p-0">
-            <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
-              <PopoverTrigger asChild>
-                <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8">
-                  <div
-                    className="h-4 ml-2 w-4 border border-white/10 shadow-sm"
-                    style={{
-                      backgroundColor: fill || "#000000",
+        {/* Case */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Case</span>
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+            {[
+              { label: "aA", value: "none" },
+              { label: "AA", value: "uppercase" },
+              { label: "aa", value: "lowercase" },
+            ].map((item) => (
+              <button
+                key={item.value}
+                onClick={() => onTextCaseChange(item.value as "none" | "uppercase" | "lowercase")}
+                className={cn(
+                  "flex-1 h-6 text-[10px] font-medium rounded-sm transition-colors",
+                  textCase === item.value
+                    ? "bg-muted text-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Color */}
+        <div className="flex items-center justify-between py-1 gap-4">
+          <span className="text-xs text-muted-foreground">Color</span>
+          <InputGroup className="w-[130px] h-7">
+            <InputGroupAddon align="inline-start" className="relative p-0">
+              <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
+                <PopoverTrigger asChild>
+                  <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
+                    <div
+                      className="h-5 w-5 rounded-sm border border-input shadow-sm"
+                      style={{ backgroundColor: fill || "#000000" }}
+                    />
+                  </InputGroupButton>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-3" align="start">
+                  <ColorPicker
+                    value={fill}
+                    onChange={(colorValue: any) => {
+                      const hexColor = color.rgb(colorValue as number[]).hex();
+                      onFillChange(hexColor);
                     }}
-                  />
-                </InputGroupButton>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="start">
-                <ColorPicker
-                  value={fill}
-                  onChange={(colorValue) => {
-                    const hexColor = color.rgb(colorValue as number[]).hex();
-                    onFillChange(hexColor);
-                  }}
-                  className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                >
-                  <ColorPickerSelection />
-                  <div className="flex items-center gap-4">
-                    <ColorPickerEyeDropper />
-                    <div className="grid w-full gap-1">
-                      <ColorPickerHue />
+                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                  >
+                    <ColorPickerSelection />
+                    <div className="flex items-center gap-4">
+                      <ColorPickerEyeDropper />
+                      <div className="grid w-full gap-1">
+                        <ColorPickerHue />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ColorPickerOutput />
-                    <ColorPickerFormat />
-                  </div>
-                </ColorPicker>
-              </PopoverContent>
-            </Popover>
-          </InputGroupAddon>
-          <InputGroupInput
-            value={(fill || "#000000").toUpperCase()}
-            onChange={(e) => onFillChange(e.target.value)}
-            className="text-sm p-0 text-[10px] font-mono"
-          />
-          <InputGroupAddon align="inline-end" className="border-l border-white/5 pl-2">
-            <span className="text-[10px]">100%</span>
-          </InputGroupAddon>
-        </InputGroup>
+                    <div className="flex items-center gap-2">
+                      <ColorPickerOutput />
+                      <ColorPickerFormat />
+                    </div>
+                  </ColorPicker>
+                </PopoverContent>
+              </Popover>
+            </InputGroupAddon>
+            <InputGroupInput
+              value={(fill || "#000000").toUpperCase()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFillChange(e.target.value)}
+              className="text-xs! p-0"
+            />
+          </InputGroup>
+        </div>
       </div>
     </div>
   );
