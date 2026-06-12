@@ -242,6 +242,9 @@ export function applyClipStylesAndFilters(opts: {
       Math.min(borderRadius, textureWidth / 2, textureHeight / 2),
     );
     pooled.maskGfx.fill({ color: 0xffffff, alpha: 1 });
+
+    // Force mask update by resetting the mask property
+    tempSprite.mask = null;
     tempSprite.mask = pooled.maskGfx;
   } else if (pooled.maskGfx != null) {
     tempSprite.mask = null;

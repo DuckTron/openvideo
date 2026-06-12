@@ -417,7 +417,6 @@ export class PixiSpriteRenderer {
         this.maskGraphics.label = "MaskGraphics";
         (this.maskGraphics as any)._calculateBounds = () => {}; // Do not affect bounding box
         this.animationContainer!.addChild(this.maskGraphics);
-        this.pixiSprite.mask = this.maskGraphics;
       }
       this.maskGraphics.clear();
       this.maskGraphics.roundRect(
@@ -429,6 +428,10 @@ export class PixiSpriteRenderer {
       );
       this.maskGraphics.fill({ color: 0xffffff, alpha: 1 });
       this.maskGraphics.visible = true;
+
+      // Force mask update by resetting the mask property
+      this.pixiSprite.mask = null;
+      this.pixiSprite.mask = this.maskGraphics;
     } else {
       if (this.maskGraphics) {
         this.maskGraphics.visible = false;

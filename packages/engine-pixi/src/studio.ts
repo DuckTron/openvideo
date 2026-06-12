@@ -2341,6 +2341,8 @@ export class Studio extends EventEmitter<StudioEvents> {
       maskGraphics.roundRect(-w / 2, -h / 2, w, h, Math.min(borderRadius, w / 2, h / 2));
       maskGraphics.fill({ color: 0xffffff, alpha: 1 });
       rootContainer.addChild(maskGraphics);
+      // Force mask update by resetting the mask property
+      tempSprite.mask = null;
       tempSprite.mask = maskGraphics;
     }
 

@@ -12,6 +12,8 @@ import {
   type ITransitionInfo,
 } from "./clips";
 import type { ColorAdjustment } from "./utils/color-adjustment";
+import type { ShapeType } from "@openvideo/core";
+
 export interface ClipTimingJSON {
   display: {
     from: number;
@@ -282,7 +284,7 @@ export interface PlaceholderJSON extends BaseClipJSON {
 // Shape clip specific
 export interface ShapeJSON extends BaseClipJSON {
   type: "Shape";
-  shapeType: "rectangle";
+  shapeType: ShapeType;
 }
 
 // Global Transition interface (applied between clips)
