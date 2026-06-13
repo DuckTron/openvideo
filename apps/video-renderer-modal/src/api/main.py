@@ -1,6 +1,8 @@
 """Modal service for headless video rendering using Playwright and @openvideo/engine-pixi."""
 
 import os
+import sys
+import time
 import json
 import base64
 import http.server
@@ -292,8 +294,8 @@ def upload_to_r2(file_data: bytes, key: str) -> str:
 @app.function(
     image=image,
     timeout=600,  # 10 minutes maximum rendering budget
-    memory=2048,  # 2GB RAM
-    cpu=4.0,      # 4 CPU cores
+    memory=8192,  # 8GB RAM
+    cpu=8.0,      # 8 CPU cores
     secrets=[r2_secret]
 )
 async def render_video(project: dict, options: Optional[dict] = None) -> Union[bytes, dict]:
@@ -309,7 +311,24 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
     if options is None:
         options = {}
 
-    with tempfile.TemporaryDirectory() as temp_dir:
+    xvfb_process = None
+    try:
+        if not IS_LOCAL and sys.platform.startswith("linux"):
+            try:
+                print("[modal-renderer] Starting virtual display (Xvfb) for headed rendering on server...")
+                xvfb_process = subprocess.Popen(
+                    ["Xvfb", ":99", "-ac", "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                os.environ["DISPLAY"] = ":99"
+                time.sleep(1)
+            except Exception as xvfb_err:
+                print(f"[modal-renderer] Warning: Failed to start Xvfb: {xvfb_err}. Falling back to headless.")
+
+        run_headless = not IS_LOCAL and xvfb_process is None
+
+        temp_dir = tempfile.mkdtemp()
         print("[modal-renderer] Initializing Threaded HTTP Server...")
         server = ThreadedHTTPServer(("127.0.0.1", 0), CustomHTTPRequestHandler)
         server.temp_dir = temp_dir
@@ -351,10 +370,10 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
                 "prioritizeSpeed": prioritize_speed
             }
 
-            print(f"[modal-renderer] Launching Playwright Chromium (headless={not IS_LOCAL})...")
+            print(f"[modal-renderer] Launching Playwright Chromium (headless={run_headless})...")
             async with async_playwright() as p:
                 browser = await p.chromium.launch(
-                    headless=not IS_LOCAL,
+                    headless=run_headless,
                     args=[
                         "--no-sandbox",
                         "--disable-dev-shm-usage",
@@ -369,7 +388,13 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
                         "--enable-accelerated-video",
                         "--enable-media-stream",
                         "--autoplay-policy=no-user-gesture-required",
-                    ]
+                    ] + ([
+                        "--use-angle=swiftshader",
+                        "--enable-unsafe-swiftshader",
+                    ] if run_headless else [
+                        "--ignore-gpu-blocklist",
+                        "--enable-gpu",
+                    ])
                 )
 
                 page = await browser.new_page()
@@ -448,6 +473,19 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
             server.shutdown()
             server.server_close()
             print("[modal-renderer] Threaded HTTP Server stopped.")
+    finally:
+        if xvfb_process:
+            print("[modal-renderer] Stopping virtual display (Xvfb)...")
+            xvfb_process.terminate()
+            xvfb_process.wait()
+            print("[modal-renderer] Virtual display (Xvfb) stopped.")
+        if temp_dir and os.path.exists(temp_dir):
+            import shutil
+            try:
+                shutil.rmtree(temp_dir)
+                print("[modal-renderer] Temporary directory cleaned up.")
+            except Exception as e:
+                print(f"[modal-renderer] Warning: Failed to clean up temporary directory {temp_dir}: {e}")
 
 
 # ---------------------------------------------------------------------------
