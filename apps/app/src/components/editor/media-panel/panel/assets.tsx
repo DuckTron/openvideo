@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudioStore } from "@/stores/studio-store";
@@ -22,6 +24,10 @@ import {
   IconUpload,
   IconSparkles,
   IconDots,
+  IconLayoutGrid,
+  IconList,
+  IconCheck,
+  IconFolder,
 } from "@tabler/icons-react";
 import type { MediaType } from "@/types/media";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
@@ -432,6 +438,157 @@ function AssetCard({
   );
 }
 
+// ─── Asset List Row ───────────────────────────────────────────────────────────
+
+function AssetListRow({
+  asset,
+  onAdd,
+  onSelect,
+  onDelete,
+  onDownload,
+}: {
+  asset: VisualAsset;
+  onAdd: (asset: VisualAsset) => void;
+  onSelect: (asset: VisualAsset) => void;
+  onDelete: (id: string) => void;
+  onDownload: (asset: VisualAsset) => void;
+}) {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const { studio } = useStudioStore();
+  const draggableData = buildDraggableData(asset);
+  const isInUse = studio?.clips?.some((clip: any) => clip.src === asset.src);
+
+  const preview =
+    asset.type === "image" ? (
+      <div className="w-10 aspect-square rounded overflow-hidden shadow border border-primary">
+        <img src={asset.thumbnailSrc || asset.src} className="w-full h-full object-cover" />
+      </div>
+    ) : asset.type === "video" ? (
+      <div className="w-10 aspect-video rounded overflow-hidden shadow border border-primary bg-background">
+        {asset.thumbnailSrc ? (
+          <img src={asset.thumbnailSrc} className="w-full h-full object-cover" />
+        ) : (
+          <video src={asset.src} className="w-full h-full object-cover" muted />
+        )}
+      </div>
+    ) : (
+      <div className="w-10 aspect-square rounded overflow-hidden shadow border border-primary bg-secondary flex items-center justify-center">
+        <IconMusic size={14} className="text-primary" />
+      </div>
+    );
+
+  const isTemp = asset.id.startsWith("temp_");
+  const isUploading =
+    isTemp ||
+    (asset.uploadProgress !== undefined &&
+      asset.uploadProgress !== null &&
+      asset.uploadProgress < 100);
+  const showPreview =
+    (asset.type === "image" || asset.type === "video") &&
+    asset.src &&
+    !isTemp &&
+    asset.uploadProgress == null;
+
+  return (
+    <Draggable data={draggableData} renderCustomPreview={preview}>
+      <div
+        className="flex items-center gap-2.5 p-1.5 rounded-lg hover:bg-accent/40 group cursor-pointer transition-all duration-200"
+        onClick={() => !isTemp && onSelect(asset)}
+      >
+        {/* Left: Thumbnail/Icon */}
+        <div className="relative size-8 rounded-md overflow-hidden bg-zinc-950/40 border border-border/40 flex items-center justify-center shrink-0">
+          {showPreview ? (
+            asset.type === "image" ? (
+              <img
+                src={asset.thumbnailSrc || asset.src}
+                alt={asset.name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img
+                src={asset.thumbnailSrc || asset.src}
+                alt={asset.name}
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              {asset.type === "image" && <IconPhoto size={14} className="text-muted-foreground" />}
+              {asset.type === "video" && <IconVideo size={14} className="text-muted-foreground" />}
+              {asset.type === "audio" && <IconMusic size={14} className="text-muted-foreground" />}
+            </div>
+          )}
+
+          {isUploading && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+              <IconLoader2 className="animate-spin text-primary size-3.5" />
+            </div>
+          )}
+        </div>
+
+        {/* Center: File Info */}
+        <div className="min-w-0 flex-1">
+          <div className="text-xs text-foreground font-sans font-medium truncate group-hover:text-foreground transition-colors">
+            {asset.name}
+          </div>
+          {asset.duration && (
+            <div className="text-[10px] text-muted-foreground/85 font-mono mt-0.5">
+              {formatDuration(asset.duration)}
+            </div>
+          )}
+        </div>
+
+        {/* Right: Actions */}
+        {!isTemp && (
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onAdd(asset);
+              }}
+              className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Add to Canvas"
+            >
+              <IconPlus size={13} strokeWidth={2.5} />
+            </button>
+
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <button
+                  onClick={(e) => e.stopPropagation()}
+                  className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <IconDots size={13} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-32 py-1.5">
+                <DropdownMenuItem
+                  onClick={() => onSelect(asset)}
+                  className="cursor-pointer text-xs"
+                >
+                  Details
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDownload(asset)}
+                  className="cursor-pointer text-xs"
+                >
+                  Download
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onDelete(asset.id)}
+                  className="text-destructive cursor-pointer text-xs"
+                >
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+      </div>
+    </Draggable>
+  );
+}
+
 // ─── Main Panel ───────────────────────────────────────────────────────────────
 
 interface PanelAssetsProps {
@@ -454,6 +611,26 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
   const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [viewMode, setViewMode] = useState<"grid" | "list">("list");
+  const router = useRouter();
+
+  // tRPC compositions list query and creation mutation
+  const { data: spaces } = trpc.space.list.useQuery();
+  const createSpace = trpc.space.create.useMutation();
+  const trpcUtils = trpc.useUtils();
+
+  const handleCreateComposition = async () => {
+    const name = prompt("Enter composition name:");
+    if (!name) return;
+    try {
+      const newSpace = await createSpace.mutateAsync({ name });
+      await trpcUtils.space.list.invalidate();
+      router.push(`/edit/${newSpace.id}`);
+    } catch (err) {
+      console.error("Failed to create composition:", err);
+    }
+  };
 
   // AI Semantic Search State
   const [isSemanticMode, setIsSemanticMode] = useState(false);
@@ -713,7 +890,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   }
 
   return (
-    <div className="h-full flex flex-col relative">
+    <div className="h-full flex flex-col relative bg-background p-2 gap-4 overflow-hidden select-none">
       <input
         type="file"
         ref={fileInputRef}
@@ -723,54 +900,70 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
         onChange={handleFileUpload}
       />
 
-      {/* ── Uploads area (scrollable) ── */}
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        {/* Search, Filter, Generate, Upload Row (always visible) */}
-        <div className="flex items-center gap-2 w-full px-4 py-3">
-          {/* Search Input */}
+      {/* Header Row */}
+      <div className="flex items-center justify-between shrink-0 select-none">
+        <div className="flex items-center gap-2 text-sm font-medium  text-foreground px-2">
+          <IconFolder className="size-4.5 text-foreground/80" />
+          <span>Assets</span>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => fileInputRef.current?.click()}
+          className="h-8 gap-1.5 px-2.5 text-xs hover:bg-secondary/40 transition-colors"
+        >
+          <IconUpload className="size-3.5" />
+          <span>Upload</span>
+        </Button>
+      </div>
+
+      {/* Files Card */}
+      <div className="bg-card border border-border/40 rounded-xl p-3.5 flex-1 flex flex-col min-h-0">
+        <div className="flex items-center justify-between mb-3 shrink-0">
+          <span className="text-xs font-sans font-semibold text-muted-foreground">Files</span>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="p-1 hover:bg-accent/60 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            title="Upload Files"
+          >
+            <IconPlus className="size-3.5" />
+          </button>
+        </div>
+
+        {/* Search, Filter, ViewMode Actions Row */}
+        <div className="flex items-center gap-1.5 mb-3 shrink-0">
           <div className="relative flex-1 min-w-0">
-            <IconSearch
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
+            <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground animate-none" />
             <input
-              placeholder={isSemanticMode ? "Find quotes or topics..." : "Search assets..."}
-              className="w-full h-9 pl-9 pr-3 text-[13px] bg-secondary/50 border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border focus:bg-background transition-all"
+              placeholder={isSemanticMode ? "Find quotes or topics..." : "Search your files"}
+              className="w-full h-8 pl-8 pr-2 text-xs bg-zinc-950/40 border border-border/40 rounded-lg text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-border transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          {/* AI Search Toggle */}
-          <Button
-            variant={isSemanticMode ? "default" : "outline"}
-            size="sm"
+          {/* AI Semantic Sparkles Toggle */}
+          <button
             onClick={() => setIsSemanticMode(!isSemanticMode)}
-            className={`h-9 px-3 gap-1.5 text-xs rounded-lg transition-all shrink-0 ${
+            className={cn(
+              "p-1.5 rounded-lg border transition-colors cursor-pointer flex items-center justify-center h-8 w-8 shrink-0",
               isSemanticMode
-                ? "bg-gradient-to-r from-violet-600/95 to-indigo-600/95 hover:from-violet-600 hover:to-indigo-600 text-white shadow-md shadow-violet-500/10 border-none font-semibold"
-                : "bg-secondary/50 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground font-medium"
-            }`}
-            title="AI Semantic Search (find specific quotes or topics)"
+                ? "bg-violet-600/20 border-violet-500/40 text-violet-400 hover:bg-violet-600/30"
+                : "bg-zinc-950/40 border-border/40 text-muted-foreground hover:text-foreground hover:bg-zinc-800/40",
+            )}
+            title="AI Semantic Search"
           >
-            <IconSparkles size={14} className={isSemanticMode ? "animate-pulse" : ""} />
-            <span>AI Search</span>
-          </Button>
+            <IconSparkles className="size-3.5" />
+          </button>
 
           {/* Filter Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
-              >
-                <IconFilter size={15} />
-              </Button>
+              <button className="p-1.5 bg-zinc-950/40 border border-border/40 rounded-lg text-muted-foreground hover:text-foreground hover:bg-zinc-800/40 transition-colors cursor-pointer h-8 w-8 shrink-0 flex items-center justify-center">
+                <IconFilter className="size-3.5" />
+              </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-border bg-popover text-popover-foreground rounded-xl w-36"
-            >
+            <DropdownMenuContent align="end" className="w-36">
               {[
                 { value: "all", label: "All Assets" },
                 { value: "image", label: "Images" },
@@ -791,206 +984,208 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {/* Generate Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-            onClick={() => setIsGeneratorModalOpen(true)}
+          {/* Grid/List layout toggle */}
+          <button
+            onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")}
+            className="p-1.5 bg-zinc-950/40 border border-border/40 rounded-lg text-muted-foreground hover:text-foreground hover:bg-zinc-800/40 transition-colors cursor-pointer h-8 w-8 shrink-0 flex items-center justify-center"
+            title={viewMode === "grid" ? "Switch to List View" : "Switch to Grid View"}
           >
-            <IconSparkles size={14} />
-            <span>Generate</span>
-          </Button>
-
-          {/* Upload Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <IconUpload size={14} />
-            <span>Upload</span>
-          </Button>
+            {viewMode === "grid" ? (
+              <IconList className="size-3.5" />
+            ) : (
+              <IconLayoutGrid className="size-3.5" />
+            )}
+          </button>
         </div>
 
-        {files.length === 0 ? (
-          /* Empty state */
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-            <div className="mb-4 text-muted-foreground">
-              <IconPhoto size={24} strokeWidth={1.5} />
+        {/* Assets List/Grid Scroll Area */}
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+          {files.length === 0 ? (
+            <div className="flex-1 flex flex-col items-center justify-center px-4 text-center select-none">
+              <div className="mb-4 text-muted-foreground/60">
+                <IconFolder size={24} strokeWidth={1.5} />
+              </div>
+              <div className="text-xs text-muted-foreground/80 leading-relaxed font-medium">
+                Drag & drop or click to{" "}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="underline text-foreground hover:text-primary transition-colors font-medium cursor-pointer"
+                >
+                  add files
+                </button>
+              </div>
             </div>
-            <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px]">
-              Drag and drop your assets here, or use the buttons above to upload or generate.
-            </p>
-          </div>
-        ) : isSemanticMode && searchQuery.trim().length >= 3 ? (
-          /* AI Semantic Search Results */
-          <ScrollArea className="flex-1 px-4">
-            {isSemanticFetching ? (
-              <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-                <IconLoader2 className="animate-spin text-violet-500" size={24} />
-                <span className="text-xs">Searching with Gemini AI...</span>
-              </div>
-            ) : !semanticResults || semanticResults.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground text-center">
-                <IconSparkles size={28} className="text-violet-500 opacity-40 animate-pulse" />
-                <span className="text-sm font-semibold text-foreground/80">
-                  No AI matches found
-                </span>
-                <p className="text-xs max-w-[220px]">
-                  Try searching for other keywords, phrases, or topics mentioned in the assets.
-                </p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-3 pb-6">
-                {semanticResults.map((result: any) => {
-                  const minutes = Math.floor((result.startMs || 0) / 60000);
-                  const seconds = Math.floor(((result.startMs || 0) % 60000) / 1000);
-                  const timestampStr =
-                    result.startMs !== undefined && result.endMs !== undefined
-                      ? `${minutes}:${seconds.toString().padStart(2, "0")} - ${Math.floor(
-                          result.endMs / 60000,
-                        )}:${Math.floor((result.endMs % 60000) / 1000)
-                          .toString()
-                          .padStart(2, "0")}`
-                      : "";
+          ) : isSemanticMode && searchQuery.trim().length >= 3 ? (
+            /* AI Semantic Search Results */
+            <ScrollArea className="flex-1 pr-1.5">
+              {isSemanticFetching ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
+                  <IconLoader2 className="animate-spin text-violet-500" size={20} />
+                  <span className="text-[11px]">Searching with Gemini...</span>
+                </div>
+              ) : !semanticResults || semanticResults.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-1.5 text-muted-foreground text-center">
+                  <IconSparkles size={24} className="text-violet-500 opacity-40 animate-pulse" />
+                  <span className="text-xs font-semibold text-foreground/80">No AI matches</span>
+                  <p className="text-[10px] max-w-[180px]">
+                    Try keywords or phrases mentioned in assets.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 pb-4">
+                  {semanticResults.map((result: any) => {
+                    const minutes = Math.floor((result.startMs || 0) / 60000);
+                    const seconds = Math.floor(((result.startMs || 0) % 60000) / 1000);
+                    const timestampStr =
+                      result.startMs !== undefined && result.endMs !== undefined
+                        ? `${minutes}:${seconds.toString().padStart(2, "0")} - ${Math.floor(
+                            result.endMs / 60000,
+                          )}:${Math.floor((result.endMs % 60000) / 1000)
+                            .toString()
+                            .padStart(2, "0")}`
+                        : "";
 
-                  const parentFile = files.find((f) => f.id === result.assetId);
-                  const visualAsset: VisualAsset = {
-                    id: result.assetId,
-                    type: result.assetType as any,
-                    src: result.src,
-                    name: result.assetName,
-                    thumbnailSrc: parentFile?.thumbnailSrc,
-                  };
+                    const parentFile = files.find((f) => f.id === result.assetId);
+                    const visualAsset: VisualAsset = {
+                      id: result.assetId,
+                      type: result.assetType as any,
+                      src: result.src,
+                      name: result.assetName,
+                      thumbnailSrc: parentFile?.thumbnailSrc,
+                    };
 
-                  const percentageScore = Math.round((result.score || 0) * 100);
+                    const percentageScore = Math.round((result.score || 0) * 100);
 
-                  return (
-                    <div
-                      key={`${result.assetId}-${result.startMs}-${result.endMs}`}
-                      className="group flex flex-col gap-2 p-3 bg-secondary/20 hover:bg-secondary/40 border border-border/40 hover:border-violet-500/30 rounded-xl transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
-                      onClick={() => setSelectedAssetId(result.assetId)}
-                    >
-                      {/* Match score label */}
-                      <div className="absolute top-2.5 right-2.5">
-                        <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full border border-violet-500/20">
-                          {percentageScore}% match
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <div className="relative size-12 rounded-lg overflow-hidden bg-background shrink-0 flex items-center justify-center border border-border/50">
-                          {result.assetType === "image" ? (
-                            <img
-                              src={visualAsset.thumbnailSrc || result.src}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : result.assetType === "video" ? (
-                            visualAsset.thumbnailSrc ? (
+                    return (
+                      <div
+                        key={`${result.assetId}-${result.startMs}-${result.endMs}`}
+                        className="group flex flex-col gap-1.5 p-2 bg-secondary/10 hover:bg-secondary/20 border border-border/40 hover:border-violet-500/20 rounded-lg transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
+                        onClick={() => setSelectedAssetId(result.assetId)}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative size-8 rounded overflow-hidden bg-background shrink-0 flex items-center justify-center border border-border/50">
+                            {result.assetType === "image" ? (
                               <img
-                                src={visualAsset.thumbnailSrc}
+                                src={visualAsset.thumbnailSrc || result.src}
                                 className="w-full h-full object-cover"
                               />
+                            ) : result.assetType === "video" ? (
+                              visualAsset.thumbnailSrc ? (
+                                <img
+                                  src={visualAsset.thumbnailSrc}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <video
+                                  src={result.src}
+                                  className="w-full h-full object-cover"
+                                  muted
+                                />
+                              )
                             ) : (
-                              <video
-                                src={result.src}
-                                className="w-full h-full object-cover"
-                                muted
-                              />
-                            )
-                          ) : (
-                            <IconMusic size={20} className="text-violet-500" />
-                          )}
+                              <IconMusic size={14} className="text-violet-500" />
+                            )}
+                          </div>
+
+                          <div className="min-w-0 flex-1">
+                            <h4 className="text-xs font-semibold text-foreground truncate">
+                              {result.assetName}
+                            </h4>
+                            {timestampStr && (
+                              <div className="flex items-center gap-0.5 text-[9px] text-muted-foreground/85 mt-0.5 font-mono">
+                                <IconClock size={8} />
+                                <span>{timestampStr}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="min-w-0 flex-1 pr-16">
-                          <h4 className="text-xs font-semibold text-foreground truncate">
-                            {result.assetName}
-                          </h4>
-                          {timestampStr && (
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5 font-mono">
-                              <IconClock size={10} />
-                              <span>{timestampStr}</span>
-                            </div>
-                          )}
+                        {result.matchedText && (
+                          <div className="text-[10px] text-muted-foreground bg-background/20 p-1.5 rounded italic border-l border-violet-500/30 line-clamp-1">
+                            "{result.matchedText}"
+                          </div>
+                        )}
+
+                        <div className="flex items-center justify-between mt-0.5 pt-1 border-t border-border/10">
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="h-6 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedAssetId(result.assetId);
+                            }}
+                          >
+                            <IconInfoCircle size={10} />
+                            Details
+                          </Button>
+
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className="h-6 px-1.5 text-[9px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-0.5 rounded"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              addItemToCanvas({
+                                ...visualAsset,
+                                startMs: result.startMs,
+                                endMs: result.endMs,
+                              });
+                            }}
+                          >
+                            <IconPlus size={10} strokeWidth={2.5} />
+                            Add Segment
+                          </Button>
                         </div>
                       </div>
-
-                      {result.matchedText && (
-                        <div className="text-xs text-muted-foreground bg-background/40 p-2 rounded-lg italic border-l-2 border-violet-500/40 line-clamp-2">
-                          "{result.matchedText}"
-                        </div>
-                      )}
-
-                      <div className="flex items-center justify-between mt-1 pt-1.5 border-t border-border/20">
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          className="h-7 px-2 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAssetId(result.assetId);
-                          }}
-                        >
-                          <IconInfoCircle size={12} />
-                          Details
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          className="h-7 px-2.5 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            addItemToCanvas({
-                              ...visualAsset,
-                              startMs: result.startMs,
-                              endMs: result.endMs,
-                            });
-                          }}
-                        >
-                          <IconPlus size={11} strokeWidth={2.5} />
-                          Add Trimmed Segment
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </ScrollArea>
-        ) : (
-          /* With assets: grid */
-          <ScrollArea className="flex-1 px-4">
-            {isSemanticMode && searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
-              <div className="text-[11px] text-amber-500 font-medium mb-3 px-1 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-center animate-pulse">
-                Type 3+ characters to search with AI...
-              </div>
-            )}
-            {filteredAssets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                <IconPhoto size={28} className="opacity-40" />
-                <span className="text-xs">No matches found.</span>
-              </div>
-            ) : (
-              <div className="grid grid-cols-[repeat(auto-fill,minmax(90px,1fr))] gap-3 pb-4">
-                {filteredAssets.map((asset) => (
-                  <AssetCard
-                    key={asset.id}
-                    asset={asset}
-                    onAdd={addItemToCanvas}
-                    onSelect={(asset) => setSelectedAssetId(asset.id)}
-                    onDelete={handleDelete}
-                    onDownload={handleDownload}
-                  />
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        )}
+                    );
+                  })}
+                </div>
+              )}
+            </ScrollArea>
+          ) : (
+            /* Standard Grid or List View */
+            <ScrollArea className="flex-1 pr-1.5">
+              {isSemanticMode && searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
+                <div className="text-[10px] text-amber-500 font-medium mb-2 px-1 py-1 bg-amber-500/5 border border-amber-500/15 rounded text-center">
+                  Type 3+ characters...
+                </div>
+              )}
+              {filteredAssets.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-10 gap-1.5 text-muted-foreground">
+                  <IconPhoto size={20} className="opacity-40" />
+                  <span className="text-xs">No matches found.</span>
+                </div>
+              ) : viewMode === "grid" ? (
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(85px,1fr))] gap-2.5 pb-4">
+                  {filteredAssets.map((asset) => (
+                    <AssetCard
+                      key={asset.id}
+                      asset={asset}
+                      onAdd={addItemToCanvas}
+                      onSelect={(asset) => setSelectedAssetId(asset.id)}
+                      onDelete={handleDelete}
+                      onDownload={handleDownload}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5 pb-4">
+                  {filteredAssets.map((asset) => (
+                    <AssetListRow
+                      key={asset.id}
+                      asset={asset}
+                      onAdd={addItemToCanvas}
+                      onSelect={(asset) => setSelectedAssetId(asset.id)}
+                      onDelete={handleDelete}
+                      onDownload={handleDownload}
+                    />
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          )}
+        </div>
       </div>
       {/* Asset Generator Modal */}
       <AssetGeneratorModal open={isGeneratorModalOpen} onOpenChange={setIsGeneratorModalOpen} />

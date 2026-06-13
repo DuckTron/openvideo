@@ -2,12 +2,11 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Outfit, Inter, Figtree } from "next/font/google";
+import { Geist, Geist_Mono, Outfit, Figtree } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree-sans" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit-sans" });
 
@@ -93,13 +92,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={cn(
-        geistMono.variable,
-        figtree.variable,
-        outfit.variable,
-        "font-sans",
-        inter.variable,
-      )}
+      className={cn(geistMono.variable, figtree.variable, outfit.variable, "font-sans")}
     >
       <head />
       <body className={`antialiased dark`}>

@@ -1,220 +1,128 @@
 "use client";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { useProjectStore } from "@/stores/project-store";
-import { Log } from "@openvideo/engine-pixi";
 import { ExportModal } from "./export-modal";
-import Link from "next/link";
-import {
-  IconKeyboard,
-  IconChevronLeft,
-  IconPencil,
-  IconRobot,
-  IconArrowBackUp,
-  IconArrowForwardUp,
-  IconDownload,
-} from "@tabler/icons-react";
-import { toast } from "sonner";
 import { ShortcutsModal } from "./shortcuts-modal";
-import { useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import AutosizeInput from "../ui/autosize-input";
 import { authClient } from "@/lib/auth-client";
 import { core, projectStore } from "@/lib/project";
 import { useStore } from "zustand";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { usePanelStore } from "@/stores/panel-store";
+import {
+  IconHome,
+  IconMenu2,
+  IconChevronDown,
+  IconArrowBackUp,
+  IconArrowForwardUp,
+  IconCheck,
+  IconDatabase,
+  IconMessageCircle,
+  IconKeyboard,
+  IconDownload,
+  IconLock,
+} from "@tabler/icons-react";
 
 export default function Header() {
-  const { aspectRatio, setCanvasSize } = useProjectStore();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
-  const [customWidth, setCustomWidth] = useState("");
-  const [customHeight, setCustomHeight] = useState("");
+  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
   const router = useRouter();
   const params = useParams();
   const projectId = params.projectId as string;
   const { data: session } = authClient.useSession();
-  const { projectName, setProjectName } = useProjectStore();
-  const [isSaving, setIsSaving] = useState(false);
-  const [title, setTitle] = useState(projectName || "Untitled video");
-  const { editorMode, setEditorMode } = usePanelStore();
+  const { projectName } = useProjectStore();
 
-  // Sync title with store when project name changes externally (like on initial load)
-  useEffect(() => {
-    if (projectName && projectName !== title) {
-      setTitle(projectName);
-    }
-  }, [projectName]);
-
-  const handleApplyCustomSize = () => {
-    const w = parseInt(customWidth);
-    const h = parseInt(customHeight);
-    if (!isNaN(w) && !isNaN(h) && w > 0 && h > 0) {
-      setCanvasSize({ width: w, height: h }, "Custom");
-    } else {
-      toast.error("Invalid dimensions");
-    }
-  };
-
-  const handleGetStarted = (route: string) => {
-    router.push(route);
-  };
-
-  const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
-  // Track undo/redo availability from Core store history
   const canUndo = useStore(projectStore, (s) => s.history.length > 0);
   const canRedo = useStore(projectStore, (s) => s.future.length > 0);
 
-  // NOTE: canUndo/canRedo state now sourced from core.store
-
-  const handleExportJSON = () => {
-    try {
-      const json = core.project.export();
-      if (Object.keys(json.clips).length === 0) {
-        alert("No clips to export");
-        return;
-      }
-
-      const jsonString = JSON.stringify(json, null, 2);
-      const blob = new Blob([jsonString], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-
-      const aEl = document.createElement("a");
-      document.body.appendChild(aEl);
-      aEl.href = url;
-      aEl.download = `${projectName || "project"}-${Date.now()}.json`;
-      aEl.click();
-
-      setTimeout(() => {
-        if (document.body.contains(aEl)) {
-          document.body.removeChild(aEl);
-        }
-        URL.revokeObjectURL(url);
-      }, 100);
-    } catch (error) {
-      Log.error("Export to JSON error:", error);
-      alert("Failed to export to JSON: " + (error as Error).message);
-    }
-  };
-
-  const handleImportJSON = () => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json,application/json";
-    input.style.display = "none";
-
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
-
-      try {
-        const text = await file.text();
-        const json = JSON.parse(text);
-        core.project.import(json);
-        toast.success("Project imported successfully");
-      } catch (error) {
-        Log.error("Load from JSON error:", error);
-        alert("Failed to load from JSON: " + (error as Error).message);
-      } finally {
-        if (document.body.contains(input)) {
-          document.body.removeChild(input);
-        }
-      }
-    };
-
-    document.body.appendChild(input);
-    input.click();
-  };
-
-  const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setTitle(e.target.value);
-  };
-
   return (
-    <header className="flex h-12 w-full shrink-0 items-center px-4 bg-card z-10 border-b">
-      {/* Left: Project Navigation */}
-      <div className="flex items-center gap-4 w-[280px]">
+    <header className="flex h-12 w-full shrink-0 items-center justify-between px-4 bg-background border-b border-border/50 z-20 select-none">
+      {/* Left Action Group */}
+      <div className="flex items-center gap-2">
         <button
           onClick={() => router.push("/spaces")}
-          className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+          className="p-1.5 hover:bg-muted/50 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          title="Home"
         >
-          <IconChevronLeft className="h-4 w-4" />
-          <span className="text-sm font-medium">Projects</span>
+          <IconHome className="size-4.5" />
         </button>
 
-        <div className="w-px h-4 bg-border" />
+        <button
+          className="p-1.5 hover:bg-muted/50 rounded-md text-muted-foreground hover:text-foreground transition-colors"
+          title="Menu"
+        >
+          <IconMenu2 className="size-4.5" />
+        </button>
 
-        <AutosizeInput
-          name="title"
-          value={title}
-          onChange={handleTitleChange}
-          width={140}
-          inputClassName="border-none bg-transparent px-0 py-1 text-sm font-semibold text-foreground focus:outline-none"
-        />
-        {/* <Button onClick={() => console.log(core.project.export())}>Debug</Button> */}
-      </div>
+        <button className="flex items-center gap-1 px-2 py-1 hover:bg-muted/50 rounded-md text-muted-foreground hover:text-foreground text-xs font-medium transition-colors">
+          <span>View</span>
+          <IconChevronDown className="size-3 text-muted-foreground" />
+        </button>
 
-      {/* Center: Mode Switcher */}
-      <div className="flex-1 flex justify-center">
-        <Tabs value={editorMode} onValueChange={(v) => setEditorMode(v as "editor" | "agent")}>
-          <TabsList className="h-8 bg-muted/50 border-0">
-            <TabsTrigger
-              value="editor"
-              className="text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <IconPencil className="h-3.5 w-3.5" />
-              Editor
-            </TabsTrigger>
-            <TabsTrigger
-              value="agent"
-              className="text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
-            >
-              <IconRobot className="h-3.5 w-3.5" />
-              Agent
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
-      </div>
+        <div className="w-px h-4 bg-border/50 mx-1" />
 
-      {/* Right: Actions */}
-      <div className="flex items-center justify-end gap-3 w-[280px]">
-        {/* History Controls */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             onClick={() => core.undo()}
             disabled={!canUndo}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors disabled:opacity-25"
+            title="Undo"
           >
-            <IconArrowBackUp className="h-4 w-4" />
+            <IconArrowBackUp className="size-4.5" />
           </button>
           <button
             onClick={() => core.redo()}
             disabled={!canRedo}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30"
+            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors disabled:opacity-25"
+            title="Redo"
           >
-            <IconArrowForwardUp className="h-4 w-4" />
+            <IconArrowForwardUp className="size-4.5" />
           </button>
         </div>
 
-        <div className="w-px h-4 bg-border" />
-
-        {/* Help & Export */}
-        <div className="flex items-center gap-1">
-          <button
-            onClick={() => setIsShortcutsModalOpen(true)}
-            className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
-          >
-            <IconKeyboard className="h-4 w-4" />
-          </button>
-
-          <button
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-foreground text-background text-xs font-medium rounded-md hover:bg-foreground/90 transition-colors"
-          >
-            <IconDownload className="h-3.5 w-3.5" />
-            Export
-          </button>
+        <div className="p-1 text-emerald-500" title="Changes saved">
+          <IconCheck className="size-4" strokeWidth={3} />
         </div>
+      </div>
+
+      {/* Center Group: Project Dropdown */}
+      <div className="flex items-center justify-center">
+        <button className="flex items-center gap-1.5 text-xs font-sans font-medium text-foreground hover:opacity-80 transition-opacity cursor-pointer focus:outline-none">
+          <IconLock className="size-3.5 text-foreground" strokeWidth={1.8} />
+          <span>Personal</span>
+          <span className="font-light">/</span>
+          <span>{projectName || "You've Got This: Start Now"}</span>
+          <IconChevronDown className="size-3 text-foreground/80" />
+        </button>
+      </div>
+
+      {/* Right Action Group */}
+      <div className="flex items-center gap-2.5">
+        {/* Token/Usage Badge */}
+        <div className="flex items-center gap-1.5 px-2.5 py-1 bg-muted/40 border border-border/50 rounded-full text-[11px] text-muted-foreground font-medium select-none">
+          <IconDatabase className="size-3.5 text-purple-400" />
+          <span>40</span>
+          <span className="text-muted-foreground/50">•</span>
+          <span>59m</span>
+        </div>
+
+        {/* User initials bubble */}
+        <div className="h-7.5 w-7.5 rounded-full bg-emerald-700/80 flex items-center justify-center text-xs font-bold text-white border border-border/40 select-none cursor-pointer">
+          {session?.user?.name ? session.user.name.substring(0, 2).toUpperCase() : "+ J"}
+        </div>
+
+        <button
+          onClick={() => setIsShortcutsModalOpen(true)}
+          className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-md transition-colors"
+          title="Keyboard shortcuts"
+        >
+          <IconKeyboard className="size-4.5" />
+        </button>
+
+        <button
+          onClick={() => setIsExportModalOpen(true)}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-foreground hover:bg-foreground/95 text-background text-xs font-semibold rounded-md transition-all"
+        >
+          <span>Export</span>
+        </button>
 
         <ExportModal open={isExportModalOpen} onOpenChange={setIsExportModalOpen} />
         <ShortcutsModal open={isShortcutsModalOpen} onOpenChange={setIsShortcutsModalOpen} />

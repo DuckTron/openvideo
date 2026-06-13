@@ -166,7 +166,7 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
 
   return (
     <StudioContextMenuProvider state={contextMenuState} onClose={closeContextMenu}>
-      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-card rounded-sm relative">
+      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-[#0c0c0e] rounded-sm relative overflow-hidden">
         <canvas
           ref={canvasRef}
           style={{

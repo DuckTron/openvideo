@@ -56,7 +56,7 @@ export type PropertyKey =
 // Property configuration for each clip type
 export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   // Scene settings (when no clips are selected)
-  Scene: ["projectMenu", "exportProperties", "sceneDuration", "sceneSizeProperties"],
+  Scene: ["exportProperties", "sceneDuration", "sceneSizeProperties"],
 
   // Image clip properties
   Image: [
