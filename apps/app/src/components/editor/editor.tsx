@@ -3,10 +3,9 @@ import { useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { MediaPanel } from "@/components/editor/media-panel";
 import { CanvasPanel } from "@/components/editor/canvas-panel";
-import Timeline from "@/components/editor/timeline";
 import { cn } from "@/lib/utils";
-import { useMediaPanelStore } from "@/components/editor/media-panel/store";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import Timeline from "@/components/editor/timeline";
 import { usePanelStore } from "@/stores/panel-store";
 import { Loading } from "@/components/editor/loading";
 import FloatingControl from "@/components/editor/floating-controls/floating-control";
@@ -95,8 +94,6 @@ export default function Editor({
       setIsReady(true);
     }
   }, [editorMode]);
-
-  const { showLabels } = useMediaPanelStore();
 
   return (
     <div className="h-screen w-screen flex flex-col bg-background overflow-hidden">

@@ -109,6 +109,7 @@ const Header = ({
         height: "50px",
         flex: "none",
       }}
+      className="bg-card"
     >
       <div
         style={{

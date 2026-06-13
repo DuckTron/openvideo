@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
+const figtreeHeading = Figtree({ subsets: ["latin"], variable: "--font-heading" });
+
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree-sans" });
 const outfit = Outfit({ subsets: ["latin"], variable: "--font-outfit-sans" });
@@ -99,6 +101,7 @@ export default function RootLayout({
         outfit.variable,
         "font-sans",
         inter.variable,
+        figtreeHeading.variable,
       )}
     >
       <head />

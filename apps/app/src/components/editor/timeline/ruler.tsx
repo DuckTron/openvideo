@@ -321,7 +321,7 @@ const Ruler = (props: RulerProps) => {
 
   return (
     <div
-      className="border-t border-border"
+      className="bg-card border-border"
       style={{
         position: "relative",
         width: "100%",

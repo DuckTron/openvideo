@@ -22,29 +22,25 @@ const viewMap: Record<Tab, React.ReactNode> = {
 };
 
 export function MediaPanel() {
-  const { activeTab, isOpen, setIsOpen, showLabels } = useMediaPanelStore();
+  const { activeTab, isOpen, setIsOpen } = useMediaPanelStore();
 
   return (
-    <div
-      className={cn(
-        "h-full bg-background rounded-sm relative shrink-0",
-        showLabels ? "w-16" : "w-11",
-      )}
-    >
+    <div className="h-full bg-background rounded-sm relative shrink-0 flex flex-row">
       <TabBar />
       {isOpen && (
-        <div className="absolute left-full top-0 bottom-0 w-[360px] bg-card border-r border-t border-b shadow-xl z-50 flex flex-col overflow-hidden">
-          <div className="h-12 items-center flex justify-between px-4 shrink-0">
-            <span className="text-sm font-medium">{tabs[activeTab].label}</span>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-1.5 hover:bg-white/5 rounded-md text-muted-foreground hover:text-white transition-colors cursor-pointer"
-            >
-              <IconX className="size-4" />
-            </button>
+        <div className="w-[360px] pr-1 bg-background h-full flex flex-col overflow-hidden">
+          <div className="bg-card/70 rounded-sm h-full">
+            <div className="h-12 items-center flex justify-between px-4 shrink-0">
+              <span className="text-sm font-medium">{tabs[activeTab].label}</span>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1.5 hover:bg-white/5 rounded-md text-muted-foreground hover:text-white transition-colors cursor-pointer"
+              >
+                <IconX className="size-4" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto">{viewMap[activeTab]}</div>
           </div>
-          <Separator />
-          <div className="flex-1 overflow-auto">{viewMap[activeTab]}</div>
         </div>
       )}
     </div>

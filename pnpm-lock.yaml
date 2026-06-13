@@ -170,7 +170,7 @@ importers:
         specifier: ^4.17.21
         version: 4.18.1
       lucide-react:
-        specifier: ^1.16.0
+        specifier: ^1.17.0
         version: 1.17.0(react@19.2.0)
       mediabunny:
         specifier: ^1.26.0
