@@ -41,7 +41,7 @@ image = (
     # Install the specific engine-pixi version into /app inside the container
     .run_commands(
         "mkdir -p /app",
-        "cd /app && npm install @openvideo/engine-pixi@1.1.4"
+        "cd /app && npm install @openvideo/engine-pixi@1.1.5"
     )
     # Mount renderer.html dynamically from the host workspace
     .add_local_file(RENDERER_HTML_MOUNT_PATH, "/app/renderer.html")
@@ -249,8 +249,8 @@ def upload_to_r2(file_data: bytes, key: str) -> str:
 @app.function(
     image=image,
     timeout=600,  # 10 minutes maximum rendering budget
-    memory=16384,  # 16GB RAM
-    cpu=8.0,      # 8 CPU cores
+    memory=2048,  # 2GB RAM
+    cpu=4.0,      # 4 CPU cores
     secrets=[r2_secret]
 )
 async def render_video(project: dict, options: Optional[dict] = None) -> Union[bytes, dict]:

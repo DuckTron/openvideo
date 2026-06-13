@@ -1,5 +1,14 @@
 # @openvideo/app
 
+## 0.1.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @openvideo/core@1.1.5
+  - @openvideo/engine-pixi@1.1.5
+  - @openvideo/timeline@1.1.5
+
 ## 0.1.3
 
 ### Patch Changes
