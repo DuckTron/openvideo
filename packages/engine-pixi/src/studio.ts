@@ -41,7 +41,8 @@ export interface IStudioOpts {
   width: number;
   height: number;
   fps?: number;
-  backgroundColor?: string;
+  backgroundColor?: string; // Outside workspace backdrop color
+  artboardColor?: string; // Artboard background color
   canvas?: HTMLCanvasElement;
   interactivity?: boolean;
   spacing?: number;
@@ -283,6 +284,7 @@ export class Studio extends EventEmitter<StudioEvents> {
     this.opts = {
       fps: 30,
       backgroundColor: "#000000",
+      artboardColor: "#000000",
       interactivity: true,
       spacing: 0,
       allowZoom: false,
@@ -594,6 +596,9 @@ export class Studio extends EventEmitter<StudioEvents> {
     });
     this.pixiApp = app;
 
+    // Sync current background color to the renderer in case it changed during asynchronous initialization
+    app.renderer.background.color = this.hexToNumber(this.opts.backgroundColor);
+
     // Trigger initial render to avoid black screen
     app.render();
 
@@ -610,7 +615,9 @@ export class Studio extends EventEmitter<StudioEvents> {
 
     // Create background for Artboard (in clip container)
     this.artboardBg = new Graphics();
-    this.artboardBg.rect(0, 0, this.opts.width, this.opts.height).fill({ color: 0x000000 });
+    this.artboardBg
+      .rect(0, 0, this.opts.width, this.opts.height)
+      .fill({ color: this.hexToNumber(this.opts.artboardColor) });
     this.artboard.addChild(this.artboardBg);
 
     // Initialize Clip Container (Masked Content)
@@ -714,9 +721,11 @@ export class Studio extends EventEmitter<StudioEvents> {
   }
 
   /**
-   * Update the background color of the studio
+   * Update the background color of the studio (applies to the outside area)
    */
   public setBackgroundColor(color: string) {
+    console.log("APPLYING BACKDROP COLOR", color);
+
     this.opts.backgroundColor = color;
     const colorNum = this.hexToNumber(color);
 
@@ -728,12 +737,38 @@ export class Studio extends EventEmitter<StudioEvents> {
     this.updateFrame(this.currentTime);
   }
 
+  /**
+   * Update the artboard background color of the studio (applies to the video frame itself)
+   */
+  public setArtboardColor(color: string) {
+    console.log("APPLYING ARTBOARD COLOR", color);
+
+    this.opts.artboardColor = color;
+    const colorNum = this.hexToNumber(color);
+
+    if (this.artboardBg) {
+      this.artboardBg
+        .clear()
+        .rect(0, 0, this.opts.width, this.opts.height)
+        .fill({ color: colorNum });
+    }
+
+    if (this.pixiApp) {
+      this.pixiApp.render();
+    }
+
+    this.updateFrame(this.currentTime);
+  }
+
   public updateDimensions(width: number, height: number) {
     this.opts.width = width;
     this.opts.height = height;
 
     if (this.artboardBg) {
-      this.artboardBg.clear().rect(0, 0, width, height).fill({ color: 0x000000 });
+      this.artboardBg
+        .clear()
+        .rect(0, 0, width, height)
+        .fill({ color: this.hexToNumber(this.opts.artboardColor) });
     }
     if (this.artboardMask) {
       this.artboardMask.clear().rect(0, 0, width, height).fill({ color: 0xffffff });

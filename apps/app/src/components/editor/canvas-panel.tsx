@@ -13,6 +13,7 @@ import { editorFont } from "./constants";
 import { CUSTOM_TRANSITIONS } from "./transition-custom";
 import { CUSTOM_EFFECTS } from "./effect-custom";
 import { useStudioContextMenu, StudioContextMenuProvider } from "./studio-canvas-context-menu";
+import { useResolvedColor } from "@/hooks/use-resolved-color";
 
 const STUDIO_CONFIG = {
   fps: 30,
@@ -29,13 +30,15 @@ interface CanvasPanelProps {
  * Manages the Studio instance, canvas rendering, and responsive layout updates.
  */
 export function CanvasPanel({ onReady }: CanvasPanelProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const studioRef = useRef<Studio | null>(null);
   const onReadyRef = useRef(onReady);
   const { setStudio } = useStudioStore();
   const { canvasSize } = useProjectStore();
 
-  const backgroundColor = useStore(projectStore, (s) => s.settings.backgroundColor) || "#111111";
+  const explicitBgColor = useStore(projectStore, (s) => s.settings.backgroundColor);
+  const resolvedCardColor = useResolvedColor(containerRef, "--card", "#1D1816");
 
   // Keep onReady ref up to date
   useEffect(() => {
@@ -55,12 +58,19 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
     });
   }, [canvasSize]);
 
-  // Handle background color changes
-  // useEffect(() => {
-  //   if (studioRef.current) {
-  //     studioRef.current.setBackgroundColor(backgroundColor);
-  //   }
-  // }, [backgroundColor]);
+  // Handle backdrop (outside area) color changes based on theme
+  useEffect(() => {
+    if (studioRef.current) {
+      studioRef.current.setBackgroundColor(resolvedCardColor);
+    }
+  }, [resolvedCardColor]);
+
+  // Handle artboard (video background) color changes
+  useEffect(() => {
+    if (studioRef.current) {
+      studioRef.current.setArtboardColor(explicitBgColor || "#000000");
+    }
+  }, [explicitBgColor]);
 
   // Setup Studio and ResizeObserver (only once on mount)
   useEffect(() => {
@@ -70,7 +80,8 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
     studioRef.current = new Studio({
       ...canvasSize,
       ...STUDIO_CONFIG,
-      backgroundColor: "#1D1816",
+      backgroundColor: resolvedCardColor,
+      artboardColor: explicitBgColor || "#000000",
       canvas: canvasRef.current,
       core: core,
       previewScale: 0.75,
@@ -166,7 +177,10 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
 
   return (
     <StudioContextMenuProvider state={contextMenuState} onClose={closeContextMenu}>
-      <div className="h-full w-full flex flex-col min-h-0 min-w-0 bg-card rounded-sm relative">
+      <div
+        ref={containerRef}
+        className="h-full w-full flex flex-col min-h-0 min-w-0 bg-card rounded-sm relative"
+      >
         <canvas
           ref={canvasRef}
           style={{
