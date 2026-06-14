@@ -52,7 +52,7 @@ export function FadeGroupProperty({
               step={100}
               className="flex-1"
             />
-            <InputGroup className="w-16">
+            <InputGroup className="w-16 h-7">
               <NumberInput
                 value={fadeIn.localValue}
                 onChange={(val) => fadeIn.handleDirectSet(val || 0)}
@@ -79,7 +79,7 @@ export function FadeGroupProperty({
               step={100}
               className="flex-1"
             />
-            <InputGroup className="w-16">
+            <InputGroup className="w-16 h-7">
               <NumberInput
                 value={fadeOut.localValue}
                 onChange={(val) => fadeOut.handleDirectSet(val || 0)}

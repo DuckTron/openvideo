@@ -52,7 +52,7 @@ export function FontProperty({ currentFamily, onChange }: FontPropertyProps) {
             variant="outline"
             role="combobox"
             aria-expanded={isOpen}
-            className="w-full h-9 justify-between px-3 border-input"
+            className="w-full h-7 justify-between px-3 border-input text-xs relative"
           >
             <span className="truncate">{currentFontFamily?.family ?? "Select font"}</span>
             <CaretDown className="size-4 opacity-50 shrink-0 ml-2" />

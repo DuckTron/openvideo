@@ -134,7 +134,7 @@ export function ChromaKeyProperty({
                 step={1}
                 className="flex-1"
               />
-              <InputGroup className="w-14">
+              <InputGroup className="w-14 h-7">
                 <NumberInput
                   value={sim.localValue}
                   onChange={(val) => sim.handleDirectSet(val || 0)}
@@ -159,7 +159,7 @@ export function ChromaKeyProperty({
                 step={1}
                 className="flex-1"
               />
-              <InputGroup className="w-14">
+              <InputGroup className="w-14 h-7">
                 <NumberInput
                   value={sp.localValue}
                   onChange={(val) => sp.handleDirectSet(val || 0)}

@@ -29,14 +29,14 @@ export function TimeGroupProperty() {
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Length</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-medium px-2.5 py-1 bg-secondary border rounded-md text-foreground min-w-[60px] text-center select-none">
+            <span className="text-xs font-medium h-7 px-2.5 flex items-center justify-center bg-secondary border rounded-md text-foreground min-w-[60px] select-none">
               {durationSec.toFixed(1)}s
             </span>
-            <div className="flex items-center border rounded-md overflow-hidden bg-secondary">
-              <button className="px-2 py-1 text-muted-foreground hover:text-white hover:bg-white/5 text-xs transition-colors border-r cursor-pointer select-none">
+            <div className="h-7 flex items-center border rounded-md overflow-hidden bg-secondary">
+              <button className="h-full px-2.5 text-muted-foreground hover:text-white hover:bg-white/5 text-xs transition-colors border-r cursor-pointer select-none flex items-center justify-center">
                 —
               </button>
-              <button className="px-2 py-1 text-muted-foreground hover:text-white hover:bg-white/5 text-xs transition-colors cursor-pointer select-none">
+              <button className="h-full px-2.5 text-muted-foreground hover:text-white hover:bg-white/5 text-xs transition-colors cursor-pointer select-none flex items-center justify-center">
                 +
               </button>
             </div>

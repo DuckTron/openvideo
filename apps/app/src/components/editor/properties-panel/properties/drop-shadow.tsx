@@ -55,14 +55,14 @@ export function DropShadowProperty({
       <CollapsibleContent>
         <div className="pb-2 flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <InputGroup>
+            <InputGroup className="h-7">
               <InputGroupAddon align="inline-start">
                 <Ruler className="size-3.5" />
               </InputGroupAddon>
               <NumberInput value={distance || 0} onChange={onDistanceChange} />
             </InputGroup>
 
-            <InputGroup>
+            <InputGroup className="h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">°</span>
               </InputGroupAddon>
@@ -71,7 +71,7 @@ export function DropShadowProperty({
           </div>
 
           <div className="flex gap-2">
-            <InputGroup className="flex-1">
+            <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <Drop className="size-3.5" />
               </InputGroupAddon>
@@ -81,7 +81,7 @@ export function DropShadowProperty({
             <Popover>
               <PopoverTrigger asChild>
                 <div
-                  className="w-10 h-9 rounded-md border cursor-pointer shrink-0"
+                  className="w-10 h-7 rounded-md border cursor-pointer shrink-0"
                   style={{ backgroundColor: shadowColor || "#000000" }}
                 />
               </PopoverTrigger>

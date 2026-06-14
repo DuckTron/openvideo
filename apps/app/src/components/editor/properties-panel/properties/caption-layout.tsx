@@ -56,7 +56,7 @@ export function CaptionLayoutProperty({
             key={value}
             variant={textAlign === value ? "default" : "outline"}
             size="icon"
-            className={cn("size-8", textAlign === value && "bg-primary text-primary-foreground")}
+            className={cn("size-7", textAlign === value && "bg-primary text-primary-foreground")}
             onClick={() => onTextAlignChange(value)}
           >
             <Icon className="size-4" />
@@ -68,7 +68,7 @@ export function CaptionLayoutProperty({
       <div className="flex flex-col gap-1">
         <span className="text-[10px] text-muted-foreground">Vertical Position</span>
         <Select value={verticalPosition} onValueChange={(v) => onVerticalPositionChange(v as any)}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 bg-secondary border rounded-md text-xs!">
             <SelectValue placeholder="Position" />
           </SelectTrigger>
           <SelectContent>
@@ -83,7 +83,7 @@ export function CaptionLayoutProperty({
       <div className="flex flex-col gap-1">
         <span className="text-[10px] text-muted-foreground">Words Per Line</span>
         <Select value={String(wordsPerLine)} onValueChange={(v) => onWordsPerLineChange(Number(v))}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 bg-secondary border rounded-md text-xs!">
             <SelectValue placeholder="Words per line" />
           </SelectTrigger>
           <SelectContent>
@@ -101,7 +101,7 @@ export function CaptionLayoutProperty({
       <div className="flex flex-col gap-1">
         <span className="text-[10px] text-muted-foreground">Max Lines</span>
         <Select value={String(maxLines)} onValueChange={(v) => onMaxLinesChange(Number(v))}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 bg-secondary border rounded-md text-xs!">
             <SelectValue placeholder="Max lines" />
           </SelectTrigger>
           <SelectContent>

@@ -44,7 +44,7 @@ export function TransformProperty({
         <div className="flex items-center justify-between gap-4">
           <span className="text-xs text-muted-foreground">Position</span>
           <div className="flex w-[130px] gap-2">
-            <InputGroup className="flex-1 h-8">
+            <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">X</span>
               </InputGroupAddon>
@@ -54,7 +54,7 @@ export function TransformProperty({
                 className="pl-1 bg-transparent text-xs!"
               />
             </InputGroup>
-            <InputGroup className="flex-1 h-8">
+            <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">Y</span>
               </InputGroupAddon>
@@ -71,7 +71,7 @@ export function TransformProperty({
         <div className="flex items-center justify-between gap-4">
           <span className="text-xs text-muted-foreground">Size</span>
           <div className="flex w-[130px] gap-2">
-            <InputGroup className="flex-1 h-8">
+            <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">W</span>
               </InputGroupAddon>
@@ -81,7 +81,7 @@ export function TransformProperty({
                 className="pl-1 bg-transparent text-xs!"
               />
             </InputGroup>
-            <InputGroup className="flex-1 h-8">
+            <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">H</span>
               </InputGroupAddon>

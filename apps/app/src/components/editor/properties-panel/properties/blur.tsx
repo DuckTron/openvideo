@@ -31,7 +31,7 @@ export function BlurProperty({ value, onChange, max = 20 }: BlurPropertyProps) {
           step={0.5}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-20 h-7">
           <NumberInput
             value={localValue}
             onChange={(val) => handleDirectSet(val || 0)}

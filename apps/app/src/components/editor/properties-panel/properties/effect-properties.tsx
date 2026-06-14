@@ -200,7 +200,7 @@ const PairProperty = ({
             }}
             className="flex-1"
           />
-          <InputGroup className="w-12">
+          <InputGroup className="w-12 h-7">
             <NumberInput
               value={value[i]}
               onChange={(val) => {
@@ -289,7 +289,7 @@ const MatrixProperty = ({ value, onChange }: MatrixPropertyProps) => {
                   onValueChange={(vals) => handleChange(i, vals[0])}
                   className="flex-1"
                 />
-                <InputGroup className="w-14">
+                <InputGroup className="w-14 h-7">
                   <NumberInput
                     value={v}
                     onChange={(val) => handleChange(i, val || 0)}
@@ -360,7 +360,7 @@ const StopsProperty = ({ value, config, onChange }: StopsPropertyProps) => {
                 onValueChange={(v) => handleStopChange(index, "offset", v[0])}
                 className="flex-1"
               />
-              <InputGroup className="w-14">
+              <InputGroup className="w-14 h-7">
                 <NumberInput
                   value={stop.offset}
                   onChange={(val) => handleStopChange(index, "offset", val || 0)}
@@ -385,7 +385,7 @@ const StopsProperty = ({ value, config, onChange }: StopsPropertyProps) => {
                 onValueChange={(v) => handleStopChange(index, "alpha", v[0])}
                 className="flex-1"
               />
-              <InputGroup className="w-14">
+              <InputGroup className="w-14 h-7">
                 <NumberInput
                   value={stop.alpha}
                   onChange={(val) => handleStopChange(index, "alpha", val || 0)}
@@ -427,7 +427,7 @@ const CoordinatesProperty = ({ value, min, max, step, onChange }: CoordinatesPro
             }
             className="flex-1"
           />
-          <InputGroup className="w-12">
+          <InputGroup className="w-12 h-7">
             <NumberInput
               value={value[axis]}
               onChange={(val) =>
@@ -551,7 +551,7 @@ const PropertyRenderer = ({
         onValueChange={(v) => onChange(v[0])}
         className="flex-1"
       />
-      <InputGroup className="w-14">
+      <InputGroup className="w-14 h-7">
         <NumberInput
           value={value}
           onChange={onChange}

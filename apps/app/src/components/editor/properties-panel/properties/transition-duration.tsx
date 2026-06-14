@@ -73,7 +73,7 @@ export function TransitionDurationProperty({
               step={0.1}
               className="flex-1"
             />
-            <InputGroup className="w-16">
+            <InputGroup className="w-16 h-7">
               <InputGroupInput
                 type="number"
                 value={inputStr}

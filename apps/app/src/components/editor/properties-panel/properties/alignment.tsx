@@ -29,7 +29,7 @@ export function AlignmentProperty({ value, onChange }: AlignmentPropertyProps) {
             key={alignValue}
             variant={value === alignValue ? "default" : "outline"}
             size="icon"
-            className={cn("size-8", value === alignValue && "bg-primary text-primary-foreground")}
+            className={cn("size-7", value === alignValue && "bg-primary text-primary-foreground")}
             onClick={() => onChange(alignValue)}
           >
             <Icon className="size-4" />

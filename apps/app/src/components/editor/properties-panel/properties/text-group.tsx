@@ -80,7 +80,7 @@ const FontPicker = React.memo(
             variant="outline"
             role="combobox"
             aria-expanded={isOpen}
-            className="w-full h-8 justify-between px-3 border-input text-xs relative"
+            className="w-full h-7 justify-between px-3 border-input text-xs relative"
           >
             <span className="truncate">{currentFamily.family}</span>
             <CaretUpDown className="size-4 opacity-50 shrink-0 absolute right-2" />

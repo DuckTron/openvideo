@@ -40,7 +40,7 @@ export function SpacingProperty({
           step={0.1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-20 h-7">
           <NumberInput
             value={lh.localValue}
             onChange={(val) => lh.handleDirectSet(val)}
@@ -63,7 +63,7 @@ export function SpacingProperty({
             step={0.5}
             className="flex-1"
           />
-          <InputGroup className="w-20">
+          <InputGroup className="w-20 h-7">
             <NumberInput
               value={ls.localValue}
               onChange={(val) => ls.handleDirectSet(val)}

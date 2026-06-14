@@ -60,7 +60,7 @@ export function CaptionStyleProperty({
           step={1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-20 h-7">
           <NumberInput
             value={fs.localValue}
             onChange={(val) => fs.handleDirectSet(val)}
@@ -84,7 +84,7 @@ export function CaptionStyleProperty({
           step={0.1}
           className="flex-1"
         />
-        <InputGroup className="w-20">
+        <InputGroup className="w-20 h-7">
           <NumberInput
             value={lh.localValue}
             onChange={(val) => lh.handleDirectSet(val)}
@@ -116,7 +116,7 @@ export function CaptionStyleProperty({
 
       {/* Text Transform */}
       <Select value={textTransform} onValueChange={(v) => onTextTransformChange(v as any)}>
-        <SelectTrigger>
+        <SelectTrigger className="h-7 bg-secondary border rounded-md text-xs!">
           <SelectValue placeholder="Text transform" />
         </SelectTrigger>
         <SelectContent>

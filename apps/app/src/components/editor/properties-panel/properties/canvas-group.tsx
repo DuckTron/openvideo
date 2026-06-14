@@ -83,7 +83,7 @@ export function CanvasGroupProperty() {
         {/* Width */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Width</span>
-          <InputGroup className="w-[130px]">
+          <InputGroup className="w-[130px] h-7">
             <NumberInput
               value={width}
               onChange={onWidthChange}
@@ -98,7 +98,7 @@ export function CanvasGroupProperty() {
         {/* Height */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Height</span>
-          <InputGroup className="w-[130px]">
+          <InputGroup className="w-[130px] h-7">
             <NumberInput
               value={height}
               onChange={onHeightChange}

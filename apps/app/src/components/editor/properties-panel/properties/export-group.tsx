@@ -458,7 +458,7 @@ export function ExportGroupProperty() {
               setAutoStartExport(true);
               setIsExportModalOpen(true);
             }}
-            className="w-full h-8 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-md cursor-pointer transition-colors"
+            className="w-full h-7 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded-md cursor-pointer transition-colors"
           >
             Export
           </Button>

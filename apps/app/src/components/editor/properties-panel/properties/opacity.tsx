@@ -47,7 +47,7 @@ export function OpacityProperty({ value, onChange }: OpacityPropertyProps) {
               step={1}
               className="flex-1"
             />
-            <InputGroup className="w-14">
+            <InputGroup className="w-14 h-7">
               <NumberInput
                 value={localValue}
                 onChange={(val) => handleDirectSet(val)}

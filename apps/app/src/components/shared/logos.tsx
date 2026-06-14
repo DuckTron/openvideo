@@ -1,9 +1,4 @@
-"use client";
-
-import { Warning, User, Image } from "@phosphor-icons/react";
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
-
-export type Icon = PhosphorIcon;
+import React from "react";
 
 type SVGIconProps = React.SVGProps<SVGSVGElement>;
 
@@ -53,9 +48,6 @@ export const LogoIcons = {
       />
     </svg>
   ),
-  user: User,
-  video: Image,
-  warning: Warning,
   discord: ({ ...props }: SVGIconProps) => (
     <svg
       viewBox="0 0 256 199"
