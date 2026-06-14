@@ -200,7 +200,7 @@ const PairProperty = ({
             }}
             className="flex-1"
           />
-          <InputGroup className="w-12 h-7">
+          <InputGroup className="w-12 h-7 text-center">
             <NumberInput
               value={value[i]}
               onChange={(val) => {
@@ -293,7 +293,7 @@ const MatrixProperty = ({ value, onChange }: MatrixPropertyProps) => {
                   <NumberInput
                     value={v}
                     onChange={(val) => handleChange(i, val || 0)}
-                    className="pl-1 bg-transparent text-xs!"
+                    className="pl-1 bg-transparent text-xs! text-center"
                     min={0}
                     max={1}
                     step={0.01}
@@ -604,13 +604,6 @@ export function EffectProperties({ clip }: EffectPropertiesProps) {
       {/* Section Header */}
       <div className="flex items-center justify-between py-2">
         <span className="text-xs font-semibold text-foreground">Configuration</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-5 text-muted-foreground hover:text-foreground"
-        >
-          <span className="text-base leading-none">+</span>
-        </Button>
       </div>
 
       <div className="py-1 flex flex-col">

@@ -24,7 +24,7 @@ class Caption extends Resizable {
 
   constructor(props: CaptionsProps) {
     super(props);
-    this.fill = "#701a75";
+    this.fill = "#5F729E";
     this.tScale = props.tScale;
     this.display = props.display;
     this.text = props.text;

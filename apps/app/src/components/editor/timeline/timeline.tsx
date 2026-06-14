@@ -8,20 +8,7 @@ import { useStudioStore } from "@/stores/studio-store";
 import { projectStore, core } from "@/lib/project";
 import Playhead from "./playhead";
 import { useEditorHotkeys } from "@/hooks/use-editor-hotkeys";
-import {
-  Audio,
-  Image,
-  Text,
-  Video,
-  Caption,
-  Helper,
-  Track,
-  LinealAudioBars,
-  RadialAudioBars,
-  WaveAudioBars,
-  HillAudioBars,
-  Transition,
-} from "./items";
+import { Audio, Image, Text, Video, Caption, Helper, Track, Transition } from "./items";
 import PreviewTrackItem from "./items/preview-drag-item";
 import { useTimelineOffsetX } from "../hooks/use-timeline-offset";
 import { addStudioSync } from "./studio-to-store-sync";
@@ -39,10 +26,6 @@ CanvasTimeline.registerItems({
   Helper,
   Track,
   PreviewTrackItem,
-  LinealAudioBars,
-  RadialAudioBars,
-  WaveAudioBars,
-  HillAudioBars,
   Effect,
   Transition,
   Shape,
