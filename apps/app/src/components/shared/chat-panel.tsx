@@ -57,7 +57,7 @@ export function ChatPanel({
   };
 
   return (
-    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
+    <div className={cn("flex flex-col h-full overflow-hidden bg-card/70", className)}>
       {messages.length === 0 ? (
         <div className="flex-1">
           {emptyState ?? (
@@ -142,10 +142,7 @@ export function ChatPanel({
 
       <div className="p-4 md:p-3 pt-0 space-y-4 shrink-0">
         <HoverBorderGradient containerClassName="rounded-sm w-full" className="w-full bg-card">
-          <InputGroup
-            className="rounded-sm border-none has-disabled:opacity-100"
-            style={{ backgroundColor: "#141414" }}
-          >
+          <InputGroup className="rounded-sm border-none has-disabled:opacity-100 bg-input/30!">
             <InputGroupTextarea
               value={input}
               onChange={(e) => onInputChange(e.target.value)}

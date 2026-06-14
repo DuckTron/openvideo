@@ -17,9 +17,12 @@ import { trpc } from "@/lib/trpc";
 import { core } from "@/lib/project";
 import { toast } from "sonner";
 import { LogoIcons } from "@/components/shared/logos";
+import { useStudioStore } from "@/stores/studio-store";
 
 export function TabBar() {
   const { activeTab, setActiveTab, isOpen, setIsOpen } = useMediaPanelStore();
+  const { selectedClips, setSelectedClips } = useStudioStore();
+  const hasSelection = selectedClips.length > 0;
   const router = useRouter();
   const { projectName, canvasSize, fps } = useProjectStore();
 
@@ -72,7 +75,7 @@ export function TabBar() {
       <div className="flex flex-col items-center py-2 px-2 gap-1.5 bg-card/80 h-full">
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
-          const isActive = activeTab === tabKey && isOpen;
+          const isActive = activeTab === tabKey && isOpen && !hasSelection;
           return (
             <div
               className={cn(
@@ -82,7 +85,11 @@ export function TabBar() {
                   : "text-muted-foreground hover:bg-white/5 hover:text-white",
               )}
               onClick={() => {
-                if (activeTab === tabKey && isOpen) {
+                if (hasSelection) {
+                  setSelectedClips([]);
+                  setActiveTab(tabKey);
+                  setIsOpen(true);
+                } else if (activeTab === tabKey && isOpen) {
                   setIsOpen(false);
                 } else {
                   setActiveTab(tabKey);

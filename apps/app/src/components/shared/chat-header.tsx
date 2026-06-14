@@ -1,6 +1,6 @@
 "use client";
 
-import { IconRefresh, IconPlus } from "@tabler/icons-react";
+import { IconRefresh, IconPlus, IconLayoutSidebarRightCollapse } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -9,6 +9,7 @@ interface ChatHeaderProps {
   isConnected?: boolean;
   onRefresh?: () => void;
   onNewChat?: () => void;
+  onClose?: () => void;
 }
 
 export function ChatHeader({
@@ -16,39 +17,45 @@ export function ChatHeader({
   isConnected = true,
   onRefresh,
   onNewChat,
+  onClose,
 }: ChatHeaderProps) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 border-b border-border shrink-0">
-      <div className="flex items-center gap-2">
-        <span className="text-sm tracking-wide font-medium">{title}</span>
-        <div className="flex items-center gap-1.5 ml-1">
-          <span
-            className={cn(
-              "w-1.5 h-1.5 rounded-full transition-colors",
-              isConnected ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-rose-500",
-            )}
-          />
+    <div className="h-13 pb-1">
+      <div className="flex items-center bg-card/70 justify-between px-4 h-full shrink-0">
+        <div className="flex items-center gap-2">
+          <span className="text-sm tracking-wide font-medium">{title}</span>
         </div>
-      </div>
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          onClick={onRefresh}
-        >
-          <IconRefresh className="w-3.5 h-3.5" />
-          <span className="sr-only">Refresh</span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-7 w-7 text-muted-foreground hover:text-foreground"
-          onClick={onNewChat}
-        >
-          <IconPlus className="w-3.5 h-3.5" />
-          <span className="sr-only">New chat</span>
-        </Button>
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={onRefresh}
+          >
+            <IconRefresh className="w-3.5 h-3.5" />
+            <span className="sr-only">Refresh</span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            onClick={onNewChat}
+          >
+            <IconPlus className="w-3.5 h-3.5" />
+            <span className="sr-only">New chat</span>
+          </Button>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              onClick={onClose}
+            >
+              <IconLayoutSidebarRightCollapse className="w-3.5 h-3.5" />
+              <span className="sr-only">Close assistant</span>
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );
