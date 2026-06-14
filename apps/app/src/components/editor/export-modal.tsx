@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IconLoader2, IconVideo, IconMusic, IconClock, IconSettings } from "@tabler/icons-react";
+import { CircleNotch, Clock, Gear, MusicNote, VideoCamera } from "@phosphor-icons/react";
 import { useStudioStore } from "@/stores/studio-store";
 
 export interface ResolutionPreset {
@@ -615,7 +615,7 @@ export function ExportModal({
                   >
                     <span className="text-sm text-foreground">Custom</span>
                     <div className="flex items-center gap-3">
-                      <IconSettings className="w-3.5 h-3.5 text-muted-foreground" />
+                      <Gear className="w-3.5 h-3.5 text-muted-foreground" />
                     </div>
                   </button>
                 </div>
@@ -650,7 +650,7 @@ export function ExportModal({
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <IconVideo className="w-3.5 h-3.5 text-muted-foreground" />
+                    <VideoCamera className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">Video</span>
                   </div>
                   <Switch checked={includeVideo} onCheckedChange={setIncludeVideo} />
@@ -730,7 +730,7 @@ export function ExportModal({
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                   <div className="flex items-center gap-2">
-                    <IconMusic className="w-3.5 h-3.5 text-muted-foreground" />
+                    <MusicNote className="w-3.5 h-3.5 text-muted-foreground" />
                     <span className="text-xs font-medium text-foreground">Audio</span>
                   </div>
                   <Switch checked={includeAudio} onCheckedChange={setIncludeAudio} />
@@ -788,7 +788,7 @@ export function ExportModal({
               {/* Footer */}
               <div className="flex items-center justify-between mt-1">
                 <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <IconClock className="w-3 h-3" />
+                  <Clock className="w-3 h-3" />
                   <span className="text-[11px]">{(maxDuration / 1e6).toFixed(2)}s</span>
                 </div>
                 <div className="flex gap-2">
@@ -884,7 +884,7 @@ export function ExportModal({
               onClick={handleClose}
               className="w-full h-9 text-xs rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-muted"
             >
-              {isExporting && <IconLoader2 className="h-3.5 w-3.5 mr-2" />}
+              {isExporting && <CircleNotch className="h-3.5 w-3.5 mr-2" />}
               Cancel Export
             </Button>
           </div>

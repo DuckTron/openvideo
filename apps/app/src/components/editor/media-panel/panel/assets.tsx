@@ -6,23 +6,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudioStore } from "@/stores/studio-store";
 import { core } from "@/lib/project";
 import {
-  IconSearch,
-  IconTrash,
-  IconMusic,
-  IconLoader2,
-  IconPhoto,
-  IconInfoCircle,
-  IconFilter,
-  IconVideo,
-  IconPlus,
-  IconFile,
-  IconClock,
-  IconLink,
-  IconRefresh,
-  IconUpload,
-  IconSparkles,
-  IconDots,
-} from "@tabler/icons-react";
+  ArrowsCounterClockwise,
+  CircleNotch,
+  Clock,
+  DotsThree,
+  File,
+  Funnel,
+  Image,
+  Info,
+  Link,
+  MagnifyingGlass,
+  MusicNote,
+  Plus,
+  Sparkle,
+  Trash,
+  Upload,
+  VideoCamera,
+} from "@phosphor-icons/react";
 import type { MediaType } from "@/types/media";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
 import { trpc } from "@/lib/trpc";
@@ -167,7 +167,7 @@ function AssetCard({
       </div>
     ) : (
       <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
-        <IconMusic size={24} className="text-primary" />
+        <MusicNote size={24} className="text-primary" />
       </div>
     );
 
@@ -198,9 +198,9 @@ function AssetCard({
           {/* Media Type Icon & In Use Badge (Top Left) */}
           <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10">
             <div className="p-1 rounded-md bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none">
-              {asset.type === "image" && <IconPhoto size={11} strokeWidth={2.5} />}
-              {asset.type === "video" && <IconVideo size={11} strokeWidth={2.5} />}
-              {asset.type === "audio" && <IconMusic size={11} strokeWidth={2.5} />}
+              {asset.type === "image" && <Image size={11} strokeWidth={2.5} />}
+              {asset.type === "video" && <VideoCamera size={11} strokeWidth={2.5} />}
+              {asset.type === "audio" && <MusicNote size={11} strokeWidth={2.5} />}
             </div>
             {isInUse && (
               <div className="px-1.5 py-0.5 rounded-md bg-primary text-[8px] text-primary-foreground font-semibold">
@@ -259,7 +259,7 @@ function AssetCard({
               {/* Uploading Status Overlay */}
               {isUploading ? (
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <IconLoader2 className="animate-spin text-primary size-5" />
+                  <CircleNotch className="animate-spin text-primary size-5" />
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
                     {asset.uploadProgress !== undefined && asset.uploadProgress !== null ? (
                       asset.uploadProgress === 100 ? (
@@ -291,7 +291,7 @@ function AssetCard({
                           variant="destructive"
                           className="text-[9px] h-4 px-1.5 gap-1 hover:bg-destructive"
                         >
-                          <IconInfoCircle size={10} />
+                          <Info size={10} />
                           Failed
                         </Badge>
                         <span className="text-[9px] text-destructive max-w-[80px] truncate text-center">
@@ -308,7 +308,7 @@ function AssetCard({
               ) : asset.indexingStatus === "completed" /* No badge for completed audio */ ? null : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <IconLoader2 className="animate-spin text-amber-500 size-4" />
+                  <CircleNotch className="animate-spin text-amber-500 size-4" />
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
                     Analyzing
                   </div>
@@ -329,7 +329,7 @@ function AssetCard({
                           variant="destructive"
                           className="text-[9px] h-5 px-2 gap-1 hover:bg-destructive"
                         >
-                          <IconInfoCircle size={10} />
+                          <Info size={10} />
                           Failed
                         </Badge>
                         <span className="text-[9px] text-destructive-foreground/85 max-w-[80px] truncate text-center font-medium">
@@ -346,7 +346,7 @@ function AssetCard({
               ) : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <IconLoader2 className="animate-spin text-amber-500 size-4" />
+                  <CircleNotch className="animate-spin text-amber-500 size-4" />
                   <div className="text-[10px] font-semibold text-white/90 text-center">
                     Analyzing
                   </div>
@@ -375,7 +375,7 @@ function AssetCard({
                     className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/80 backdrop-blur-md opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-all duration-200 hover:bg-secondary hover:text-foreground hover:scale-110 z-20"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <IconDots size={12} className="text-foreground" />
+                    <DotsThree size={12} className="text-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 py-2">
@@ -418,7 +418,7 @@ function AssetCard({
                   onAdd(asset);
                 }}
               >
-                <IconPlus size={10} strokeWidth={3} />
+                <Plus size={10} strokeWidth={3} />
               </button>
             </>
           )}
@@ -707,7 +707,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   if (!isLoaded || isAssetsStoreLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <IconLoader2 className="animate-spin text-muted-foreground" size={24} />
+        <CircleNotch className="animate-spin text-muted-foreground" size={24} />
       </div>
     );
   }
@@ -729,7 +729,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
         <div className="flex items-center gap-2 w-full px-4 py-3">
           {/* Search Input */}
           <div className="relative flex-1 min-w-0">
-            <IconSearch
+            <MagnifyingGlass
               size={14}
               className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
             />
@@ -753,7 +753,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             }`}
             title="AI Semantic Search (find specific quotes or topics)"
           >
-            <IconSparkles size={14} className={isSemanticMode ? "animate-pulse" : ""} />
+            <Sparkle size={14} className={isSemanticMode ? "animate-pulse" : ""} />
             <span>AI Search</span>
           </Button>
 
@@ -764,7 +764,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                 variant="outline"
                 className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
               >
-                <IconFilter size={15} />
+                <Funnel size={15} />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -798,7 +798,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
             onClick={() => setIsGeneratorModalOpen(true)}
           >
-            <IconSparkles size={14} />
+            <Sparkle size={14} />
             <span>Generate</span>
           </Button>
 
@@ -809,7 +809,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
             onClick={() => fileInputRef.current?.click()}
           >
-            <IconUpload size={14} />
+            <Upload size={14} />
             <span>Upload</span>
           </Button>
         </div>
@@ -818,7 +818,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           /* Empty state */
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
             <div className="mb-4 text-muted-foreground">
-              <IconPhoto size={24} strokeWidth={1.5} />
+              <Image size={24} strokeWidth={1.5} />
             </div>
             <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
             <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px]">
@@ -830,12 +830,12 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           <ScrollArea className="flex-1 px-4">
             {isSemanticFetching ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-                <IconLoader2 className="animate-spin text-violet-500" size={24} />
+                <CircleNotch className="animate-spin text-violet-500" size={24} />
                 <span className="text-xs">Searching with Gemini AI...</span>
               </div>
             ) : !semanticResults || semanticResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground text-center">
-                <IconSparkles size={28} className="text-violet-500 opacity-40 animate-pulse" />
+                <Sparkle size={28} className="text-violet-500 opacity-40 animate-pulse" />
                 <span className="text-sm font-semibold text-foreground/80">
                   No AI matches found
                 </span>
@@ -902,7 +902,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                               />
                             )
                           ) : (
-                            <IconMusic size={20} className="text-violet-500" />
+                            <MusicNote size={20} className="text-violet-500" />
                           )}
                         </div>
 
@@ -912,7 +912,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                           </h4>
                           {timestampStr && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5 font-mono">
-                              <IconClock size={10} />
+                              <Clock size={10} />
                               <span>{timestampStr}</span>
                             </div>
                           )}
@@ -935,7 +935,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                             setSelectedAssetId(result.assetId);
                           }}
                         >
-                          <IconInfoCircle size={12} />
+                          <Info size={12} />
                           Details
                         </Button>
 
@@ -952,7 +952,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                             });
                           }}
                         >
-                          <IconPlus size={11} strokeWidth={2.5} />
+                          <Plus size={11} strokeWidth={2.5} />
                           Add Trimmed Segment
                         </Button>
                       </div>
@@ -972,7 +972,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             )}
             {filteredAssets.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                <IconPhoto size={28} className="opacity-40" />
+                <Image size={28} className="opacity-40" />
                 <span className="text-xs">No matches found.</span>
               </div>
             ) : (
@@ -1027,7 +1027,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                 {selectedAsset.type === "audio" && (
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <IconMusic size={28} className="text-primary" />
+                      <MusicNote size={28} className="text-primary" />
                     </div>
                     <audio src={selectedAsset.src} controls className="w-48" />
                   </div>
@@ -1078,7 +1078,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                 <div className="flex flex-col gap-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <IconFile size={14} />
+                      <File size={14} />
                       File Size
                     </span>
                     <span className="font-medium font-mono">{formatBytes(selectedAsset.size)}</span>
@@ -1087,7 +1087,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   {selectedAsset.duration && (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground flex items-center gap-2">
-                        <IconClock size={14} />
+                        <Clock size={14} />
                         Duration
                       </span>
                       <span className="font-medium font-mono">
@@ -1098,7 +1098,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
 
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <IconLink size={14} />
+                      <Link size={14} />
                       Source
                     </span>
                     <a
@@ -1125,12 +1125,12 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                     <AlertTitle className="text-xs flex items-center gap-2">
                       {selectedAsset.indexingStatus === "failed" ? (
                         <>
-                          <IconInfoCircle size={12} />
+                          <Info size={12} />
                           Indexing Failed
                         </>
                       ) : (
                         <>
-                          <IconLoader2 size={12} className="animate-spin" />
+                          <CircleNotch size={12} className="animate-spin" />
                           Indexing
                         </>
                       )}
@@ -1174,7 +1174,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                       setSelectedAssetId(null);
                     }}
                   >
-                    <IconPlus data-icon="inline-start" />
+                    <Plus data-icon="inline-start" />
                     Add to Timeline
                   </Button>
                   <div className="flex gap-2">
@@ -1192,7 +1192,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         selectedAsset.indexingStatus === "processing"
                       }
                     >
-                      <IconRefresh
+                      <ArrowsCounterClockwise
                         data-icon="inline-start"
                         className={
                           selectedAsset.indexingStatus === "processing" ? "animate-spin" : ""
@@ -1208,7 +1208,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         setSelectedAssetId(null);
                       }}
                     >
-                      <IconTrash data-icon="inline-start" />
+                      <Trash data-icon="inline-start" />
                       Delete
                     </Button>
                   </div>

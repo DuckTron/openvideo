@@ -5,16 +5,16 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import {
-  IconPlayerPlay,
-  IconBrandYoutube,
-  IconBrandFigma,
-  IconLink,
-  IconCloud,
-  IconDeviceMobile,
-  IconSearch,
-  IconExternalLink,
-  IconCheck,
-} from "@tabler/icons-react";
+  ArrowSquareOut,
+  Check,
+  Cloud,
+  DeviceMobile,
+  FigmaLogo,
+  Link,
+  MagnifyingGlass,
+  Play,
+  YoutubeLogo,
+} from "@phosphor-icons/react";
 import { useState, useEffect, useMemo } from "react";
 
 interface AppCardProps {
@@ -39,7 +39,7 @@ function AppCard({ icon, name, description, category, connected, comingSoon }: A
               <h3 className="font-medium text-sm">{name}</h3>
               {connected && (
                 <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600">
-                  <IconCheck className="size-3" />
+                  <Check className="size-3" />
                   Connected
                 </span>
               )}
@@ -64,7 +64,7 @@ function AppCard({ icon, name, description, category, connected, comingSoon }: A
         >
           {connected ? (
             <>
-              <IconExternalLink className="size-3.5 mr-1.5" />
+              <ArrowSquareOut className="size-3.5 mr-1.5" />
               Manage
             </>
           ) : comingSoon ? (
@@ -91,46 +91,46 @@ export default function AppsPage() {
 
   const apps = [
     {
-      icon: <IconBrandYoutube className="size-6 text-red-500" />,
+      icon: <YoutubeLogo className="size-6 text-red-500" />,
       name: "YouTube",
       description: "Upload directly to YouTube with title, description, and tags.",
       category: "Export",
     },
     {
-      icon: <IconCloud className="size-6 text-sky-500" />,
+      icon: <Cloud className="size-6 text-sky-500" />,
       name: "Google Drive",
       description: "Import and export videos directly from Google Drive.",
       category: "Storage",
       connected: false,
     },
     {
-      icon: <IconCloud className="size-6 text-blue-600" />,
+      icon: <Cloud className="size-6 text-blue-600" />,
       name: "Dropbox",
       description: "Sync your projects and assets with Dropbox cloud storage.",
       category: "Storage",
     },
     {
-      icon: <IconBrandFigma className="size-6 text-purple-500" />,
+      icon: <FigmaLogo className="size-6 text-purple-500" />,
       name: "Figma",
       description: "Import designs and prototypes as video assets.",
       category: "Design",
       connected: false,
     },
     {
-      icon: <IconDeviceMobile className="size-6 text-green-500" />,
+      icon: <DeviceMobile className="size-6 text-green-500" />,
       name: "Mobile Upload",
       description: "Wirelessly transfer videos from your phone to the editor.",
       category: "Import",
       comingSoon: true,
     },
     {
-      icon: <IconLink className="size-6 text-gray-500" />,
+      icon: <Link className="size-6 text-gray-500" />,
       name: "Loom",
       description: "Import Loom recordings with comments and reactions.",
       category: "Import",
     },
     {
-      icon: <IconPlayerPlay className="size-6 text-pink-500" />,
+      icon: <Play className="size-6 text-pink-500" />,
       name: "TikTok",
       description: "Export directly to TikTok with optimal format and duration.",
       category: "Export",
@@ -207,7 +207,7 @@ export default function AppsPage() {
         <div className="sticky top-0 z-10 bg-card/95 backdrop-blur-sm border-b px-4 py-3 space-y-3">
           {/* Search */}
           <div className="relative">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               placeholder="Search apps..."
               value={searchQuery}
@@ -255,7 +255,7 @@ export default function AppsPage() {
           ) : filteredApps.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-[40vh] text-center">
               <div className="p-4 rounded-xl bg-secondary/50 mb-4">
-                <IconSearch className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
+                <MagnifyingGlass className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
               </div>
               <h3 className="font-medium mb-1">No apps found</h3>
               <p className="text-sm text-muted-foreground">Try adjusting your search or filter</p>

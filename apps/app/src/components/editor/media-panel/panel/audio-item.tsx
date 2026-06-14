@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { IconPlayerPause, IconPlayerPlay, IconMusic } from "@tabler/icons-react";
+import { MusicNote, Pause, Play } from "@phosphor-icons/react";
 import { useRef, useState, useEffect } from "react";
 import Draggable from "@/components/shared/draggable";
 
@@ -55,7 +55,7 @@ export const AudioItem = ({
       }}
       renderCustomPreview={
         <div className="px-3 py-2 bg-black rounded border border-primary shadow-xl flex items-center gap-2 pointer-events-none">
-          <IconMusic className="size-4" />
+          <MusicNote className="size-4" />
           <span className="text-xs font-medium truncate max-w-[150px]">{item.text}</span>
         </div>
       }
@@ -76,9 +76,9 @@ export const AudioItem = ({
           onClick={togglePlay}
         >
           {isPlaying ? (
-            <IconPlayerPause className="size-4 fill-current" />
+            <Pause className="size-4 fill-current" />
           ) : (
-            <IconPlayerPlay className="size-4 fill-current ml-0.5" />
+            <Play className="size-4 fill-current ml-0.5" />
           )}
         </Button>
 

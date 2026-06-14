@@ -1,7 +1,9 @@
-import { IconAlertTriangle, IconUser, IconPhoto } from "@tabler/icons-react";
-import type { Icon as TablerIcon } from "@tabler/icons-react";
+"use client";
 
-export type Icon = TablerIcon;
+import { Warning, User, Image } from "@phosphor-icons/react";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+
+export type Icon = PhosphorIcon;
 
 type SVGIconProps = React.SVGProps<SVGSVGElement>;
 
@@ -51,9 +53,9 @@ export const LogoIcons = {
       />
     </svg>
   ),
-  user: IconUser,
-  video: IconPhoto,
-  warning: IconAlertTriangle,
+  user: User,
+  video: Image,
+  warning: Warning,
   discord: ({ ...props }: SVGIconProps) => (
     <svg
       viewBox="0 0 256 199"

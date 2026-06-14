@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { IconTrash } from "@tabler/icons-react";
+import { Trash } from "@phosphor-icons/react";
 import { useState, useEffect } from "react";
 
 export default function TrashPage() {
@@ -54,7 +54,7 @@ export default function TrashPage() {
         ) : (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center">
             <div className="p-4 rounded-xl bg-secondary/50 mb-4">
-              <IconTrash className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
+              <Trash className="size-8 text-muted-foreground/60" strokeWidth={1.5} />
             </div>
             <h3 className="font-medium mb-1">Trash is empty</h3>
             <p className="text-sm text-muted-foreground mb-4">

@@ -1,6 +1,6 @@
 "use client";
 
-import { IconSparkles } from "@tabler/icons-react";
+import { Sparkle } from "@phosphor-icons/react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

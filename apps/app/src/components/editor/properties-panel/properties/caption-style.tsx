@@ -1,6 +1,6 @@
 "use client";
 
-import { IconTextSize, IconLineHeight, IconBold, IconItalic } from "@tabler/icons-react";
+import { ArrowsDownUp, TextB, TextItalic, TextT } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
@@ -50,7 +50,7 @@ export function CaptionStyleProperty({
 
       {/* Font Size */}
       <div className="flex items-center gap-4">
-        <IconTextSize className="size-4 text-muted-foreground" />
+        <TextT className="size-4 text-muted-foreground" />
         <Slider
           value={[fs.localValue]}
           onValueChange={(v) => fs.handleChange(v[0])}
@@ -74,7 +74,7 @@ export function CaptionStyleProperty({
 
       {/* Line Height */}
       <div className="flex items-center gap-4">
-        <IconLineHeight className="size-4 text-muted-foreground" />
+        <ArrowsDownUp className="size-4 text-muted-foreground" />
         <Slider
           value={[lh.localValue]}
           onValueChange={(v) => lh.handleChange(v[0])}
@@ -102,7 +102,7 @@ export function CaptionStyleProperty({
           className="size-8"
           onClick={() => onFontWeightChange(fontWeight === "bold" ? "normal" : "bold")}
         >
-          <IconBold className="size-4" />
+          <TextB className="size-4" />
         </Button>
         <Button
           variant={fontStyle === "italic" ? "default" : "outline"}
@@ -110,7 +110,7 @@ export function CaptionStyleProperty({
           className="size-8"
           onClick={() => onFontStyleChange(fontStyle === "italic" ? "normal" : "italic")}
         >
-          <IconItalic className="size-4" />
+          <TextItalic className="size-4" />
         </Button>
       </div>
 

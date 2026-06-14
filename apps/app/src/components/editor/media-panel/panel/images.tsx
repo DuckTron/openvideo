@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { core } from "@/lib/project";
 import { Log } from "@openvideo/engine-pixi";
-import { IconSearch, IconPhoto, IconLoader2 } from "@tabler/icons-react";
+import { CircleNotch, Image, MagnifyingGlass } from "@phosphor-icons/react";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { debounce } from "lodash";
 import Draggable from "@/components/shared/draggable";
@@ -92,7 +92,7 @@ export default function PanelImages() {
         <div className="p-4">
           <InputGroup>
             <InputGroupAddon className="bg-secondary/30 pointer-events-none text-muted-foreground w-8 justify-center">
-              <IconSearch size={14} />
+              <MagnifyingGlass size={14} />
             </InputGroupAddon>
 
             <InputGroupInput
@@ -108,11 +108,11 @@ export default function PanelImages() {
       <ScrollArea className="flex-1 px-4">
         {isLoading && images.length === 0 ? (
           <div className="flex items-center justify-center py-20">
-            <IconLoader2 className="animate-spin text-muted-foreground" size={32} />
+            <CircleNotch className="animate-spin text-muted-foreground" size={32} />
           </div>
         ) : images.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
-            <IconPhoto size={32} className="opacity-50" />
+            <Image size={32} className="opacity-50" />
             <span className="text-sm">No images found</span>
           </div>
         ) : (
@@ -155,7 +155,7 @@ export default function PanelImages() {
         )}
         {isLoading && images.length > 0 && (
           <div className="flex items-center justify-center py-4">
-            <IconLoader2 className="animate-spin text-muted-foreground" size={20} />
+            <CircleNotch className="animate-spin text-muted-foreground" size={20} />
           </div>
         )}
       </ScrollArea>

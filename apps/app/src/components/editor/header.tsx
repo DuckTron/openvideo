@@ -6,7 +6,7 @@ import { usePanelStore } from "@/stores/panel-store";
 import { Button } from "@/components/ui/button";
 import { LogoIcons } from "@/components/shared/logos";
 import { ExportModal } from "./export-modal";
-import { IconLayoutSidebarRightExpand } from "@tabler/icons-react";
+import { Sidebar } from "@phosphor-icons/react";
 import { LockSimpleIcon, CaretDownIcon } from "@phosphor-icons/react";
 
 export default function Header() {
@@ -63,7 +63,7 @@ export default function Header() {
               size="icon"
               className="text-muted-foreground hover:text-foreground"
             >
-              <IconLayoutSidebarRightExpand className="size-4" />
+              <Sidebar className="size-4" />
               <span className="sr-only">Open assistant</span>
             </Button>
           )}

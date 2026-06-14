@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  IconAlignLeft,
-  IconAlignCenter,
-  IconAlignRight,
-  IconAlignJustified,
-} from "@tabler/icons-react";
+  TextAlignCenter,
+  TextAlignJustify,
+  TextAlignLeft,
+  TextAlignRight,
+} from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -38,9 +38,9 @@ export function CaptionLayoutProperty({
   onMaxLinesChange,
 }: CaptionLayoutPropertyProps) {
   const alignments = [
-    { value: "left" as const, icon: IconAlignLeft },
-    { value: "center" as const, icon: IconAlignCenter },
-    { value: "right" as const, icon: IconAlignRight },
+    { value: "left" as const, icon: TextAlignLeft },
+    { value: "center" as const, icon: TextAlignCenter },
+    { value: "right" as const, icon: TextAlignRight },
   ];
 
   return (

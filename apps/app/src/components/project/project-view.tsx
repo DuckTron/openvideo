@@ -12,18 +12,18 @@ import type { schema } from "@openvideo/db";
 // Infer Space type from the Drizzle schema (matches what tRPC returns)
 type Space = typeof schema.space.$inferSelect;
 import {
-  IconArrowLeft,
-  IconUpload,
-  IconFileText,
-  IconVideo,
-  IconPhoto,
-  IconMusic,
-  IconPlus,
-  IconTrash,
-  IconRefresh,
-  IconDots,
-  IconPencil,
-} from "@tabler/icons-react";
+  ArrowLeft,
+  ArrowsCounterClockwise,
+  DotsThree,
+  FileText,
+  Image,
+  MusicNote,
+  Pencil,
+  Plus,
+  Trash,
+  Upload,
+  VideoCamera,
+} from "@phosphor-icons/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -296,13 +296,13 @@ export default function ProjectView({ projectId }: { projectId: string }) {
   const getFileIcon = (type: string) => {
     switch (type) {
       case "video":
-        return IconVideo;
+        return VideoCamera;
       case "image":
-        return IconPhoto;
+        return Image;
       case "audio":
-        return IconMusic;
+        return MusicNote;
       default:
-        return IconFileText;
+        return FileText;
     }
   };
 
@@ -314,7 +314,7 @@ export default function ProjectView({ projectId }: { projectId: string }) {
         <div className="flex items-center justify-between p-4 w-full">
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => router.push("/home")}>
-              <IconArrowLeft className="size-4" />
+              <ArrowLeft className="size-4" />
             </Button>
             <div>
               <div className="flex items-center gap-2">
@@ -325,7 +325,7 @@ export default function ProjectView({ projectId }: { projectId: string }) {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="icon">
-                <IconDots className="size-4" />
+                <DotsThree className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -335,14 +335,14 @@ export default function ProjectView({ projectId }: { projectId: string }) {
                   setIsRenaming(true);
                 }}
               >
-                <IconPencil className="mr-2 size-4" />
+                <Pencil className="mr-2 size-4" />
                 Rename
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setDeleteDialogOpen(true)}
                 className="text-destructive"
               >
-                <IconTrash className="mr-2 size-4" />
+                <Trash className="mr-2 size-4" />
                 Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -363,7 +363,7 @@ export default function ProjectView({ projectId }: { projectId: string }) {
               onClick={() => document.getElementById("file-upload")?.click()}
               disabled={isUploading || !project}
             >
-              <IconPlus className="mr-1 size-4" />
+              <Plus className="mr-1 size-4" />
               Add
             </Button>
           </div>
@@ -377,14 +377,14 @@ export default function ProjectView({ projectId }: { projectId: string }) {
                 </div>
               ) : files.length === 0 ? (
                 <div className="text-center py-12">
-                  <IconFileText className="size-10 text-muted-foreground/40 mx-auto mb-3" />
+                  <FileText className="size-10 text-muted-foreground/40 mx-auto mb-3" />
                   <p className="text-sm text-muted-foreground mb-4">No assets yet</p>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => document.getElementById("file-upload")?.click()}
                   >
-                    <IconUpload className="mr-2 size-4" />
+                    <Upload className="mr-2 size-4" />
                     Upload files
                   </Button>
                 </div>
@@ -498,19 +498,19 @@ export default function ProjectView({ projectId }: { projectId: string }) {
                                   className="size-6 opacity-0 group-hover:opacity-100 transition-opacity absolute top-1.5 right-1.5 bg-black/50 hover:bg-black/70 text-white border-0 z-30"
                                   onClick={(e) => e.stopPropagation()}
                                 >
-                                  <IconDots className="size-3" />
+                                  <DotsThree className="size-3" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleResyncFile(file.id)}>
-                                  <IconRefresh className="mr-2 size-4" />
+                                  <ArrowsCounterClockwise className="mr-2 size-4" />
                                   Resync
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteFile(file.id)}
                                   className="text-destructive"
                                 >
-                                  <IconTrash className="mr-2 size-4" />
+                                  <Trash className="mr-2 size-4" />
                                   Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>

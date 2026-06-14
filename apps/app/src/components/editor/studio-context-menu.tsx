@@ -12,15 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  IconClipboard,
-  IconCopy,
-  IconCopyPlus,
-  IconLock,
-  IconLockOpen,
-  IconDots,
-  IconTrash,
-} from "@tabler/icons-react";
+import { Clipboard, Copy, DotsThree, Lock, LockOpen, Trash } from "@phosphor-icons/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { core, projectStore } from "@/lib/project";
@@ -127,7 +119,7 @@ export function StudioContextMenu() {
                 "w-9 h-9 rounded-full transition-all hover:bg-accent/50 active:scale-90",
               )}
             >
-              <IconDots className="w-4 h-4" />
+              <DotsThree className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -141,19 +133,19 @@ export function StudioContextMenu() {
           {!isLocked && (
             <>
               <DropdownMenuItem onClick={handleCopy} disabled={!selectedClip}>
-                <IconCopy />
+                <Copy />
                 Copy
                 <DropdownMenuShortcut>⌘ C</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handlePaste} disabled={!hasClipboard}>
-                <IconClipboard />
+                <Clipboard />
                 Paste
                 <DropdownMenuShortcut>⌘ V</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handleDuplicate} disabled={!selectedClip}>
-                <IconCopyPlus />
+                <Copy />
                 Duplicate
                 <DropdownMenuShortcut>⌘ D</DropdownMenuShortcut>
               </DropdownMenuItem>
@@ -161,14 +153,14 @@ export function StudioContextMenu() {
           )}
 
           <DropdownMenuItem onClick={handleToggleLock} disabled={!selectedClip}>
-            {isLocked ? <IconLockOpen /> : <IconLock />}
+            {isLocked ? <LockOpen /> : <Lock />}
             {isLocked ? "Unlock" : "Lock"}
             <DropdownMenuShortcut>⌘ L</DropdownMenuShortcut>
           </DropdownMenuItem>
 
           {!isLocked && (
             <DropdownMenuItem onClick={handleDelete} disabled={!selectedClip}>
-              <IconTrash />
+              <Trash />
               Delete
               <DropdownMenuShortcut>⌫</DropdownMenuShortcut>
             </DropdownMenuItem>

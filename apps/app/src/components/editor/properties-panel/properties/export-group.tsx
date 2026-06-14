@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { IconVideo, IconSettings } from "@tabler/icons-react";
+import { Gear, VideoCamera } from "@phosphor-icons/react";
 import { useStudioStore } from "@/stores/studio-store";
 import {
   ExportModal,
@@ -220,7 +220,7 @@ export function ExportGroupProperty() {
           {/* Selected Preset Badge */}
           <div className="flex items-center justify-between bg-secondary border rounded-md px-3 py-1.5">
             <div className="flex items-center gap-2">
-              <IconVideo className="size-4 text-blue-500 shrink-0" />
+              <VideoCamera className="size-4 text-blue-500 shrink-0" />
               <span className="text-xs font-medium text-foreground">
                 {selectedPresetLabel === "Custom"
                   ? "Custom Export"
@@ -234,7 +234,7 @@ export function ExportGroupProperty() {
                     className="text-muted-foreground hover:text-white transition-colors cursor-pointer"
                     title="Edit export settings"
                   >
-                    <IconSettings className="size-4" />
+                    <Gear className="size-4" />
                   </button>
                 </PopoverTrigger>
                 <PopoverContent

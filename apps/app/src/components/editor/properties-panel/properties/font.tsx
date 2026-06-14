@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { IconChevronDown, IconCheck } from "@tabler/icons-react";
+import { CaretDown, Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -36,7 +36,7 @@ export function FontProperty({ currentFamily, onChange }: FontPropertyProps) {
         }}
       >
         <span className="flex-1 text-left">{family.family}</span>
-        {currentFontFamily?.family === family.family && <IconCheck className="size-4 ml-2" />}
+        {currentFontFamily?.family === family.family && <Check className="size-4 ml-2" />}
       </button>
     ));
   }, [currentFontFamily?.family, onChange]);
@@ -55,7 +55,7 @@ export function FontProperty({ currentFamily, onChange }: FontPropertyProps) {
             className="w-full h-9 justify-between px-3 border-input"
           >
             <span className="truncate">{currentFontFamily?.family ?? "Select font"}</span>
-            <IconChevronDown className="size-4 opacity-50 shrink-0 ml-2" />
+            <CaretDown className="size-4 opacity-50 shrink-0 ml-2" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 gap-0" align="start">

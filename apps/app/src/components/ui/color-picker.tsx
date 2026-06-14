@@ -1,6 +1,6 @@
 "use client";
 import Color from "color";
-import { IconColorPicker } from "@tabler/icons-react";
+import { Eyedropper } from "@phosphor-icons/react";
 import { Slider } from "radix-ui";
 import {
   type ComponentProps,
@@ -283,7 +283,7 @@ export const ColorPickerEyeDropper = ({ className, ...props }: ColorPickerEyeDro
       type="button"
       {...(props as any)}
     >
-      <IconColorPicker size={16} />
+      <Eyedropper size={16} />
     </Button>
   );
 };

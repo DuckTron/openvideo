@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { IconLogout, IconUser, IconSettings } from "@tabler/icons-react";
+import { Gear, SignOut, User } from "@phosphor-icons/react";
 
 export function UserMenu() {
   const { data: session } = authClient.useSession();
@@ -70,7 +70,7 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="cursor-pointer p-3">
           <Link href="/home" className="flex items-center">
-            <IconUser className="mr-3 h-4 w-4" />
+            <User className="mr-3 h-4 w-4" />
             <div className="flex flex-col">
               <span className="font-medium">My Projects</span>
               <span className="text-xs text-muted-foreground">Manage your videos</span>
@@ -79,7 +79,7 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="cursor-pointer p-3">
           <Link href="/settings" className="flex items-center">
-            <IconSettings className="mr-3 h-4 w-4" />
+            <Gear className="mr-3 h-4 w-4" />
             <div className="flex flex-col">
               <span className="font-medium">Account Settings</span>
               <span className="text-xs text-muted-foreground">Profile & preferences</span>
@@ -91,7 +91,7 @@ export function UserMenu() {
           className="text-destructive focus:text-destructive cursor-pointer p-3"
           onClick={handleSignOut}
         >
-          <IconLogout className="mr-3 h-4 w-4" />
+          <SignOut className="mr-3 h-4 w-4" />
           <span className="font-medium">Sign out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

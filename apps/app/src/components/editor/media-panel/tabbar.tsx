@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IconMenu, IconPlus, IconCopy, IconMenu2 } from "@tabler/icons-react";
+import { Copy, List, Plus } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { useProjectStore } from "@/stores/project-store";
 import { trpc } from "@/lib/trpc";

@@ -2,16 +2,16 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  IconAlignLeft,
-  IconAlignCenter,
-  IconAlignRight,
-  IconTextSize,
-  IconUnderline,
-  IconOverline,
-  IconStrikethrough,
-  IconSelector,
-  IconCheck,
-} from "@tabler/icons-react";
+  CaretUpDown,
+  Check,
+  TextAlignCenter,
+  TextAlignLeft,
+  TextAlignRight,
+  TextStrikethrough,
+  TextT,
+  TextUnderline,
+} from "@phosphor-icons/react";
+import { TextOverline } from "@/components/shared/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ColorPicker,
@@ -68,7 +68,7 @@ const FontPicker = React.memo(
           }}
         >
           <span className="flex-1 text-left">{family.family}</span>
-          {currentFamily.family === family.family && <IconCheck className="size-4 ml-2" />}
+          {currentFamily.family === family.family && <Check className="size-4 ml-2" />}
         </button>
       ));
     }, [currentFamily.family, handleFontChange]);
@@ -83,7 +83,7 @@ const FontPicker = React.memo(
             className="w-full h-8 justify-between px-3 border-input text-xs relative"
           >
             <span className="truncate">{currentFamily.family}</span>
-            <IconSelector className="size-4 opacity-50 shrink-0 absolute right-2" />
+            <CaretUpDown className="size-4 opacity-50 shrink-0 absolute right-2" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 gap-0" align="start">
@@ -215,7 +215,7 @@ export function TextGroupProperty({
               className="pl-2 bg-transparent text-xs!"
             />
             <InputGroupAddon align="inline-end">
-              <IconTextSize className="size-3.5" />
+              <TextT className="size-3.5" />
             </InputGroupAddon>
           </InputGroup>
         </div>
@@ -225,9 +225,9 @@ export function TextGroupProperty({
           <span className="text-xs text-muted-foreground">Align</span>
           <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
             {[
-              { icon: IconAlignLeft, value: "left" },
-              { icon: IconAlignCenter, value: "center" },
-              { icon: IconAlignRight, value: "right" },
+              { icon: TextAlignLeft, value: "left" },
+              { icon: TextAlignCenter, value: "center" },
+              { icon: TextAlignRight, value: "right" },
             ].map((item) => (
               <button
                 key={item.value}
@@ -250,9 +250,9 @@ export function TextGroupProperty({
           <span className="text-xs text-muted-foreground">Decoration</span>
           <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
             {[
-              { icon: IconUnderline, value: "underline", active: underline },
-              { icon: IconOverline, value: "overline", active: overline },
-              { icon: IconStrikethrough, value: "strikethrough", active: linethrough },
+              { icon: TextUnderline, value: "underline", active: underline },
+              { icon: TextOverline, value: "overline", active: overline },
+              { icon: TextStrikethrough, value: "strikethrough", active: linethrough },
             ].map((item) => (
               <button
                 key={item.value}

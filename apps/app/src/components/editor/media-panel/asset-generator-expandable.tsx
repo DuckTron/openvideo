@@ -7,27 +7,27 @@ import { useGeneratedStore } from "@/stores/generated-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  IconVideo,
-  IconPhoto,
-  IconUser,
-  IconMicrophone,
-  IconMusic,
-  IconWaveSine,
-  IconSparkles,
-  IconSettings,
-  IconDeviceMobile,
-  IconUpload,
-  IconClock,
-  IconChevronDown,
-  IconArrowUp,
-} from "@tabler/icons-react";
+  ArrowUp,
+  CaretDown,
+  Clock,
+  DeviceMobile,
+  Gear,
+  Image,
+  Microphone,
+  MusicNote,
+  Sparkle,
+  Upload,
+  User,
+  VideoCamera,
+  Waveform,
+} from "@phosphor-icons/react";
 
 export type GenerateAssetType = "video" | "image" | "lip-sync" | "voiceover" | "music" | "sfx";
 
 interface AssetTypeOption {
   id: GenerateAssetType;
   label: string;
-  icon: React.FC<{ className?: string; size?: number; stroke?: number }>;
+  icon: React.ComponentType<any>;
   placeholder: string;
 }
 
@@ -35,37 +35,37 @@ const ASSET_TYPES: AssetTypeOption[] = [
   {
     id: "video",
     label: "Video",
-    icon: IconVideo,
+    icon: VideoCamera,
     placeholder: "Describe your video idea...",
   },
   {
     id: "image",
     label: "Image",
-    icon: IconPhoto,
+    icon: Image,
     placeholder: "Describe the image you want...",
   },
   {
     id: "lip-sync",
     label: "Lip Sync",
-    icon: IconUser,
+    icon: User,
     placeholder: "Character and dialogue for lip sync...",
   },
   {
     id: "voiceover",
     label: "Voiceover",
-    icon: IconMicrophone,
+    icon: Microphone,
     placeholder: "Text to convert to voiceover...",
   },
   {
     id: "music",
     label: "Music",
-    icon: IconMusic,
+    icon: MusicNote,
     placeholder: "Music mood or style...",
   },
   {
     id: "sfx",
     label: "SFX",
-    icon: IconWaveSine,
+    icon: Waveform,
     placeholder: "Describe the sound effect...",
   },
 ];
@@ -187,10 +187,7 @@ export function AssetGeneratorExpandable({
             className="group flex flex-1 items-center gap-3 text-left"
           >
             <div className="relative">
-              <IconSparkles
-                className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110"
-                stroke={1.5}
-              />
+              <Sparkle className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110" />
               <div className="absolute inset-0 size-4 animate-pulse rounded-full bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
@@ -203,7 +200,7 @@ export function AssetGeneratorExpandable({
             className="h-7 gap-1.5 px-2 text-xs border-border/60 bg-background hover:bg-primary/10 hover:text-primary hover:border-primary/30"
             onClick={onUploadClick}
           >
-            <IconUpload className="size-3.5" stroke={1.5} />
+            <Upload className="size-3.5" />
             <span>Upload</span>
           </Button>
         </div>
@@ -247,8 +244,8 @@ export function AssetGeneratorExpandable({
           <Popover open={typeOpen} onOpenChange={setTypeOpen}>
             <PopoverTrigger asChild>
               <Button variant="secondary" size="sm" className="h-8 gap-1 px-2 text-xs">
-                <CurrentIcon className="size-3.5" stroke={1.5} />
-                <IconChevronDown className="size-3" stroke={1.5} />
+                <CurrentIcon className="size-3.5" />
+                <CaretDown className="size-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -274,7 +271,7 @@ export function AssetGeneratorExpandable({
                         : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
                     )}
                   >
-                    <OptionIcon className="size-3.5" stroke={1.5} />
+                    <OptionIcon className="size-3.5" />
                     <span>{option.label}</span>
                   </button>
                 );
@@ -286,8 +283,8 @@ export function AssetGeneratorExpandable({
           <Popover open={modelOpen} onOpenChange={setModelOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                <IconSettings className="size-3.5" stroke={1.5} />
-                <IconChevronDown className="size-3" stroke={1.5} />
+                <Gear className="size-3.5" />
+                <CaretDown className="size-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -320,8 +317,8 @@ export function AssetGeneratorExpandable({
             <Popover open={ratioOpen} onOpenChange={setRatioOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                  <IconDeviceMobile className="size-3.5" stroke={1.5} />
-                  <IconChevronDown className="size-3" stroke={1.5} />
+                  <DeviceMobile className="size-3.5" />
+                  <CaretDown className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -354,8 +351,8 @@ export function AssetGeneratorExpandable({
             <Popover open={durationOpen} onOpenChange={setDurationOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                  <IconClock className="size-3.5" stroke={1.5} />
-                  <IconChevronDown className="size-3" stroke={1.5} />
+                  <Clock className="size-3.5" />
+                  <CaretDown className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -389,7 +386,7 @@ export function AssetGeneratorExpandable({
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
                   <span className="font-medium text-foreground">{quantity}</span>
-                  <IconChevronDown className="size-3" stroke={1.5} />
+                  <CaretDown className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -428,7 +425,7 @@ export function AssetGeneratorExpandable({
           >
             {/* {loading ? <IconLoader2 className="size-4 animate-spin" /> : "Generate"} */}
 
-            <IconArrowUp className="w-4 h-4" />
+            <ArrowUp className="w-4 h-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>

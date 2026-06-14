@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { IconMinus, IconPlus } from "@tabler/icons-react";
+import { Minus, Plus } from "@phosphor-icons/react";
 
 interface SectionHeaderProps {
   title: string;
@@ -20,7 +20,7 @@ export function SectionHeader({ title, hasContent, onAdd, onRemove }: SectionHea
         className="size-6 rounded-sm text-muted-foreground"
         onClick={hasContent ? onRemove : onAdd}
       >
-        {hasContent ? <IconMinus className="size-4" /> : <IconPlus className="size-4" />}
+        {hasContent ? <Minus className="size-4" /> : <Plus className="size-4" />}
       </Button>
     </div>
   );

@@ -8,7 +8,7 @@ import PanelTransition from "./panel/transition";
 import PanelText from "./panel/text";
 import PanelCaptions from "./panel/captions";
 import PanelElements from "./panel/elements";
-import { IconX } from "@tabler/icons-react";
+import { X } from "@phosphor-icons/react";
 import { useStudioStore } from "@/stores/studio-store";
 import { PropertiesPanel } from "../properties-panel";
 
@@ -58,7 +58,7 @@ export function MediaPanel() {
                 onClick={handleClose}
                 className="p-1.5 hover:bg-white/5 rounded-md text-muted-foreground hover:text-white transition-colors cursor-pointer"
               >
-                <IconX className="size-4" />
+                <X className="size-4" />
               </button>
             </div>
             <div className="flex-1 overflow-auto">

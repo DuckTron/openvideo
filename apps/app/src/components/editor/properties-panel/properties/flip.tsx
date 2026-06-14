@@ -1,6 +1,6 @@
 "use client";
 
-import { IconFlipHorizontal, IconFlipVertical } from "@tabler/icons-react";
+import { FlipHorizontal, FlipVertical } from "@phosphor-icons/react";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 
@@ -42,7 +42,7 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
               size="sm"
               className="flex-1 h-7 text-xs bg-secondary border rounded-md"
             >
-              <IconFlipHorizontal className="size-3.5 mr-1" />
+              <FlipHorizontal className="size-3.5 mr-1" />
               <span>X</span>
             </Toggle>
             <Toggle
@@ -52,7 +52,7 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
               size="sm"
               className="flex-1 h-7 text-xs bg-secondary border rounded-md"
             >
-              <IconFlipVertical className="size-3.5 mr-1" />
+              <FlipVertical className="size-3.5 mr-1" />
               <span>Y</span>
             </Toggle>
           </div>

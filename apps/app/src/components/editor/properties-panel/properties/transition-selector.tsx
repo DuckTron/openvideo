@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { IconLoader2 } from "@tabler/icons-react";
+import { CircleNotch } from "@phosphor-icons/react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IClip, getTransitionOptions, registerCustomTransition } from "@openvideo/engine-pixi";
@@ -86,7 +86,7 @@ export function TransitionSelectorProperty({
           <div className="relative w-full aspect-video rounded-md bg-input/30 border overflow-hidden">
             {!isReady && (
               <div className="absolute inset-0 z-10 flex items-center justify-center">
-                <IconLoader2 className="animate-spin text-muted-foreground" />
+                <CircleNotch className="animate-spin text-muted-foreground" />
               </div>
             )}
             {effect.previewStatic && (

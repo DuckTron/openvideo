@@ -4,17 +4,16 @@ import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
-  IconCopy,
-  IconClipboard,
-  IconCopyPlus,
-  IconTrash,
-  IconLock,
-  IconLockOpen,
-  IconScissors,
-  IconVolume,
-  IconVolumeOff,
-  IconChevronRight,
-} from "@tabler/icons-react";
+  CaretRight,
+  Clipboard,
+  Copy,
+  Lock,
+  LockOpen,
+  Scissors,
+  SpeakerHigh,
+  SpeakerSlash,
+  Trash,
+} from "@phosphor-icons/react";
 import { core, projectStore } from "@/lib/project";
 import { nanoid } from "nanoid";
 import type { AnyClip } from "@openvideo/core";
@@ -290,7 +289,7 @@ function MenuSub({ trigger, children }: { trigger: React.ReactNode; children: Re
         className="group relative flex w-full cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground"
       >
         {trigger}
-        <IconChevronRight className="ml-auto w-4 h-4" />
+        <CaretRight className="ml-auto w-4 h-4" />
       </button>
       {open && (
         <div
@@ -407,19 +406,19 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
         {!isLocked && (
           <>
             <MenuItem onClick={wrapWithClose(handleCopy)}>
-              <IconCopy className="w-4 h-4" />
+              <Copy className="w-4 h-4" />
               Copy
               <Shortcut>⌘ C</Shortcut>
             </MenuItem>
 
             <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-              <IconClipboard className="w-4 h-4" />
+              <Clipboard className="w-4 h-4" />
               Paste
               <Shortcut>⌘ V</Shortcut>
             </MenuItem>
 
             <MenuItem onClick={wrapWithClose(handleDuplicate)}>
-              <IconCopyPlus className="w-4 h-4" />
+              <Copy className="w-4 h-4" />
               Duplicate
               <Shortcut>⌘ D</Shortcut>
             </MenuItem>
@@ -430,7 +429,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
 
         {!isLocked && (
           <MenuItem onClick={wrapWithClose(handleSplit)}>
-            <IconScissors className="w-4 h-4" />
+            <Scissors className="w-4 h-4" />
             Split at Playhead
             <Shortcut>⌘ K</Shortcut>
           </MenuItem>
@@ -439,13 +438,13 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
         <MenuSeparator />
 
         <MenuItem onClick={wrapWithClose(handleToggleMute)}>
-          {isMuted ? <IconVolume className="w-4 h-4" /> : <IconVolumeOff className="w-4 h-4" />}
+          {isMuted ? <SpeakerHigh className="w-4 h-4" /> : <SpeakerSlash className="w-4 h-4" />}
           {isMuted ? "Unmute" : "Mute"}
           <Shortcut>⌘ ⇧ M</Shortcut>
         </MenuItem>
 
         <MenuItem onClick={wrapWithClose(handleToggleLock)}>
-          {isLocked ? <IconLockOpen className="w-4 h-4" /> : <IconLock className="w-4 h-4" />}
+          {isLocked ? <LockOpen className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
           {isLocked ? "Unlock" : "Lock"}
           <Shortcut>⌘ L</Shortcut>
         </MenuItem>
@@ -454,7 +453,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
           <>
             <MenuSeparator />
             <MenuItem onClick={wrapWithClose(handleDelete)} destructive>
-              <IconTrash className="w-4 h-4" />
+              <Trash className="w-4 h-4" />
               Delete
               <Shortcut>⌫</Shortcut>
             </MenuItem>
@@ -476,7 +475,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
       }}
     >
       <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-        <IconClipboard className="w-4 h-4" />
+        <Clipboard className="w-4 h-4" />
         Paste at Playhead
         <Shortcut>⌘ V</Shortcut>
       </MenuItem>

@@ -3,7 +3,7 @@
 import { useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { IconArrowUp, IconPaperclip } from "@tabler/icons-react";
+import { ArrowUp, Paperclip } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -152,7 +152,7 @@ export function ChatPanel({
             />
             <InputGroupAddon align="block-end">
               <InputGroupButton variant="ghost" className="rounded-lg text-foreground">
-                <IconPaperclip className="w-4 h-4" />
+                <Paperclip className="w-4 h-4" />
               </InputGroupButton>
               <InputGroupButton
                 variant="default"
@@ -161,7 +161,7 @@ export function ChatPanel({
                 onClick={onSend}
                 disabled={!input.trim() || isThinking}
               >
-                <IconArrowUp className="w-4 h-4" />
+                <ArrowUp className="w-4 h-4" />
                 <span className="sr-only">Send</span>
               </InputGroupButton>
             </InputGroupAddon>

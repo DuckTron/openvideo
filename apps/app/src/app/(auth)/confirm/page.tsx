@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { IconMail } from "@tabler/icons-react";
+import { MailIcon } from "@/components/auth/mail-icon";
 import { AuthLayout } from "@/components/auth/auth-layout";
 
 export const metadata: Metadata = {
@@ -13,7 +13,7 @@ export default function ConfirmPage() {
     <AuthLayout variant="single">
       <div className="flex flex-col items-center gap-6 text-center">
         <div className="p-4 rounded-full bg-secondary/50">
-          <IconMail className="size-6 text-muted-foreground" />
+          <MailIcon className="size-6 text-muted-foreground" />
         </div>
         <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-semibold tracking-tight">Check your email</h1>

@@ -4,17 +4,17 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  IconLoader2,
-  IconPlayerPlay,
-  IconTrash,
-  IconClock,
-  IconSparkles,
-  IconMessageCircle,
-  IconChevronRight,
-  IconKeyboard,
-  IconUpload,
-  IconPalette,
-} from "@tabler/icons-react";
+  CaretRight,
+  ChatCircle,
+  CircleNotch,
+  Clock,
+  Keyboard,
+  Palette,
+  Play,
+  Sparkle,
+  Trash,
+  Upload,
+} from "@phosphor-icons/react";
 import { fontManager, Log } from "@openvideo/engine-pixi";
 import type { AnyClip } from "@openvideo/core";
 import { generateCaptionClips } from "@/lib/caption-generator";
@@ -396,7 +396,7 @@ export default function PanelCaptions() {
           <div className="flex flex-1 items-center justify-center gap-4 select-none">
             <div className="flex flex-col items-center justify-center pb-12">
               <div className="size-16 rounded-sm bg-secondary/30 flex items-center justify-center">
-                <IconSparkles size={24} strokeWidth={1.5} className="text-muted-foreground" />
+                <Sparkle size={24} strokeWidth={1.5} className="text-muted-foreground" />
               </div>
               <h3 className="text-sm font-bold text-foreground mb-1.5">No Media Detected</h3>
               <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] mb-5 text-center">
@@ -435,9 +435,9 @@ export default function PanelCaptions() {
                 className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground justify-start"
               >
                 {isGenerating ? (
-                  <IconLoader2 className="size-5 animate-spin shrink-0" />
+                  <CircleNotch className="size-5 animate-spin shrink-0" />
                 ) : (
-                  <IconSparkles className="size-5 shrink-0" />
+                  <Sparkle className="size-5 shrink-0" />
                 )}
                 <div className="flex flex-col items-start gap-0.5 flex-1">
                   <span className="text-sm font-medium">
@@ -455,7 +455,7 @@ export default function PanelCaptions() {
                 disabled
                 className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
               >
-                <IconKeyboard className="size-5 shrink-0" />
+                <Keyboard className="size-5 shrink-0" />
                 <div className="flex flex-col items-start gap-0.5 flex-1">
                   <span className="text-sm font-medium">Manual Captions</span>
                   <span className="text-xs text-muted-foreground leading-tight">
@@ -470,7 +470,7 @@ export default function PanelCaptions() {
                 disabled
                 className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
               >
-                <IconUpload className="size-5 shrink-0" />
+                <Upload className="size-5 shrink-0" />
                 <div className="flex flex-col items-start gap-0.5 flex-1">
                   <span className="text-sm font-medium">Upload Caption File</span>
                   <span className="text-xs text-muted-foreground leading-tight">
@@ -485,7 +485,7 @@ export default function PanelCaptions() {
                 disabled
                 className="h-auto py-3 px-4 flex items-center gap-3 border-border/60 bg-secondary/30 hover:bg-secondary/50 text-foreground opacity-50 justify-start"
               >
-                <IconPalette className="size-5 shrink-0" />
+                <Palette className="size-5 shrink-0" />
                 <div className="flex flex-col items-start gap-0.5 flex-1">
                   <span className="text-sm font-medium">Auto Lyrics</span>
                   <span className="text-xs text-muted-foreground leading-tight">
@@ -598,7 +598,7 @@ function CaptionItem({
             onSeek();
           }}
         >
-          <IconPlayerPlay className="h-3 w-3" />
+          <Play className="h-3 w-3" />
         </Button>
         <Button
           variant="ghost"
@@ -609,7 +609,7 @@ function CaptionItem({
             onDelete();
           }}
         >
-          <IconTrash className="h-3 w-3" />
+          <Trash className="h-3 w-3" />
         </Button>
       </div>
     </div>

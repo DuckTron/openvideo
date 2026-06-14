@@ -1,20 +1,24 @@
-import {
-  IconAlertTriangle,
-  IconUser,
-  IconPhoto,
-  IconCrop,
-  IconCheck,
-  IconMenu,
-  IconLoader2,
-} from "@tabler/icons-react";
-import type { Icon as TablerIcon } from "@tabler/icons-react";
+"use client";
 
-export type Icon = TablerIcon;
+import * as React from "react";
+import { Warning, User, Image, Crop, Check, List, CircleNotch } from "@phosphor-icons/react";
+import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+
+export type Icon = PhosphorIcon;
+
+export const TextOverline = React.forwardRef<SVGSVGElement, React.ComponentPropsWithoutRef<"svg">>(
+  (props, ref) => (
+    <svg ref={ref} viewBox="0 0 256 256" fill="currentColor" {...props}>
+      <path d="M192,104v40a64,64,0,0,1-128,0V104a8,8,0,0,1,16,0v40a48,48,0,0,0,96,0V104a8,8,0,0,1,16,0ZM216,64a8,8,0,0,1-8,8H48a8,8,0,0,1,0-16H208A8,8,0,0,1,216,64Z" />
+    </svg>
+  ),
+);
+TextOverline.displayName = "TextOverline";
 
 type SVGIconProps = React.SVGProps<SVGSVGElement>;
 
 export const Icons = {
-  spinner: IconLoader2,
+  spinner: CircleNotch,
   gitHub: ({ ...props }: SVGIconProps) => (
     <svg
       aria-hidden="true"
@@ -84,11 +88,11 @@ export const Icons = {
       />
     </svg>
   ),
-  user: IconUser,
-  video: IconPhoto,
-  warning: IconAlertTriangle,
-  crop: IconCrop,
-  check: IconCheck,
+  user: User,
+  video: Image,
+  warning: Warning,
+  crop: Crop,
+  check: Check,
   discord: ({ ...props }: SVGIconProps) => (
     <svg
       viewBox="0 0 256 199"
@@ -119,7 +123,7 @@ export const Icons = {
       <path d="M9 18c-4.51 2-5-2-7-2" />
     </svg>
   ),
-  menu: IconMenu,
+  menu: List,
   sparkle: ({ ...props }: SVGIconProps) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path

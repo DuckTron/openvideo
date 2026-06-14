@@ -1,6 +1,6 @@
 "use client";
 
-import { IconRefresh, IconPlus, IconLayoutSidebarRightCollapse } from "@tabler/icons-react";
+import { ArrowsCounterClockwise, Plus, Sidebar } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 
 interface ChatHeaderProps {
@@ -31,7 +31,7 @@ export function ChatHeader({
             className="text-muted-foreground hover:text-foreground"
             onClick={onRefresh}
           >
-            <IconRefresh className="size-4" />
+            <ArrowsCounterClockwise className="size-4" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
@@ -40,7 +40,7 @@ export function ChatHeader({
             className="text-muted-foreground hover:text-foreground"
             onClick={onNewChat}
           >
-            <IconPlus className="size-4" />
+            <Plus className="size-4" />
             <span className="sr-only">New chat</span>
           </Button>
           {onClose && (
@@ -50,7 +50,7 @@ export function ChatHeader({
               className="text-muted-foreground hover:text-foreground"
               onClick={onClose}
             >
-              <IconLayoutSidebarRightCollapse className="size-4" />
+              <Sidebar className="size-4" />
               <span className="sr-only">Close assistant</span>
             </Button>
           )}

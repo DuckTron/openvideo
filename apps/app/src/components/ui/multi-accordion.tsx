@@ -1,7 +1,7 @@
 "use client";
 import React, { ReactNode, ReactElement, isValidElement } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { IconChevronDown } from "@tabler/icons-react";
+import { CaretDown } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { Separator } from "./separator";
 
@@ -137,7 +137,7 @@ export function AccordionHeader({
         {children}
       </div>
       {!customIcon && (
-        <IconChevronDown
+        <CaretDown
           className={cn("transition-transform size-4 ", isActive ? "rotate-180" : "rotate-0")}
         />
       )}

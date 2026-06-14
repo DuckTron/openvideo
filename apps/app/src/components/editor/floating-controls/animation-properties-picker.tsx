@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { NumberInput } from "@/components/ui/number-input";
-import { IconPlus, IconTrash, IconX } from "@tabler/icons-react";
+import { Plus, Trash, X } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -445,7 +445,7 @@ export function AnimationPropertiesPicker() {
                 onClick={() => setFloatingControl("")}
                 className="text-muted-foreground hover:text-foreground"
               >
-                <IconX className="size-3.5" />
+                <X className="size-3.5" />
               </button>
             </div>
 
@@ -558,7 +558,7 @@ export function AnimationPropertiesPicker() {
                           onClick={handleAddKeyframe}
                           className="h-7 gap-1 text-xs"
                         >
-                          <IconPlus className="size-3" />
+                          <Plus className="size-3" />
                           Add Stop
                         </Button>
                       </div>
@@ -712,7 +712,7 @@ function KeyframeItem({
         </span>
         {canRemove && (
           <button onClick={onRemove} className="text-muted-foreground hover:text-destructive">
-            <IconTrash className="size-3.5" />
+            <Trash className="size-3.5" />
           </button>
         )}
       </div>
@@ -740,7 +740,7 @@ function KeyframeItem({
                     onClick={() => onPropertyToggle(prop, false)}
                     className="text-muted-foreground hover:text-destructive"
                   >
-                    <IconX className="size-3.5" />
+                    <X className="size-3.5" />
                   </button>
                 </div>
               </div>
@@ -763,7 +763,7 @@ function KeyframeItem({
                 size="sm"
                 className="w-full border-dashed text-muted-foreground"
               >
-                <IconPlus data-icon="inline-start" />
+                <Plus data-icon="inline-start" />
                 Add Property
               </Button>
             </DropdownMenuTrigger>

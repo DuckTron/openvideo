@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconLineHeight } from "@tabler/icons-react";
+import { ArrowsDownUp } from "@phosphor-icons/react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   ColorPicker,
@@ -98,7 +98,7 @@ export function StrokeProperty({
             <span className="text-xs text-muted-foreground">Width</span>
             <InputGroup className="w-[130px]">
               <InputGroupAddon align="inline-start">
-                <IconLineHeight className="size-3.5" />
+                <ArrowsDownUp className="size-3.5" />
               </InputGroupAddon>
               <NumberInput
                 value={width || 0}

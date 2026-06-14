@@ -1,6 +1,6 @@
 "use client";
 
-import { IconLineHeight } from "@tabler/icons-react";
+import { ArrowsDownUp } from "@phosphor-icons/react";
 import { Slider } from "@/components/ui/slider";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
@@ -30,7 +30,7 @@ export function SpacingProperty({
 
       {/* Line Height */}
       <div className="flex items-center gap-4">
-        <IconLineHeight className="size-4 text-muted-foreground" />
+        <ArrowsDownUp className="size-4 text-muted-foreground" />
         <Slider
           value={[lh.localValue]}
           onValueChange={(v) => lh.handleChange(v[0])}

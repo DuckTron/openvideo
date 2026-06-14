@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { IconBlur, IconRuler2 } from "@tabler/icons-react";
+import { Drop, Ruler } from "@phosphor-icons/react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   ColorPicker,
@@ -62,7 +62,7 @@ export function ShadowProperty({
             <div className="flex w-[130px] gap-2">
               <InputGroup className="flex-1 h-7">
                 <InputGroupAddon align="inline-start">
-                  <IconRuler2 className="size-3.5" />
+                  <Ruler className="size-3.5" />
                 </InputGroupAddon>
                 <NumberInput
                   value={Math.round(offsetX || 0)}
@@ -72,7 +72,7 @@ export function ShadowProperty({
               </InputGroup>
               <InputGroup className="flex-1 h-7">
                 <InputGroupAddon align="inline-start">
-                  <IconRuler2 className="size-3.5" />
+                  <Ruler className="size-3.5" />
                 </InputGroupAddon>
                 <NumberInput
                   value={Math.round(offsetY || 0)}
@@ -88,7 +88,7 @@ export function ShadowProperty({
             <span className="text-xs text-muted-foreground">Blur</span>
             <InputGroup className="w-[130px]">
               <InputGroupAddon align="inline-start">
-                <IconBlur className="size-3.5" />
+                <Drop className="size-3.5" />
               </InputGroupAddon>
               <NumberInput
                 value={blur || 0}
