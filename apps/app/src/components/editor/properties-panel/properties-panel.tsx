@@ -611,18 +611,11 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
     }
   };
 
-  // Auto-insert separators between logical property groups
-  const needsSeparator = (key: PropertyKey, index: number) => {
-    if (index === 0) return false;
-    // Insert separator before transform (after textGroup) and before stroke/effects
-    return true;
-  };
-
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-2">
       {propertyKeys.map((key, index) => (
         <React.Fragment key={key}>
-          {needsSeparator(key, index) && <Separator className="bg-white/10" />}
+          {/* {needsSeparator(key, index) && <Separator className="bg-white/10" />} */}
           {renderProperty(key)}
         </React.Fragment>
       ))}

@@ -59,7 +59,7 @@ export function ShadowProperty({
           {/* Offset X/Y */}
           <div className="flex items-center justify-between gap-4">
             <span className="text-xs text-muted-foreground">Offset</span>
-            <div className="flex w-[130px] gap-2">
+            <div className="flex w-[160px] gap-2">
               <InputGroup className="flex-1 h-7">
                 <InputGroupAddon align="inline-start">
                   <Ruler className="size-3.5" />
@@ -86,7 +86,7 @@ export function ShadowProperty({
           {/* Blur */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Blur</span>
-            <InputGroup className="w-[130px]">
+            <InputGroup className="w-[160px]">
               <InputGroupAddon align="inline-start">
                 <Drop className="size-3.5" />
               </InputGroupAddon>
@@ -101,7 +101,7 @@ export function ShadowProperty({
           {/* Color */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Color</span>
-            <InputGroup className="w-[130px] h-7">
+            <InputGroup className="w-[160px] h-7">
               <InputGroupAddon align="inline-start" className="relative p-0">
                 <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                   <PopoverTrigger asChild>

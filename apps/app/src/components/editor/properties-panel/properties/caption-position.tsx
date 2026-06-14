@@ -33,7 +33,7 @@ export function CaptionPositionProperty({ value, onChange }: CaptionPositionProp
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Position</span>
           <Select value={value} onValueChange={(v) => onChange(v as any)}>
-            <SelectTrigger className="w-[130px] h-7 bg-secondary border rounded-md text-xs!">
+            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
               <SelectValue placeholder="Vertical Position" />
             </SelectTrigger>
             <SelectContent>

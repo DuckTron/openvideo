@@ -60,7 +60,7 @@ export function TransitionDurationProperty({
         {/* Duration row */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Duration</span>
-          <div className="flex items-center gap-2 w-[130px]">
+          <div className="flex items-center gap-2 w-[160px]">
             <Slider
               value={[localValue]}
               onValueChange={(v) => {

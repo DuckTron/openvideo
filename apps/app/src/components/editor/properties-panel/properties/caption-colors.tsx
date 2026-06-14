@@ -51,7 +51,7 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
         ).map(({ key, label, fallback }) => (
           <div key={key} className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">{label}</span>
-            <InputGroup className="w-[130px] h-7">
+            <InputGroup className="w-[160px] h-7">
               <InputGroupAddon align="inline-start" className="relative p-0">
                 <Popover modal={true}>
                   <PopoverTrigger asChild>

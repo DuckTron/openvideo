@@ -57,7 +57,7 @@ export function ChatPanel({
   };
 
   return (
-    <div className={cn("flex flex-col h-full overflow-hidden bg-card/70", className)}>
+    <div className={cn("flex flex-col h-full overflow-hidden bg-card", className)}>
       {messages.length === 0 ? (
         <div className="flex-1">
           {emptyState ?? (

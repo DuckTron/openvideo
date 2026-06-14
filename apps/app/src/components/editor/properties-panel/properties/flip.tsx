@@ -34,7 +34,7 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
       <div className="py-1 flex flex-col">
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Flip</span>
-          <div className="flex items-center gap-2 w-[130px]">
+          <div className="flex items-center gap-2 w-[160px]">
             <Toggle
               pressed={x}
               onPressedChange={(pressed) => onChange({ ...value, x: pressed })}

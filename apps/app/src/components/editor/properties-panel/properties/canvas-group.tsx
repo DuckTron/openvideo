@@ -83,7 +83,7 @@ export function CanvasGroupProperty() {
         {/* Width */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Width</span>
-          <InputGroup className="w-[130px] h-7">
+          <InputGroup className="w-[160px] h-7">
             <NumberInput
               value={width}
               onChange={onWidthChange}
@@ -98,7 +98,7 @@ export function CanvasGroupProperty() {
         {/* Height */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Height</span>
-          <InputGroup className="w-[130px] h-7">
+          <InputGroup className="w-[160px] h-7">
             <NumberInput
               value={height}
               onChange={onHeightChange}
@@ -114,7 +114,7 @@ export function CanvasGroupProperty() {
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Aspect Ratio</span>
           <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
-            <SelectTrigger className="w-[130px] h-7 bg-secondary border rounded-md text-xs!">
+            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
               <SelectValue placeholder="Aspect ratio" />
             </SelectTrigger>
             <SelectContent>
@@ -142,7 +142,7 @@ export function CanvasGroupProperty() {
         {/* Background Color */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Background</span>
-          <InputGroup className="w-[130px] h-7">
+          <InputGroup className="w-[160px] h-7">
             <InputGroupAddon align="inline-start" className="relative p-0">
               <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                 <PopoverTrigger asChild>

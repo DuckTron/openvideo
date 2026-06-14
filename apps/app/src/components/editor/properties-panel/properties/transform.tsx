@@ -43,7 +43,7 @@ export function TransformProperty({
         {/* Position - X & Y */}
         <div className="flex items-center justify-between gap-4">
           <span className="text-xs text-muted-foreground">Position</span>
-          <div className="flex w-[130px] gap-2">
+          <div className="flex w-[160px] gap-2">
             <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">X</span>
@@ -70,7 +70,7 @@ export function TransformProperty({
         {/* Size - W & H */}
         <div className="flex items-center justify-between gap-4">
           <span className="text-xs text-muted-foreground">Size</span>
-          <div className="flex w-[130px] gap-2">
+          <div className="flex w-[160px] gap-2">
             <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
                 <span className="text-[10px] text-muted-foreground">W</span>

@@ -72,7 +72,7 @@ export function ChromaKeyProperty({
           {/* Key Color */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Key Color</span>
-            <InputGroup className="w-[130px] h-7">
+            <InputGroup className="w-[160px] h-7">
               <InputGroupAddon align="inline-start" className="relative p-0">
                 <Popover modal={true}>
                   <PopoverTrigger asChild>
@@ -125,7 +125,7 @@ export function ChromaKeyProperty({
           {/* Similarity */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Similarity</span>
-            <div className="flex items-center gap-2 w-[130px]">
+            <div className="flex items-center gap-2 w-[160px]">
               <Slider
                 value={[sim.localValue]}
                 onValueChange={(v) => sim.handleChange(v[0])}
@@ -150,7 +150,7 @@ export function ChromaKeyProperty({
           {/* Spill */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Spill</span>
-            <div className="flex items-center gap-2 w-[130px]">
+            <div className="flex items-center gap-2 w-[160px]">
               <Slider
                 value={[sp.localValue]}
                 onValueChange={(v) => sp.handleChange(v[0])}

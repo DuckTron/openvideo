@@ -28,7 +28,7 @@ export default function Header() {
 
   return (
     <div className="h-13 pb-1 shrink-0">
-      <div className="h-full bg-card/70 grid grid-cols-3 items-center px-4">
+      <div className="h-full bg-card grid grid-cols-3 items-center px-4">
         {/* Left Column: Logo & App Name */}
         <div className="flex items-center justify-start gap-1.5 select-none">
           <LogoIcons.scenify className="size-5 text-foreground" />
@@ -36,7 +36,7 @@ export default function Header() {
         </div>
 
         {/* Center Column: Project Space & Details */}
-        <div className="flex items-center justify-center gap-1.5 text-xs select-none">
+        <div className="flex items-center justify-center gap-1.5 text-sm font-semibold">
           <LockSimpleIcon size={14} className=" shrink-0" />
           <span className=" font-medium">Personal</span>
           <span className="font-light px-1">/</span>

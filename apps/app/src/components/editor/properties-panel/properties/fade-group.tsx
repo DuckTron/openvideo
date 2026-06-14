@@ -42,7 +42,7 @@ export function FadeGroupProperty({
         {/* Fade In */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Fade-in</span>
-          <div className="flex items-center gap-2 w-[130px]">
+          <div className="flex items-center gap-2 w-[160px]">
             <Slider
               value={[fadeIn.localValue]}
               onValueChange={(v) => fadeIn.handleChange(v[0])}
@@ -69,7 +69,7 @@ export function FadeGroupProperty({
         {/* Fade Out */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Fade-out</span>
-          <div className="flex items-center gap-2 w-[130px]">
+          <div className="flex items-center gap-2 w-[160px]">
             <Slider
               value={[fadeOut.localValue]}
               onValueChange={(v) => fadeOut.handleChange(v[0])}

@@ -182,7 +182,7 @@ const PairProperty = ({
   onChange,
 }: PairPropertyProps) => {
   return (
-    <div className="flex flex-col gap-1 w-[130px]">
+    <div className="flex flex-col gap-1 w-[160px]">
       {([0, 1] as const).map((i) => (
         <div key={i} className="flex items-center gap-2 py-0.5">
           <span className="w-8 text-[9px] uppercase text-muted-foreground truncate">
@@ -280,7 +280,7 @@ const MatrixProperty = ({ value, onChange }: MatrixPropertyProps) => {
           i < 8 && (
             <div key={i} className="flex items-center justify-between py-1 gap-4">
               <span className="text-xs text-muted-foreground font-mono">M{i}</span>
-              <div className="flex items-center gap-2 w-[130px]">
+              <div className="flex items-center gap-2 w-[160px]">
                 <Slider
                   value={[v]}
                   min={0}
@@ -351,7 +351,7 @@ const StopsProperty = ({ value, config, onChange }: StopsPropertyProps) => {
           {/* Offset */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Offset</span>
-            <div className="flex items-center gap-2 w-[130px]">
+            <div className="flex items-center gap-2 w-[160px]">
               <Slider
                 value={[stop.offset]}
                 min={config.offset.min}
@@ -376,7 +376,7 @@ const StopsProperty = ({ value, config, onChange }: StopsPropertyProps) => {
           {/* Alpha */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Alpha</span>
-            <div className="flex items-center gap-2 w-[130px]">
+            <div className="flex items-center gap-2 w-[160px]">
               <Slider
                 value={[stop.alpha]}
                 min={config.alpha.min}
@@ -408,7 +408,7 @@ const StopsProperty = ({ value, config, onChange }: StopsPropertyProps) => {
 
 const CoordinatesProperty = ({ value, min, max, step, onChange }: CoordinatesPropertyProps) => {
   return (
-    <div className="flex flex-col gap-1 w-[130px]">
+    <div className="flex flex-col gap-1 w-[160px]">
       {(["x", "y"] as const).map((axis) => (
         <div key={axis} className="flex items-center gap-2 py-0.5">
           <span className="w-3 text-[10px] font-semibold text-muted-foreground uppercase">
@@ -450,7 +450,7 @@ const CoordinatesProperty = ({ value, min, max, step, onChange }: CoordinatesPro
 
 const ColorProperty = ({ value, onChange }: ColorPropertyProps) => {
   return (
-    <InputGroup className="w-[130px] h-7">
+    <InputGroup className="w-[160px] h-7">
       <InputGroupAddon align="inline-start" className="relative p-0">
         <Popover modal>
           <PopoverTrigger asChild>
@@ -639,7 +639,7 @@ export function EffectProperties({ clip }: EffectPropertiesProps) {
               <span className="text-xs text-muted-foreground capitalize">
                 {property.replace(/([A-Z])/g, " $1").trim()}
               </span>
-              <div className="w-[130px]">
+              <div className="w-[160px]">
                 <PropertyRenderer
                   property={property}
                   value={currentValue}
@@ -676,7 +676,7 @@ export function EffectProperties({ clip }: EffectPropertiesProps) {
               <span className="text-xs text-muted-foreground capitalize">
                 {property.replace(/([A-Z])/g, " $1").trim()}
               </span>
-              <div className="w-[130px]">
+              <div className="w-[160px]">
                 {type === "color" && (
                   <ColorProperty
                     value={currentValue ?? "#000000"}
@@ -699,7 +699,7 @@ export function EffectProperties({ clip }: EffectPropertiesProps) {
                     value={currentValue.toString()}
                     onValueChange={(value) => handleUpdate(property, Number(value))}
                   >
-                    <SelectTrigger className="w-[130px] h-7 bg-secondary border rounded-md text-xs!">
+                    <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>

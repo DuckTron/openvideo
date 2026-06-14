@@ -51,8 +51,8 @@ export function MediaPanel() {
       <TabBar />
       {showPanelContent && (
         <div className="w-[360px] pr-1 bg-background h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
-          <div className="bg-card/70 rounded-sm h-full flex flex-col">
-            <div className="h-12 items-center flex justify-between px-4 shrink-0 border-b border-white/5">
+          <div className="bg-card rounded-sm h-full flex flex-col">
+            <div className="h-12 items-center flex justify-between px-4 shrink-0">
               <span className="text-sm font-medium">{getPanelTitle()}</span>
               <button
                 onClick={handleClose}

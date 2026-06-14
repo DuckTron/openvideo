@@ -20,7 +20,7 @@ export function ChatHeader({
 }: ChatHeaderProps) {
   return (
     <div className="h-13 pb-1">
-      <div className="flex items-center bg-card/70 justify-between px-4 h-full shrink-0">
+      <div className="flex items-center bg-card justify-between px-4 h-full shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold tracking-wide">{title}</span>
         </div>

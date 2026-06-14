@@ -72,17 +72,17 @@ export function TabBar() {
   return (
     <div className="relative flex flex-col items-center pr-1 gap-3 h-full bg-background shrink-0 ">
       {/* Tabs list */}
-      <div className="flex flex-col items-center py-2 px-2 gap-2.5 bg-card/70 h-full">
+      <div className="flex flex-col items-center py-2 px-2 gap-2.5 bg-card h-full">
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           const isActive = activeTab === tabKey && isOpen && !hasSelection;
           return (
             <div
               className={cn(
-                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-1.5 px-0.5 gap-2",
+                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-2 px-0.5 gap-1.5",
                 isActive
-                  ? "bg-white/10 text-white font-semibold"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-white",
+                  ? "bg-accent text-accent-foreground font-semibold"
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
               )}
               onClick={() => {
                 if (hasSelection) {

@@ -35,7 +35,7 @@ export function CornerRadiusProperty({ value, onChange, max = 500 }: CornerRadiu
       <div className="py-1 flex flex-col">
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Radius</span>
-          <div className="flex items-center gap-2 w-[130px]">
+          <div className="flex items-center gap-2 w-[160px]">
             <Slider
               value={[localValue]}
               onValueChange={(v) => handleChange(v[0])}

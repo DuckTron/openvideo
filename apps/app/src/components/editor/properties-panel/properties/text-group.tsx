@@ -160,13 +160,6 @@ export function TextGroupProperty({
       {/* Section Header */}
       <div className="flex items-center justify-between py-2">
         <span className="text-xs font-semibold text-foreground">Typography</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-5 text-muted-foreground hover:text-foreground"
-        >
-          <span className="text-base leading-none">+</span>
-        </Button>
       </div>
 
       <div className="py-1 flex flex-col">
@@ -176,14 +169,14 @@ export function TextGroupProperty({
           <Input
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
-            className="w-[130px] h-7 text-xs! bg-secondary border rounded-md"
+            className="w-[160px] h-7 text-xs! bg-secondary border rounded-md"
             placeholder="Text"
           />
         </div>
         {/* Font */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Font</span>
-          <div className="w-[130px]">
+          <div className="w-[160px]">
             <FontPicker currentFamily={{ family: currentFamily }} handleFontChange={onFontChange} />
           </div>
         </div>
@@ -192,7 +185,7 @@ export function TextGroupProperty({
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Style</span>
           <Select value={currentFont.postScriptName} onValueChange={onFontStyleChange}>
-            <SelectTrigger className="w-[130px] h-7 bg-secondary border rounded-md text-xs!">
+            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
             <SelectContent>
@@ -208,7 +201,7 @@ export function TextGroupProperty({
         {/* Size */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Size</span>
-          <InputGroup className="w-[130px]">
+          <InputGroup className="w-[160px]">
             <NumberInput
               value={fontSize}
               onChange={onFontSizeChange}
@@ -223,7 +216,7 @@ export function TextGroupProperty({
         {/* Align */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Align</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
             {[
               { icon: TextAlignLeft, value: "left" },
               { icon: TextAlignCenter, value: "center" },
@@ -248,7 +241,7 @@ export function TextGroupProperty({
         {/* Decoration */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Decoration</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
             {[
               { icon: TextUnderline, value: "underline", active: underline },
               { icon: TextOverline, value: "overline", active: overline },
@@ -277,7 +270,7 @@ export function TextGroupProperty({
         {/* Case */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Case</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[130px]">
+          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
             {[
               { label: "aA", value: "none" },
               { label: "AA", value: "uppercase" },
@@ -302,7 +295,7 @@ export function TextGroupProperty({
         {/* Color */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Color</span>
-          <InputGroup className="w-[130px] h-7">
+          <InputGroup className="w-[160px] h-7">
             <InputGroupAddon align="inline-start" className="relative p-0">
               <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                 <PopoverTrigger asChild>

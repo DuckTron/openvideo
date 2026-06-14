@@ -130,7 +130,7 @@ export default function Editor({
                 </div>
               </ResizablePanel>
 
-              <ResizableHandle className="bg-border/90" />
+              <ResizableHandle className="w-full opacity-0 hover:opacity-100 bg-primary transition-opacity duration-200" />
 
               {/* Bottom Panel: Timeline */}
               <ResizablePanel
@@ -147,7 +147,7 @@ export default function Editor({
 
           {isCopilotVisible && (
             <>
-              <ResizableHandle className="bg-border/90" />
+              <ResizableHandle className="opacity-0 hover:opacity-100 bg-primary transition-opacity duration-200" />
 
               {/* Right Panel: Assistant (Full Height) */}
               <ResizablePanel

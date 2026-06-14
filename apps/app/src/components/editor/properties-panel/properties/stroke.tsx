@@ -51,7 +51,7 @@ export function StrokeProperty({
           {/* Color */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Color</span>
-            <InputGroup className="w-[130px] h-7">
+            <InputGroup className="w-[160px] h-7">
               <InputGroupAddon align="inline-start" className="relative p-0">
                 <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                   <PopoverTrigger asChild>
@@ -96,7 +96,7 @@ export function StrokeProperty({
           {/* Width */}
           <div className="flex items-center justify-between py-1 gap-4">
             <span className="text-xs text-muted-foreground">Width</span>
-            <InputGroup className="w-[130px]">
+            <InputGroup className="w-[160px]">
               <InputGroupAddon align="inline-start">
                 <ArrowsDownUp className="size-3.5" />
               </InputGroupAddon>
