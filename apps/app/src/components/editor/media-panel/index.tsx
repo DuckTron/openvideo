@@ -52,7 +52,7 @@ export function MediaPanel() {
       {showPanelContent && (
         <div className="w-[360px] pr-1 bg-background h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
           <div className="bg-card rounded-sm h-full flex flex-col">
-            <div className="h-12 items-center flex justify-between px-4 shrink-0">
+            <div className="h-12 items-center flex justify-between px-6 shrink-0">
               <span className="text-sm font-medium">{getPanelTitle()}</span>
               <button
                 onClick={handleClose}

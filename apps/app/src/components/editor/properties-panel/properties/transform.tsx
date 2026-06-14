@@ -30,13 +30,6 @@ export function TransformProperty({
       {/* Section Header */}
       <div className="flex items-center justify-between py-2">
         <span className="text-xs font-semibold text-foreground">Transform</span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="size-5 text-muted-foreground hover:text-foreground"
-        >
-          <span className="text-base leading-none">+</span>
-        </Button>
       </div>
 
       <div className="py-1 flex flex-col gap-3">

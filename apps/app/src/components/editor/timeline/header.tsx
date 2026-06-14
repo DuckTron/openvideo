@@ -87,7 +87,6 @@ const Header = ({
               disabled={!selectedClip || isLocked}
               onClick={handleDelete}
               variant={"ghost"}
-              size={"sm"}
               className="flex items-center gap-1 px-2"
             >
               <TrashIcon size={14} />
@@ -97,7 +96,6 @@ const Header = ({
               disabled={!selectedClip || isLocked}
               onClick={handleSplit}
               variant={"ghost"}
-              size={"sm"}
               className="flex items-center gap-1 px-2"
             >
               <SquareSplitHorizontalIcon size={15} />
@@ -106,7 +104,6 @@ const Header = ({
               disabled={!selectedClip || isLocked}
               onClick={handleDuplicate}
               variant={"ghost"}
-              size={"sm"}
               className="flex items-center gap-1 px-2"
             >
               <CopyIcon size={15} />
