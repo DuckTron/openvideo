@@ -1,20 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { frameToTimeString, timeToString } from "../utils/time";
-import {
-  IconTrash,
-  IconCopy,
-  IconScissors,
-  IconPlus,
-  IconMinus,
-  IconChevronsLeft,
-  IconChevronsRight,
-} from "@tabler/icons-react";
 import { useClipActions } from "../studio-context-menu";
 import { useTimelineOffsetX } from "../hooks/use-timeline-offset";
 import { useStore } from "zustand";
 import { core, projectStore } from "@/lib/project";
 import { useStudioStore } from "@/stores/studio-store";
-import { useEffect, useState } from "react";
 import { ITimelineScaleState } from "@openvideo/timeline";
 import { getFitZoomLevel } from "../utils/timeline";
 import {
@@ -24,54 +14,17 @@ import {
   DropdownMenuItem,
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
-
-const IconPlayerPlayFilled = ({ size }: { size: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} viewBox="0 0 24 24" fill="currentColor">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M6 4v16a1 1 0 0 0 1.524 .852l13 -8a1 1 0 0 0 0 -1.704l-13 -8a1 1 0 0 0 -1.524 .852z" />
-  </svg>
-);
-
-const IconPlayerPauseFilled = ({ size }: { size: number }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} viewBox="0 0 24 24" fill="currentColor">
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M9 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z" />
-    <path d="M17 4h-2a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h2a2 2 0 0 0 2 -2v-12a2 2 0 0 0 -2 -2z" />
-  </svg>
-);
-const IconPlayerSkipBack = ({ size }: { size: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M20 5v14l-12 -7z" />
-    <path d="M4 5l0 14" />
-  </svg>
-);
-
-const IconPlayerSkipForward = ({ size }: { size: number }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-    <path d="M4 5v14l12 -7z" />
-    <path d="M20 5l0 14" />
-  </svg>
-);
+import {
+  TrashIcon,
+  CopyIcon,
+  PlusIcon,
+  MinusIcon,
+  PlayIcon,
+  PauseIcon,
+  SkipBackIcon,
+  SkipForwardIcon,
+  SquareSplitHorizontalIcon,
+} from "@phosphor-icons/react";
 const Header = ({
   scale,
   setScale,
@@ -137,7 +90,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <IconTrash size={14} />
+              <TrashIcon size={14} />
             </Button>
 
             <Button
@@ -147,7 +100,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <IconScissors size={15} />
+              <SquareSplitHorizontalIcon size={15} />
             </Button>
             <Button
               disabled={!selectedClip || isLocked}
@@ -156,7 +109,7 @@ const Header = ({
               size={"sm"}
               className="flex items-center gap-1 px-2"
             >
-              <IconCopy size={15} />
+              <CopyIcon size={15} />
             </Button>
           </div>
           <div className="flex items-center justify-center">
@@ -167,7 +120,7 @@ const Header = ({
                 variant={"ghost"}
                 size={"icon"}
               >
-                <IconChevronsLeft size={14} />
+                <SkipBackIcon size={14} />
               </Button>
               <Button
                 onClick={() => {
@@ -180,9 +133,9 @@ const Header = ({
                 size={"icon"}
               >
                 {isPlaying ? (
-                  <IconPlayerPauseFilled size={14} />
+                  <PauseIcon weight="fill" size={14} />
                 ) : (
-                  <IconPlayerPlayFilled size={14} />
+                  <PlayIcon weight="fill" size={14} />
                 )}
               </Button>
               <Button
@@ -191,7 +144,7 @@ const Header = ({
                 variant={"ghost"}
                 size={"icon"}
               >
-                <IconChevronsRight size={14} />
+                <SkipForwardIcon size={14} />
               </Button>
             </div>
             <div
@@ -282,7 +235,7 @@ const ZoomControl = ({
     <div className="flex items-center justify-end select-none px-4">
       <div className="flex items-center rounded-md px-1.5 py-0.5 gap-1 h-8">
         <Button onClick={onZoomOutClick} variant={"ghost"} size={"icon"}>
-          <IconMinus />
+          <MinusIcon size={14} />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -360,7 +313,7 @@ const ZoomControl = ({
           </DropdownMenuContent>
         </DropdownMenu>
         <Button onClick={onZoomInClick} variant={"ghost"} size={"icon"}>
-          <IconPlus />
+          <PlusIcon size={14} />
         </Button>
       </div>
     </div>

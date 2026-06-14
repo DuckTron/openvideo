@@ -1,7 +1,6 @@
 "use client";
 
 import { IconRefresh, IconPlus, IconLayoutSidebarRightCollapse } from "@tabler/icons-react";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 interface ChatHeaderProps {
@@ -14,7 +13,7 @@ interface ChatHeaderProps {
 
 export function ChatHeader({
   title = "Director",
-  isConnected = true,
+  isConnected,
   onRefresh,
   onNewChat,
   onClose,

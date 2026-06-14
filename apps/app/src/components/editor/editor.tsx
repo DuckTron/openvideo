@@ -15,24 +15,7 @@ import { core } from "@/lib/project";
 import { IProject } from "@openvideo/core";
 import { trpc } from "@/lib/trpc";
 import { useProjectStore } from "@/stores/project-store";
-import { LogoIcons } from "@/components/shared/logos";
-import {
-  IconCloud,
-  IconDeviceMobile,
-  IconDeviceTv,
-  IconSquare,
-  IconAspectRatio,
-  IconChevronDown,
-  IconLayoutSidebarRightExpand,
-} from "@tabler/icons-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { ExportModal } from "./export-modal";
+import Header from "./header";
 
 export default function Editor({
   initialDesign,
@@ -47,11 +30,6 @@ export default function Editor({
   const setSpaceId = useProjectStore((state) => state.setSpaceId);
   const setProjectName = useProjectStore((state) => state.setProjectName);
   const resetProject = useProjectStore((state) => state.resetProject);
-  const projectName = useProjectStore((state) => state.projectName);
-  const aspectRatio = useProjectStore((state) => state.aspectRatio);
-  const setCanvasSize = useProjectStore((state) => state.setCanvasSize);
-
-  const [isExportOpen, setIsExportOpen] = useState(false);
 
   const {
     toolsPanel,
@@ -110,17 +88,6 @@ export default function Editor({
     checkSupport();
   }, []);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "e") {
-        e.preventDefault();
-        setIsExportOpen(true);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
-
   // Clear loading screen for non-editor modes (CanvasPanel doesn't mount, onReady never fires)
   useEffect(() => {
     if (editorMode !== "editor") {
@@ -144,88 +111,7 @@ export default function Editor({
             className="min-h-0 min-w-0"
           >
             <ResizablePanelGroup direction="vertical" className="h-full w-full gap-0">
-              <div className="h-13 pb-1 shrink-0">
-                <div className="h-full bg-card/70 grid grid-cols-3 items-center px-4">
-                  {/* Left Column: Logo & App Name */}
-                  <div className="flex items-center justify-start gap-1.5 select-none">
-                    <LogoIcons.scenify className="size-5 text-foreground" />
-                    <span className="text-sm font-semibold tracking-wide lowercase">openvideo</span>
-                  </div>
-
-                  {/* Center Column: Cloud & Project Name */}
-                  <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                    <IconCloud className="size-4 shrink-0" />
-                    <span className="text-xs font-medium text-foreground truncate max-w-[150px]">
-                      {projectName || "Untitled video"}
-                    </span>
-                  </div>
-
-                  {/* Right Column: Aspect Ratio and Export Button */}
-                  <div className="flex items-center justify-end gap-2">
-                    {/* Aspect Ratio Selector */}
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2.5"
-                        >
-                          {aspectRatio === "9:16" && <IconDeviceMobile className="size-3.5" />}
-                          {aspectRatio === "16:9" && <IconDeviceTv className="size-3.5" />}
-                          {aspectRatio === "1:1" && <IconSquare className="size-3.5" />}
-                          {aspectRatio !== "9:16" &&
-                            aspectRatio !== "16:9" &&
-                            aspectRatio !== "1:1" && <IconAspectRatio className="size-3.5" />}
-                          <span>{aspectRatio}</span>
-                          <IconChevronDown className="size-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="w-40">
-                        <DropdownMenuItem
-                          onClick={() => setCanvasSize({ width: 1920, height: 1080 }, "16:9")}
-                        >
-                          <IconDeviceTv className="size-3.5 mr-2" />
-                          16:9 Landscape
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setCanvasSize({ width: 1080, height: 1920 }, "9:16")}
-                        >
-                          <IconDeviceMobile className="size-3.5 mr-2" />
-                          9:16 Vertical
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setCanvasSize({ width: 1080, height: 1080 }, "1:1")}
-                        >
-                          <IconSquare className="size-3.5 mr-2" />
-                          1:1 Square
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    {/* Export Button */}
-                    <Button
-                      onClick={() => setIsExportOpen(true)}
-                      className="h-8 text-xs font-semibold px-3 bg-foreground text-background hover:bg-foreground/90 rounded-md flex items-center gap-2"
-                    >
-                      <span>Export</span>
-                      <span className="text-[10px] opacity-65 bg-background/20 px-1 py-0.5 rounded font-mono">
-                        Ctrl+E
-                      </span>
-                    </Button>
-
-                    {!isCopilotVisible && (
-                      <Button
-                        onClick={toggleCopilot}
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-foreground"
-                      >
-                        <IconLayoutSidebarRightExpand className="size-4" />
-                        <span className="sr-only">Open assistant</span>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <Header />
               {/* Top Panel: Media Panel + Canvas */}
               <ResizablePanel
                 defaultSize={100 - timeline}
@@ -283,9 +169,6 @@ export default function Editor({
 
       {/* WebCodecs Support Check Modal */}
       <WebCodecsUnsupportedModal open={!isWebCodecsSupported} />
-
-      {/* Export Modal */}
-      <ExportModal open={isExportOpen} onOpenChange={setIsExportOpen} />
     </div>
   );
 }

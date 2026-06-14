@@ -43,8 +43,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDirector } from "@/hooks/use-director";
-import { ChatPanel } from "@/components/shared/chat-panel";
-import { ChatHeader } from "@/components/shared/chat-header";
+import { ChatPanel } from "@/components/editor/assistant/chat-panel";
+import { ChatHeader } from "@/components/editor/assistant/chat-header";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
 import { getPresignedConfig, uploadFileWithConfig } from "@/lib/upload-utils";
 import { generateThumbnail } from "@/lib/thumbnail-generator";

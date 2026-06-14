@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useDirector } from "@/hooks/use-director";
-import { ChatPanel } from "@/components/shared/chat-panel";
-import { ChatHeader } from "@/components/shared/chat-header";
+import { ChatPanel } from "./chat-panel";
+import { ChatHeader } from "./chat-header";
 import { useProjectStore } from "@/stores/project-store";
 
 export default function Assistant({ onClose }: { onClose?: () => void }) {
@@ -21,7 +21,7 @@ export default function Assistant({ onClose }: { onClose?: () => void }) {
   return (
     <div className="flex flex-col h-full text-foreground text-sm overflow-hidden pl-1">
       <div className=" h-full w-full flex flex-col">
-        <ChatHeader isConnected={isConnected} onClose={onClose} />
+        <ChatHeader onClose={onClose} />
 
         <ChatPanel
           messages={messages}
