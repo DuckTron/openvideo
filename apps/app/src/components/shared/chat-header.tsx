@@ -23,35 +23,35 @@ export function ChatHeader({
     <div className="h-13 pb-1">
       <div className="flex items-center bg-card/70 justify-between px-4 h-full shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm tracking-wide font-medium">{title}</span>
+          <span className="text-sm font-semibold tracking-wide">{title}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground"
             onClick={onRefresh}
           >
-            <IconRefresh className="w-3.5 h-3.5" />
+            <IconRefresh className="size-4" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground"
             onClick={onNewChat}
           >
-            <IconPlus className="w-3.5 h-3.5" />
+            <IconPlus className="size-4" />
             <span className="sr-only">New chat</span>
           </Button>
           {onClose && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground"
+              className="text-muted-foreground hover:text-foreground"
               onClick={onClose}
             >
-              <IconLayoutSidebarRightCollapse className="w-3.5 h-3.5" />
+              <IconLayoutSidebarRightCollapse className="size-4" />
               <span className="sr-only">Close assistant</span>
             </Button>
           )}

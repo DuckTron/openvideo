@@ -161,14 +161,13 @@ export default function Editor({
                   </div>
 
                   {/* Right Column: Aspect Ratio and Export Button */}
-                  <div className="flex items-center justify-end gap-4">
+                  <div className="flex items-center justify-end gap-2">
                     {/* Aspect Ratio Selector */}
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2 py-1"
+                          className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground font-medium px-2.5"
                         >
                           {aspectRatio === "9:16" && <IconDeviceMobile className="size-3.5" />}
                           {aspectRatio === "16:9" && <IconDeviceTv className="size-3.5" />}
@@ -177,7 +176,7 @@ export default function Editor({
                             aspectRatio !== "16:9" &&
                             aspectRatio !== "1:1" && <IconAspectRatio className="size-3.5" />}
                           <span>{aspectRatio}</span>
-                          <IconChevronDown className="size-3" />
+                          <IconChevronDown className="size-3.5" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-40">
@@ -205,8 +204,7 @@ export default function Editor({
                     {/* Export Button */}
                     <Button
                       onClick={() => setIsExportOpen(true)}
-                      size="sm"
-                      className="h-8 text-xs font-semibold px-3 py-1 bg-foreground text-background hover:bg-foreground/90 rounded-md flex items-center gap-2"
+                      className="h-8 text-xs font-semibold px-3 bg-foreground text-background hover:bg-foreground/90 rounded-md flex items-center gap-2"
                     >
                       <span>Export</span>
                       <span className="text-[10px] opacity-65 bg-background/20 px-1 py-0.5 rounded font-mono">
@@ -219,7 +217,7 @@ export default function Editor({
                         onClick={toggleCopilot}
                         variant="ghost"
                         size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-white/5 border border-border rounded-md"
+                        className="text-muted-foreground hover:text-foreground"
                       >
                         <IconLayoutSidebarRightExpand className="size-4" />
                         <span className="sr-only">Open assistant</span>
