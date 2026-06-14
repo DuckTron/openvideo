@@ -1,42 +1,42 @@
-import { Icons } from "@/components/shared/icons";
 import {
-  IconLetterT,
-  IconSubtitles,
-  IconPhoto,
   type IconProps,
-  IconSparkle2,
-  IconCircleSquare,
-  IconSquareLetterT,
-} from "@tabler/icons-react";
+  ImageIcon,
+  TextTIcon,
+  ClosedCaptioningIcon,
+  ArrowsMergeIcon,
+  SparkleIcon,
+  CirclesThreeIcon,
+  FolderOpenIcon,
+} from "@phosphor-icons/react";
 import { create } from "zustand";
 
 export type Tab = "assets" | "text" | "captions" | "effects" | "transitions" | "elements";
 
 export const tabs: {
-  [key in Tab]: { icon: React.FC<IconProps> | React.FC<any>; label: string };
+  [key in Tab]: { icon: React.ComponentType<IconProps> | React.FC<any>; label: string };
 } = {
   assets: {
-    icon: IconPhoto,
+    icon: FolderOpenIcon,
     label: "Assets",
   },
   text: {
-    icon: IconSquareLetterT,
+    icon: TextTIcon,
     label: "Text",
   },
   captions: {
-    icon: IconSubtitles,
+    icon: ClosedCaptioningIcon,
     label: "Captions",
   },
   transitions: {
-    icon: Icons.transition,
+    icon: ArrowsMergeIcon,
     label: "Transitions",
   },
   effects: {
-    icon: IconSparkle2,
+    icon: SparkleIcon,
     label: "Effects",
   },
   elements: {
-    icon: IconCircleSquare,
+    icon: CirclesThreeIcon,
     label: "Elements",
   },
 };

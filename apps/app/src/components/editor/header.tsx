@@ -6,24 +6,11 @@ import { usePanelStore } from "@/stores/panel-store";
 import { Button } from "@/components/ui/button";
 import { LogoIcons } from "@/components/shared/logos";
 import { ExportModal } from "./export-modal";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import {
-  IconCloud,
-  IconDeviceMobile,
-  IconDeviceTv,
-  IconSquare,
-  IconAspectRatio,
-  IconChevronDown,
-  IconLayoutSidebarRightExpand,
-} from "@tabler/icons-react";
+import { IconLayoutSidebarRightExpand } from "@tabler/icons-react";
+import { LockSimpleIcon, CaretDownIcon } from "@phosphor-icons/react";
 
 export default function Header() {
-  const { projectName, aspectRatio, setCanvasSize } = useProjectStore();
+  const { projectName } = useProjectStore();
   const { isCopilotVisible, toggleCopilot } = usePanelStore();
   const [isExportOpen, setIsExportOpen] = useState(false);
 
@@ -48,12 +35,15 @@ export default function Header() {
           <span className="text-sm font-semibold lowercase">openvideo</span>
         </div>
 
-        {/* Center Column: Cloud & Project Name */}
-        <div className="flex items-center justify-center gap-2 text-muted-foreground">
-          <IconCloud className="size-4 shrink-0" />
-          <span className="text-xs font-medium text-foreground truncate max-w-[150px]">
+        {/* Center Column: Project Space & Details */}
+        <div className="flex items-center justify-center gap-1.5 text-xs select-none">
+          <LockSimpleIcon size={14} className=" shrink-0" />
+          <span className=" font-medium">Personal</span>
+          <span className="font-light px-1">/</span>
+          <span className="text-foreground truncate max-w-[200px]">
             {projectName || "Untitled video"}
           </span>
+          <CaretDownIcon size={12} className="shrink-0 ml-0.5" />
         </div>
 
         {/* Right Column: Aspect Ratio and Export Button */}

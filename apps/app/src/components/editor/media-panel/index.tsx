@@ -1,9 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { TabBar } from "./tabbar";
 import { tabs, useMediaPanelStore, type Tab } from "./store";
-import { Separator } from "@/components/ui/separator";
 import PanelAssets from "./panel/assets";
 import PanelEffect from "./panel/effects";
 import PanelTransition from "./panel/transition";
