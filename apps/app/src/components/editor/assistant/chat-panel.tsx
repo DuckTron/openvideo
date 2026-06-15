@@ -57,7 +57,7 @@ export function ChatPanel({
   };
 
   return (
-    <div className={cn("flex flex-col h-full overflow-hidden bg-card", className)}>
+    <div className={cn("flex flex-col h-full overflow-hidden", className)}>
       {messages.length === 0 ? (
         <div className="flex-1">
           {emptyState ?? (
@@ -90,7 +90,7 @@ export function ChatPanel({
                     className={cn(
                       "py-2.5 px-4 rounded-2xl text-[14px] leading-relaxed transition-all whitespace-pre-wrap",
                       m.role === "user"
-                        ? "bg-zinc-700/35 text-zinc-100 rounded-tr-none border border-zinc-600/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] font-medium"
+                        ? "bg-primary text-primary-foreground rounded-tr-none shadow-sm font-medium"
                         : m.type === "plan"
                           ? "bg-amber-950/50 border border-amber-700/30 text-amber-200/90 rounded-tl-none font-mono text-xs shadow-sm"
                           : "bg-secondary/40 text-foreground/90 rounded-tl-none border border-border/50",
@@ -126,11 +126,11 @@ export function ChatPanel({
               <div className="flex gap-3 w-full animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="py-2 px-1 flex items-center gap-2.5">
                   <div className="flex gap-[5px]">
-                    <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <div className="w-1.5 h-1.5 bg-zinc-500 rounded-full animate-bounce" />
+                    <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <div className="w-1.5 h-1.5 bg-muted-foreground/60 rounded-full animate-bounce" />
                   </div>
-                  <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
                     Thinking
                   </span>
                 </div>

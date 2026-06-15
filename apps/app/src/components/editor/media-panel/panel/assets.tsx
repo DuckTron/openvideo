@@ -748,7 +748,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             onClick={() => setIsSemanticMode(!isSemanticMode)}
             className={`h-9 px-3 gap-1.5 text-xs rounded-lg transition-all shrink-0 ${
               isSemanticMode
-                ? "bg-gradient-to-r from-violet-600/95 to-indigo-600/95 hover:from-violet-600 hover:to-indigo-600 text-white shadow-md shadow-violet-500/10 border-none font-semibold"
+                ? "bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 text-primary-foreground shadow-md shadow-primary/10 border-none font-semibold"
                 : "bg-secondary/50 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground font-medium"
             }`}
             title="AI Semantic Search (find specific quotes or topics)"
@@ -830,12 +830,12 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           <ScrollArea className="flex-1 px-4">
             {isSemanticFetching ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-                <CircleNotch className="animate-spin text-violet-500" size={24} />
+                <CircleNotch className="animate-spin text-primary" size={24} />
                 <span className="text-xs">Searching with Gemini AI...</span>
               </div>
             ) : !semanticResults || semanticResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground text-center">
-                <Sparkle size={28} className="text-violet-500 opacity-40 animate-pulse" />
+                <Sparkle size={28} className="text-primary opacity-40 animate-pulse" />
                 <span className="text-sm font-semibold text-foreground/80">
                   No AI matches found
                 </span>
@@ -871,12 +871,12 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   return (
                     <div
                       key={`${result.assetId}-${result.startMs}-${result.endMs}`}
-                      className="group flex flex-col gap-2 p-3 bg-secondary/20 hover:bg-secondary/40 border border-border/40 hover:border-violet-500/30 rounded-xl transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
+                      className="group flex flex-col gap-2 p-3 bg-secondary/20 hover:bg-secondary/40 border border-border/40 hover:border-primary/30 rounded-xl transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
                       onClick={() => setSelectedAssetId(result.assetId)}
                     >
                       {/* Match score label */}
                       <div className="absolute top-2.5 right-2.5">
-                        <span className="text-[10px] font-semibold text-violet-400 bg-violet-500/10 px-1.5 py-0.5 rounded-full border border-violet-500/20">
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20">
                           {percentageScore}% match
                         </span>
                       </div>
@@ -902,7 +902,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                               />
                             )
                           ) : (
-                            <MusicNote size={20} className="text-violet-500" />
+                            <MusicNote size={20} className="text-primary" />
                           )}
                         </div>
 
@@ -920,7 +920,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                       </div>
 
                       {result.matchedText && (
-                        <div className="text-xs text-muted-foreground bg-background/40 p-2 rounded-lg italic border-l-2 border-violet-500/40 line-clamp-2">
+                        <div className="text-xs text-muted-foreground bg-background/40 p-2 rounded-lg italic border-l-2 border-primary/40 line-clamp-2">
                           "{result.matchedText}"
                         </div>
                       )}
@@ -929,7 +929,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         <Button
                           variant="ghost"
                           size="xs"
-                          className="h-7 px-2 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md"
+                          className="h-7 px-2 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1 rounded-md"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedAssetId(result.assetId);
@@ -942,7 +942,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         <Button
                           variant="ghost"
                           size="xs"
-                          className="h-7 px-2.5 text-[10px] text-violet-400 hover:text-violet-300 hover:bg-violet-500/10 gap-1 rounded-md"
+                          className="h-7 px-2.5 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1 rounded-md"
                           onClick={(e) => {
                             e.stopPropagation();
                             addItemToCanvas({

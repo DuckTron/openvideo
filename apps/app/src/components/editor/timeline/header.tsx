@@ -62,7 +62,6 @@ const Header = ({
         height: "50px",
         flex: "none",
       }}
-      className="bg-card"
     >
       <div
         style={{
@@ -154,7 +153,7 @@ const Header = ({
               }}
             >
               <div
-                className="font-medium text-zinc-200"
+                className="font-medium text-foreground/90"
                 style={{
                   display: "flex",
                   justifyContent: "center",
@@ -236,13 +235,13 @@ const ZoomControl = ({
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <span className="text-xs font-medium text-zinc-300 min-w-[36px] text-center select-none">
+            <span className="text-xs font-medium text-foreground/80 min-w-[36px] text-center select-none">
               {Math.round(scale.zoom * 100)}%
             </span>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="end"
-            className="w-52 bg-zinc-950 border border-white/10 text-zinc-200"
+            className="w-52 bg-popover border border-border text-popover-foreground"
           >
             <DropdownMenuItem
               onClick={onZoomInClick}

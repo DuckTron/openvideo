@@ -357,7 +357,7 @@ const Timeline = () => {
         ref={timelineContainerRef}
         id="timeline-container"
         data-timeline="true"
-        className="flex pt-1 flex-col relative w-full h-full overflow-hidden bg-background"
+        className="flex border-t flex-col relative w-full h-full overflow-hidden bg-background"
         onMouseDown={onMouseDown}
         onMouseMove={onMouseMove}
         onMouseOut={onMouseOut}
@@ -372,7 +372,7 @@ const Timeline = () => {
         <Playhead scale={scale} scrollLeft={scrollLeft} />
 
         {/* Container for Tracks and Canvas */}
-        <div className="flex flex-1 min-h-0 overflow-hidden bg-card">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           <div style={{ width: timelineOffsetX }} className="relative flex-none" />
           <div className="relative flex-1 min-h-0 overflow-hidden">
             <canvas id="designcombo-timeline-canvas" ref={canvasElRef} />

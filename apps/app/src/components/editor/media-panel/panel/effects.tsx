@@ -52,7 +52,7 @@ const EffectCard = ({
       }}
       shouldDisplayPreview={!isDraggingOverTimeline}
       renderCustomPreview={
-        <div className="w-20 aspect-video rounded-md overflow-hidden shadow-xl border-2 border-primary bg-zinc-900 flex items-center justify-center">
+        <div className="w-20 aspect-video rounded-md overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
           <span className="text-[10px] text-white font-medium px-2 text-center">{label}</span>
         </div>
       }

@@ -50,7 +50,7 @@ export function TimeGroupProperty() {
             id="trim-content"
             checked={trimContent}
             onChange={(e) => setTrimContent(e.target.checked)}
-            className="rounded border-white/20 bg-secondary text-blue-600 focus:ring-0 focus:ring-offset-0 size-3.5 cursor-pointer"
+            className="rounded border-white/20 bg-secondary text-primary focus:ring-0 focus:ring-offset-0 size-3.5 cursor-pointer"
           />
           <label
             htmlFor="trim-content"

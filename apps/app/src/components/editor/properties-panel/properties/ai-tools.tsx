@@ -44,7 +44,7 @@ export function AiToolsProperty({
           className={cn(
             "p-3 rounded-lg border transition-all duration-300",
             noiseReduction
-              ? "bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.05)]"
+              ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",
           )}
         >
@@ -56,7 +56,7 @@ export function AiToolsProperty({
             <Switch
               checked={noiseReduction}
               onCheckedChange={onNoiseReductionChange}
-              className="data-[state=checked]:bg-violet-500"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
@@ -66,7 +66,7 @@ export function AiToolsProperty({
           className={cn(
             "p-3 rounded-lg border transition-all duration-300",
             enhanceVoice
-              ? "bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.05)]"
+              ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",
           )}
         >
@@ -78,7 +78,7 @@ export function AiToolsProperty({
             <Switch
               checked={enhanceVoice}
               onCheckedChange={onEnhanceVoiceChange}
-              className="data-[state=checked]:bg-violet-500"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>
@@ -88,7 +88,7 @@ export function AiToolsProperty({
           className={cn(
             "p-3 rounded-lg border transition-all duration-300",
             beatsDetection
-              ? "bg-gradient-to-r from-violet-500/10 to-indigo-500/10 border-violet-500/40 shadow-[0_0_12px_rgba(139,92,246,0.05)]"
+              ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",
           )}
         >
@@ -100,7 +100,7 @@ export function AiToolsProperty({
             <Switch
               checked={beatsDetection}
               onCheckedChange={onBeatsDetectionChange}
-              className="data-[state=checked]:bg-violet-500"
+              className="data-[state=checked]:bg-primary"
             />
           </div>
         </div>

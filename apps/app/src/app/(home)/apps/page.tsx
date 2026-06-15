@@ -124,7 +124,7 @@ export default function AppsPage() {
       comingSoon: true,
     },
     {
-      icon: <Link className="size-6 text-gray-500" />,
+      icon: <Link className="size-6 text-muted-foreground" />,
       name: "Loom",
       description: "Import Loom recordings with comments and reactions.",
       category: "Import",

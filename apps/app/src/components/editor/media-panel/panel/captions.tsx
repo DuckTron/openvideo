@@ -554,7 +554,7 @@ function CaptionItem({
       {/* Timecode block */}
       <div
         className={cn(
-          "text-xs font-mono select-none cursor-pointer shrink-0 w-12 text-zinc-500 tracking-wider transition-colors hover:text-white",
+          "text-xs font-mono select-none cursor-pointer shrink-0 w-12 text-muted-foreground tracking-wider transition-colors hover:text-foreground",
           isActive && "text-white font-semibold",
         )}
         onClick={onSeek}
@@ -574,7 +574,7 @@ function CaptionItem({
             "w-full min-h-[22px] resize-none bg-transparent border-0 p-0 text-sm leading-relaxed outline-none focus:ring-0 focus-visible:ring-0 select-text transition-colors shadow-none overflow-hidden block",
             isActive
               ? "text-white font-medium"
-              : "text-zinc-300 placeholder:text-zinc-700 focus:text-white",
+              : "text-foreground/80 placeholder:text-muted-foreground/45 focus:text-foreground",
           )}
           rows={Math.max(1, Math.ceil(text.length / 40))}
         />

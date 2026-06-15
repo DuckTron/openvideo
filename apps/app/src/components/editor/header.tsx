@@ -27,8 +27,8 @@ export default function Header() {
   }, []);
 
   return (
-    <div className="h-13 pb-1 shrink-0">
-      <div className="h-full bg-card grid grid-cols-3 items-center px-4">
+    <div className="h-13 border-b shrink-0">
+      <div className="h-full grid grid-cols-3 items-center px-4">
         {/* Left Column: Logo & App Name */}
         <div className="flex items-center justify-start gap-1.5 select-none">
           <LogoIcons.scenify className="size-5 text-foreground" />

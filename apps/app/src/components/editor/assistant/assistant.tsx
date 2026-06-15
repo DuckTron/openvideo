@@ -19,7 +19,7 @@ export default function Assistant({ onClose }: { onClose?: () => void }) {
   };
 
   return (
-    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden pl-1">
+    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden border-l">
       <div className=" h-full w-full flex flex-col">
         <ChatHeader onClose={onClose} />
 

@@ -141,7 +141,7 @@ const CaptionPresetPicker = () => {
   const PresetGrid = ({ presets }: { presets: ICaptionsControlProps[] }) => (
     <div className="grid grid-cols-2 gap-2 p-4">
       <div
-        className="flex h-[70px] cursor-pointer items-center justify-center bg-zinc-800 rounded-lg hover:bg-zinc-700 transition-colors"
+        className="flex h-[70px] cursor-pointer items-center justify-center bg-secondary rounded-lg hover:bg-secondary/80 transition-colors"
         onClick={() => {
           handleApplyPreset(NONE_PRESET);
         }}
@@ -152,7 +152,7 @@ const CaptionPresetPicker = () => {
       {presets.map((preset, index) => (
         <div
           key={index}
-          className="text-md flex h-[70px] cursor-pointer items-center justify-center bg-zinc-800 overflow-hidden rounded-lg hover:ring-2 hover:ring-primary transition-all"
+          className="text-md flex h-[70px] cursor-pointer items-center justify-center bg-secondary overflow-hidden rounded-lg hover:ring-2 hover:ring-primary transition-all"
           onClick={() => handleApplyPreset(preset)}
         >
           {preset.previewUrl ? (

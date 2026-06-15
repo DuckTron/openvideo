@@ -88,7 +88,7 @@ export function AppSidebar() {
                         src={session?.user?.image || ""}
                         alt={session?.user?.name || ""}
                       />
-                      <AvatarFallback className="rounded-lg bg-orange-300 text-primary-foreground">
+                      <AvatarFallback className="rounded-lg bg-primary text-primary-foreground">
                         {session?.user?.name?.charAt(0).toUpperCase() ||
                           session?.user?.email?.charAt(0).toUpperCase() ||
                           "U"}

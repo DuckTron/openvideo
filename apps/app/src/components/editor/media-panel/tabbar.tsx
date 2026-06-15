@@ -70,9 +70,9 @@ export function TabBar() {
   };
 
   return (
-    <div className="relative flex flex-col items-center pr-1 gap-3 h-full bg-background shrink-0 ">
+    <div className="relative flex flex-col items-center border-r  gap-3 h-full bg-background shrink-0 ">
       {/* Tabs list */}
-      <div className="flex flex-col items-center py-2 px-2 gap-2.5 bg-card h-full">
+      <div className="flex flex-col items-center py-2 px-2 gap-2.5 h-full">
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           const isActive = activeTab === tabKey && isOpen && !hasSelection;

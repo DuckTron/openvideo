@@ -54,7 +54,7 @@ export function UserMenu() {
         >
           <Avatar className="h-7.5 w-7.5 border-2 border-primary/20">
             <AvatarImage src={user.image || ""} alt={user.name || "User"} />
-            <AvatarFallback className="bg-gradient-to-tr from-emerald-700 to-orange-800 text-white text-sm font-semibold uppercase">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold uppercase">
               {user.email?.charAt(0).toUpperCase() || user.name?.charAt(0).toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>

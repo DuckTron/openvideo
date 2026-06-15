@@ -321,7 +321,6 @@ const Ruler = (props: RulerProps) => {
 
   return (
     <div
-      className="bg-card border-border"
       style={{
         position: "relative",
         width: "100%",
