@@ -12,6 +12,7 @@ export {
   Transition,
   Placeholder,
   ShapeClip,
+  ClipRegistry,
 } from "./clips";
 
 export type { IClip, IMP4ClipOpts } from "./clips";

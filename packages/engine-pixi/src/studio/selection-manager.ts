@@ -9,7 +9,7 @@ import {
 import type { IClip } from "../clips/iclip";
 import { Text } from "../clips/text-clip";
 import { Caption } from "../clips/caption-clip";
-import { Transformer } from "../transfomer/transformer";
+import { Transformer } from "../transformer/transformer";
 import type { Studio } from "../studio";
 import { nanoid } from "nanoid";
 

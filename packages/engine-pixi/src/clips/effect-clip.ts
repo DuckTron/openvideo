@@ -107,20 +107,7 @@ export class Effect extends BaseClip {
     const clip = new Effect(key);
     clip.values = json.values || {};
 
-    const timing = json.timing || {
-      display: json.display || { from: 0, to: 0 },
-      trim: json.trim || { from: 0, to: 0 },
-      duration: json.duration ?? 0,
-      playbackRate: json.playbackRate ?? 1,
-    };
-
-    clip.display.from = timing.display.from;
-    clip.display.to = timing.display.to;
-    clip.duration = timing.duration;
-
-    if (json.id) {
-      clip.id = json.id;
-    }
+    BaseClip.deserializeBaseProperties(clip, json);
 
     await clip.ready;
     return clip;

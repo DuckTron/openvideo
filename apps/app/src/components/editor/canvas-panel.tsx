@@ -65,13 +65,6 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
     }
   }, [resolvedCardColor]);
 
-  // Handle artboard (video background) color changes
-  useEffect(() => {
-    if (studioRef.current) {
-      studioRef.current.setArtboardColor(explicitBgColor || "#000000");
-    }
-  }, [explicitBgColor]);
-
   // Setup Studio and ResizeObserver (only once on mount)
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -81,7 +74,7 @@ export function CanvasPanel({ onReady }: CanvasPanelProps) {
       ...canvasSize,
       ...STUDIO_CONFIG,
       backgroundColor: resolvedCardColor,
-      artboardColor: explicitBgColor || "#000000",
+      artboardColor: "#000000",
       canvas: canvasRef.current,
       core: core,
       previewScale: 0.75,

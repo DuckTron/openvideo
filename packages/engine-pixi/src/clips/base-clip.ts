@@ -483,4 +483,83 @@ export abstract class BaseClip<T extends BaseSpriteEvents = BaseSpriteEvents>
     this.lastVf?.close();
     this.lastVf = null;
   }
+
+  /**
+   * Applies all common properties from JSON to a clip instance.
+   * This handles transform, timing, style, animation, transitions, chroma key, color adjustment, and generic metadata.
+   */
+  static deserializeBaseProperties(clip: BaseClip, json: any): void {
+    if (json.transform) {
+      clip.left = json.transform.x ?? clip.left;
+      clip.top = json.transform.y ?? clip.top;
+      clip.width = json.transform.width ?? clip.width;
+      clip.height = json.transform.height ?? clip.height;
+      clip.angle = json.transform.angle ?? clip.angle;
+      clip.zIndex = json.transform.zIndex ?? clip.zIndex;
+      clip.opacity = json.transform.opacity ?? clip.opacity;
+      if (json.transform.flip !== undefined) {
+        clip.flip = json.transform.flip ?? null;
+      }
+    }
+
+    const timing = json.timing || {
+      display: json.display || { from: 0, to: 0 },
+      trim: json.trim || { from: 0, to: 0 },
+      duration: json.duration ?? 0,
+      playbackRate: json.playbackRate ?? 1,
+    };
+
+    clip.display.from = timing.display.from ?? clip.display.from;
+    clip.display.to = timing.display.to ?? clip.display.to;
+    clip.duration = timing.duration ?? clip.duration;
+    clip.playbackRate = timing.playbackRate ?? clip.playbackRate;
+
+    if (timing.trim) {
+      clip.trim = {
+        from: timing.trim.from ?? clip.trim.from,
+        to: timing.trim.to ?? clip.trim.to,
+      };
+    }
+
+    if (timing.fadeIn !== undefined) clip.timing.fadeIn = timing.fadeIn;
+    if (timing.fadeOut !== undefined) clip.timing.fadeOut = timing.fadeOut;
+
+    if (json.style) {
+      clip.style = { ...clip.style, ...json.style };
+    }
+
+    // Apply animation if present
+    if (json.animation) {
+      clip.setAnimation(json.animation.keyFrames, json.animation.options);
+    }
+
+    // Apply modular animations if present
+    if (json.animations && Array.isArray(json.animations)) {
+      clip.clearAnimations();
+      for (const anim of json.animations) {
+        clip.addAnimation(anim.type, anim.options, anim.params);
+      }
+    }
+
+    // Apply basic properties
+    if (json.id) clip.id = json.id;
+    if (json.name) clip.name = json.name;
+    if (json.metadata) clip.metadata = json.metadata;
+    if (json.locked !== undefined) clip.locked = json.locked;
+
+    if (json.transition) {
+      clip.transition = json.transition;
+    }
+
+    if (json.chromaKey) {
+      clip.chromaKey = { ...clip.chromaKey, ...json.chromaKey };
+    }
+
+    if (json.colorAdjustment) {
+      clip.colorAdjustment = {
+        ...clip.colorAdjustment,
+        ...json.colorAdjustment,
+      };
+    }
+  }
 }

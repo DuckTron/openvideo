@@ -1323,39 +1323,9 @@ export class Text extends BaseClip<ITextEvents> {
 
     const clip = new Text(text, textClipOpts);
 
-    // Apply properties
-    if (json.transform) {
-      clip.left = json.transform.x;
-      clip.top = json.transform.y;
-      clip.width = json.transform.width;
-      clip.height = json.transform.height;
-      clip.angle = json.transform.angle;
-      clip.zIndex = json.transform.zIndex;
-      clip.opacity = json.transform.opacity;
-      clip.flip = json.transform.flip ?? null;
-    }
+    BaseClip.deserializeBaseProperties(clip, json);
 
-    const timing = json.timing || {
-      display: json.display || { from: 0, to: 0 },
-      trim: json.trim || { from: 0, to: 0 },
-      duration: json.duration ?? 0,
-      playbackRate: json.playbackRate ?? 1,
-    };
-
-    clip.display.from = timing.display.from;
-    clip.display.to = timing.display.to;
-    clip.duration = timing.duration;
-    clip.playbackRate = timing.playbackRate;
-
-    // Apply animation if present
-    if (json.animation) {
-      clip.setAnimation(json.animation.keyFrames, json.animation.options);
-    }
-
-    // Restore id and effects if present
-    if ((json as any).id) {
-      clip.id = (json as any).id;
-    }
+    // Apply text-specific effects if present
     if ((json as any).effects) {
       clip.effects = (json as any).effects;
     }

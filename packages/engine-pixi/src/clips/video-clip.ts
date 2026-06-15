@@ -449,78 +449,15 @@ export class Video extends BaseClip implements IPlaybackCapable {
 
     const stream = await ResourceManager.getReadableStream(json.src!);
     const clip = new Video(stream, options as any, json.src);
-    // await clip.ready; - Removed for performance
 
-    // Apply properties
-    if (json.transform) {
-      clip.left = json.transform.x;
-      clip.top = json.transform.y;
-      clip.width = json.transform.width;
-      clip.height = json.transform.height;
-      clip.angle = json.transform.angle;
-      clip.zIndex = json.transform.zIndex;
-      clip.opacity = json.transform.opacity;
-      clip.flip = json.transform.flip ?? null;
-    }
+    BaseClip.deserializeBaseProperties(clip, json);
 
-    const timing = json.timing || {
-      display: json.display || { from: 0, to: 0 },
-      trim: json.trim || { from: 0, to: 0 },
-      duration: json.duration ?? 0,
-      playbackRate: json.playbackRate ?? 1,
-    };
-
-    clip.display.from = timing.display.from;
-    clip.display.to = timing.display.to;
-    clip.duration = timing.duration;
-    clip.playbackRate = timing.playbackRate;
-    if (timing.fadeIn !== undefined) clip.timing.fadeIn = timing.fadeIn;
-    if (timing.fadeOut !== undefined) clip.timing.fadeOut = timing.fadeOut;
-
-    if (json.style) {
-      clip.style = { ...clip.style, ...json.style };
-    }
-    // Apply animation if present
-    if (json.animation) {
-      clip.setAnimation(json.animation.keyFrames, json.animation.options);
-    }
-
-    // Restore id and effects if present
-    if (json.id) {
-      clip.id = json.id;
-    }
+    // Apply specific video properties
     if (json.effects) {
       clip.effects = json.effects;
     }
-
-    if (json.transition) {
-      clip.transition = json.transition;
-    }
-
-    // Apply trim if present
-    const trim = json.trim || timing.trim;
-    if (trim) {
-      clip.trim.from = trim.from;
-      clip.trim.to = trim.to;
-    }
-
     if (json.volume !== undefined) {
       clip.volume = json.volume;
-    }
-
-    if ((json as any).chromaKey) {
-      clip.chromaKey = { ...clip.chromaKey, ...(json as any).chromaKey };
-    }
-
-    if ((json as any).colorAdjustment) {
-      clip.colorAdjustment = {
-        ...clip.colorAdjustment,
-        ...(json as any).colorAdjustment,
-      };
-    }
-
-    if (json.locked !== undefined) {
-      clip.locked = json.locked;
     }
 
     return clip;

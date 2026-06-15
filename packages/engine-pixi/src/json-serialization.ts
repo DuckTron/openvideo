@@ -1,16 +1,4 @@
-import {
-  Audio,
-  Image,
-  Video,
-  Text,
-  Caption,
-  Effect,
-  Transition,
-  Placeholder,
-  ShapeClip,
-  type IClip,
-  type ITransitionInfo,
-} from "./clips";
+import { ClipRegistry, type IClip, type ITransitionInfo } from "./clips";
 import type { ColorAdjustment } from "./utils/color-adjustment";
 import type { ShapeType } from "@openvideo/core";
 
@@ -457,36 +445,7 @@ export async function jsonToClip(json: ClipJSON): Promise<IClip> {
   let clip: IClip;
 
   // Try to use fromObject static method if available (fabric.js pattern)
-  let ClipClass: any = null;
-  switch (normalizedJson.type) {
-    case "Video":
-      ClipClass = Video;
-      break;
-    case "Audio":
-      ClipClass = Audio;
-      break;
-    case "Image":
-      ClipClass = Image;
-      break;
-    case "Text":
-      ClipClass = Text;
-      break;
-    case "Caption":
-      ClipClass = Caption;
-      break;
-    case "Effect":
-      ClipClass = Effect;
-      break;
-    case "Transition":
-      ClipClass = Transition;
-      break;
-    case "Placeholder":
-      ClipClass = Placeholder;
-      break;
-    case "Shape":
-      ClipClass = ShapeClip;
-      break;
-  }
+  const ClipClass = ClipRegistry.get(normalizedJson.type);
 
   if (ClipClass && typeof ClipClass.fromObject === "function") {
     clip = await ClipClass.fromObject(normalizedJson);

@@ -9,9 +9,9 @@ import {
   Sprite,
 } from "pixi.js";
 
-import { Wireframe } from "./parts/wireframe";
-import { type HandleKind, Handle } from "./parts/handle";
-import { SnappingManager, type SnapGuide } from "./parts/snapping";
+import { Wireframe } from "./wireframe";
+import { type HandleKind, Handle } from "./handle";
+import { SnappingManager, type SnapGuide } from "./snapping";
 
 const TMP = {
   delta: new Matrix(),

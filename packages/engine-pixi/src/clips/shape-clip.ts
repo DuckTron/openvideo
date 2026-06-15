@@ -294,42 +294,7 @@ export class ShapeClip extends BaseClip {
       borderRadius: json.style?.borderRadius,
     });
 
-    // Apply timing
-    if (json.timing) {
-      shape.timing.display.from = json.timing.display.from;
-      shape.timing.display.to = json.timing.display.to;
-      shape.timing.trim.from = json.timing.trim.from;
-      shape.timing.trim.to = json.timing.trim.to;
-      shape.timing.duration = json.timing.duration;
-      shape.timing.playbackRate = json.timing.playbackRate;
-      shape.timing.fadeIn = json.timing.fadeIn;
-      shape.timing.fadeOut = json.timing.fadeOut;
-      // Also set the top-level duration property used by compositor
-      shape.duration = json.timing.duration;
-    }
-
-    // Apply transform
-    if (json.transform) {
-      shape.left = json.transform.x;
-      shape.top = json.transform.y;
-      shape.width = json.transform.width;
-      shape.height = json.transform.height;
-      shape.angle = json.transform.angle;
-      shape.opacity = json.transform.opacity;
-      shape.zIndex = json.transform.zIndex;
-      shape.flip = json.transform.flip;
-    }
-
-    // Apply style
-    if (json.style) {
-      shape.style = json.style;
-    }
-
-    // Apply properties
-    if (json.id) shape.id = json.id;
-    if (json.name) shape.name = json.name;
-    if (json.metadata) shape.metadata = json.metadata;
-    if (json.locked !== undefined) shape.locked = json.locked;
+    BaseClip.deserializeBaseProperties(shape, json);
 
     return shape;
   }

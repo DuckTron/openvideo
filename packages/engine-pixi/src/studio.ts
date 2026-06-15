@@ -20,7 +20,7 @@ import { Video } from "./clips/video-clip";
 import { Effect } from "./clips/effect-clip";
 import { PixiSpriteRenderer, updateSpriteTransform } from "./sprite/pixi-sprite-renderer";
 import { type ProjectJSON } from "./json-serialization";
-import { Transformer } from "./transfomer/transformer";
+import { Transformer } from "./transformer/transformer";
 import type { EffectKey } from "./effect/glsl/gl-effect";
 import { makeEffect } from "./effect/effect";
 import { makeTransition } from "./transition/transition";

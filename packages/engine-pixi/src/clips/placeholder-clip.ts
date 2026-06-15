@@ -168,27 +168,7 @@ export class Placeholder extends BaseClip {
       duration: timing.duration,
     });
 
-    // Apply base properties
-    if (json.transform) {
-      clip.left = json.transform.x;
-      clip.top = json.transform.y;
-      clip.width = json.transform.width;
-      clip.height = json.transform.height;
-      clip.angle = json.transform.angle;
-      clip.zIndex = json.transform.zIndex;
-      clip.opacity = json.transform.opacity;
-      clip.flip = json.transform.flip ?? null;
-    }
-
-    clip.display.from = timing.display.from;
-    clip.display.to = timing.display.to;
-    clip.duration = timing.duration;
-    clip.playbackRate = timing.playbackRate;
-
-    // Restore id if present
-    if (json.id) {
-      clip.id = json.id;
-    }
+    BaseClip.deserializeBaseProperties(clip, json);
 
     await clip.ready;
     return clip;
