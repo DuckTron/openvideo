@@ -33,7 +33,7 @@ class Effect extends Resizable {
     this.tScale = props.tScale;
     this.name = props.name;
     this.effect = props.effect;
-    this.fill = "#80546C";
+    this.fill = "#40836e";
   }
 
   public _render(ctx: CanvasRenderingContext2D) {

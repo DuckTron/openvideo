@@ -35,12 +35,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
 import { useProjectStore } from "@/stores/project-store";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
 import { Badge } from "@/components/ui/badge";
@@ -819,24 +814,16 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
         </div>
 
         {files.length === 0 ? (
-          /* Empty state */
-          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
-            <div
-              className="w-full max-w-[280px] p-6 rounded-2xl border border-dashed border-border/40 bg-secondary/5 hover:bg-secondary/10 hover:border-border/60 transition-all duration-300 flex flex-col items-center gap-4 group cursor-pointer"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <div className="size-12 rounded-xl bg-secondary/30 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300 shadow-inner">
-                <RiUploadLine
-                  size={22}
-                  className="group-hover:scale-110 transition-transform duration-300 text-foreground/70 group-hover:text-primary"
-                />
+          /* Empty state - styled like captions.tsx */
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none">
+            <div className="flex flex-col items-center justify-center pb-12">
+              <div className="size-16 rounded-xl bg-secondary/30 flex items-center justify-center mb-4">
+                <RiImage2Line size={24} strokeWidth={1.5} className="text-muted-foreground" />
               </div>
-              <div>
-                <h3 className="text-xs font-bold text-foreground mb-1">Upload Your Media</h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Drag and drop files here, or click to browse. Supports video, audio, and images.
-                </p>
-              </div>
+              <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px] text-center">
+                Drag and drop your assets here, or use the buttons above to upload or generate.
+              </p>
             </div>
           </div>
         ) : isSemanticMode && searchQuery.trim().length >= 3 ? (

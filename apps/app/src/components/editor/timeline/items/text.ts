@@ -26,7 +26,7 @@ class Text extends Resizable {
     super(props);
     console.log("Text props", props);
 
-    this.fill = "#6E5347";
+    this.fill = "#0081ae";
     this.id = props.id;
     this.borderColor = "transparent";
     this.stroke = "transparent";

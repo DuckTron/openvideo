@@ -51,7 +51,7 @@ export default function Header() {
           {/* Export Button */}
           <Button
             onClick={() => setIsExportOpen(true)}
-            className="h-7 text-xs font-semibold px-3 bg-foreground text-background hover:bg-foreground/90 rounded-md flex items-center gap-2"
+            className="h-7 text-xs font-semibold px-3  rounded-md flex items-center gap-2"
           >
             <span>Export</span>
           </Button>

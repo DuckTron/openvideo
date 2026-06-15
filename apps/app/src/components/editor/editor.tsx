@@ -16,6 +16,7 @@ import { IProject } from "@openvideo/core";
 import { trpc } from "@/lib/trpc";
 import { useProjectStore } from "@/stores/project-store";
 import Header from "./header";
+import { data } from "./data";
 
 export default function Editor({
   initialDesign,
@@ -48,11 +49,11 @@ export default function Editor({
   const [isReady, setIsReady] = useState(false);
   const [isWebCodecsSupported, setIsWebCodecsSupported] = useState(true);
 
-  // useEffect(() => {
-  //   setTimeout(() => {
-  //     core.project.import(data);
-  //   }, 1000);
-  // }, []);
+  useEffect(() => {
+    setTimeout(() => {
+      core.project.import(data);
+    }, 1000);
+  }, []);
 
   // tRPC query for project data
   const { data: projectData } = trpc.space.getById.useQuery(
