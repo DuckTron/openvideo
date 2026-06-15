@@ -8,6 +8,7 @@ import { LogoIcons } from "@/components/shared/logos";
 import { ExportModal } from "./export-modal";
 import { RiSideBarLine } from "@remixicon/react";
 import { RiLockLine, RiArrowDownSLine } from "@remixicon/react";
+import { core } from "@/lib/project";
 
 export default function Header() {
   const { projectName } = useProjectStore();
@@ -30,7 +31,10 @@ export default function Header() {
     <div className="h-13 border-b shrink-0">
       <div className="h-full grid grid-cols-3 items-center px-4">
         {/* Left Column: Logo & App Name */}
-        <div className="flex items-center justify-start gap-1.5 select-none">
+        <div
+          className="flex items-center justify-start gap-1.5 select-none"
+          onClick={() => console.log(core.project.export())}
+        >
           <LogoIcons.scenify className="size-5 text-foreground" />
           <span className="text-sm font-heading font-bold leading-5 lowercase">openvideo</span>
         </div>

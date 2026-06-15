@@ -109,26 +109,6 @@ export interface StudioTrack {
   clipIds: string[];
 }
 
-/**
- * Interactive preview studio for clips with playback controls
- * Useful for previewing clips before rendering with Compositor
- *
- * @example
- * const studio = new Studio({
- *   width: 1280,
- *   height: 720,
- *   fps: 30,
- *   backgroundColor: '#000'
- * });
- *
- * await studio.addClip(spr1);
- * await studio.addClip(spr2);
- * studio.play();
- *
- * studio.on('selection:created', ({ selected }) => {
- *   console.log('Selection created', selected);
- * });
- */
 import { SelectionManager } from "./studio/selection-manager";
 import { Transport } from "./studio/transport";
 import { TimelineModel } from "./studio/timeline-model";
@@ -724,8 +704,6 @@ export class Studio extends EventEmitter<StudioEvents> {
    * Update the background color of the studio (applies to the outside area)
    */
   public setBackgroundColor(color: string) {
-    console.log("APPLYING BACKDROP COLOR", color);
-
     this.opts.backgroundColor = color;
     const colorNum = this.hexToNumber(color);
 
@@ -741,8 +719,6 @@ export class Studio extends EventEmitter<StudioEvents> {
    * Update the artboard background color of the studio (applies to the video frame itself)
    */
   public setArtboardColor(color: string) {
-    console.log("APPLYING ARTBOARD COLOR", color);
-
     this.opts.artboardColor = color;
     const colorNum = this.hexToNumber(color);
 
@@ -1988,11 +1964,6 @@ export class Studio extends EventEmitter<StudioEvents> {
           const shapeClip = clip as any;
           if (this.pixiApp?.renderer && typeof shapeClip.setRenderer === "function") {
             shapeClip.setRenderer(this.pixiApp.renderer);
-          } else {
-            console.log("[Studio] Cannot set renderer:", {
-              hasRenderer: !!this.pixiApp?.renderer,
-              hasSetRenderer: typeof shapeClip.setRenderer === "function",
-            });
           }
         }
 
