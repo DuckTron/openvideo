@@ -144,7 +144,7 @@ const Header = ({
               </Button>
             </div>
             <div
-              className="text-xs font-light flex"
+              className="text-xs flex"
               style={{
                 alignItems: "center",
                 gridTemplateColumns: "54px 4px 54px",

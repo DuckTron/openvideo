@@ -39,7 +39,7 @@ export default function Header() {
         <div className="flex items-center justify-center gap-1.5 text-sm font-semibold">
           <LockSimpleIcon size={14} className=" shrink-0" />
           <span className=" font-medium">Personal</span>
-          <span className="font-light px-1">/</span>
+          <span className="px-1">/</span>
           <span className="text-foreground truncate max-w-[200px]">
             {projectName || "Untitled video"}
           </span>

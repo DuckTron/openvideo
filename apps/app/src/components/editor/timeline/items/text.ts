@@ -6,6 +6,7 @@ import {
   TIMELINE_SELECTED_BORDER_COLOR,
   TIMELINE_UNSELECTED_BORDER_COLOR,
   TIMELINE_BORDER_WIDTH,
+  TIMELINE_ITEM_BORDER_RADIUS,
 } from "../../constants/constants";
 
 interface TextProps extends ResizableProps {
@@ -30,8 +31,8 @@ class Text extends Resizable {
     this.borderColor = "transparent";
     this.stroke = "transparent";
     this.text = props.text;
-    this.rx = 0;
-    this.ry = 0;
+    this.rx = TIMELINE_ITEM_BORDER_RADIUS;
+    this.ry = TIMELINE_ITEM_BORDER_RADIUS;
   }
 
   public _render(ctx: CanvasRenderingContext2D) {
@@ -65,14 +66,14 @@ class Text extends Resizable {
       ? TIMELINE_SELECTED_BORDER_COLOR
       : TIMELINE_UNSELECTED_BORDER_COLOR;
     const borderWidth = TIMELINE_BORDER_WIDTH;
-    const innerRadius = 0;
+    const borderRadius = TIMELINE_ITEM_BORDER_RADIUS;
 
     ctx.save();
     ctx.fillStyle = borderColor;
 
-    // Create a path for the outer rectangle (no radius)
+    // Create a path for the outer rectangle with rounded corners
     ctx.beginPath();
-    ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.roundRect(-this.width / 2, -this.height / 2, this.width, this.height, borderRadius);
 
     // Create a path for the inner rectangle with rounded corners (the hole)
     ctx.roundRect(
@@ -80,7 +81,7 @@ class Text extends Resizable {
       -this.height / 2 + borderWidth,
       this.width - borderWidth * 2,
       this.height - borderWidth * 2,
-      innerRadius,
+      Math.max(0, borderRadius - borderWidth),
     );
 
     // Use even-odd fill rule to create the border effect

@@ -1,7 +1,11 @@
 import { Control, Resizable, ResizableProps } from "@openvideo/timeline";
 import { editorFont } from "@/components/editor/constants";
 import { createResizeControls } from "../controls";
-import { TIMELINE_SELECTED_BORDER_COLOR, TIMELINE_BORDER_WIDTH } from "../../constants/constants";
+import {
+  TIMELINE_SELECTED_BORDER_COLOR,
+  TIMELINE_BORDER_WIDTH,
+  TIMELINE_ITEM_BORDER_RADIUS,
+} from "../../constants/constants";
 
 interface EffectProps extends ResizableProps {
   name: string;
@@ -23,8 +27,8 @@ class Shape extends Resizable {
     super(props);
     console.log("Effect props", props);
     this.id = props.id;
-    this.rx = 0;
-    this.ry = 0;
+    this.rx = TIMELINE_ITEM_BORDER_RADIUS;
+    this.ry = TIMELINE_ITEM_BORDER_RADIUS;
     this.display = props.display;
     this.tScale = props.tScale;
     this.name = props.name;
@@ -64,18 +68,18 @@ class Shape extends Resizable {
 
     const borderColor = TIMELINE_SELECTED_BORDER_COLOR;
     const borderWidth = TIMELINE_BORDER_WIDTH;
-    const innerRadius = 0;
+    const borderRadius = TIMELINE_ITEM_BORDER_RADIUS;
 
     ctx.save();
     ctx.fillStyle = borderColor;
     ctx.beginPath();
-    ctx.rect(-this.width / 2, -this.height / 2, this.width, this.height);
+    ctx.roundRect(-this.width / 2, -this.height / 2, this.width, this.height, borderRadius);
     ctx.roundRect(
       -this.width / 2 + borderWidth,
       -this.height / 2 + borderWidth,
       this.width - borderWidth * 2,
       this.height - borderWidth * 2,
-      innerRadius,
+      Math.max(0, borderRadius - borderWidth),
     );
     ctx.fill("evenodd");
     ctx.restore();

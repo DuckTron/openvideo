@@ -82,7 +82,7 @@ export function TabBar() {
                 "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-2 px-0.5 gap-1.5",
                 isActive
                   ? "bg-accent text-accent-foreground font-semibold"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                  : "text-accent-foreground/80 hover:bg-accent hover:text-accent-foreground",
               )}
               onClick={() => {
                 if (hasSelection) {

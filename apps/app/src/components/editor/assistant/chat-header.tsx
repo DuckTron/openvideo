@@ -22,7 +22,7 @@ export function ChatHeader({
     <div className="h-13 border-b">
       <div className="flex items-center  justify-between px-4 h-full shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-semibold tracking-wide">{title}</span>
+          <span className="text-sm font-semibold">{title}</span>
         </div>
         <div className="flex items-center gap-1">
           <Button
