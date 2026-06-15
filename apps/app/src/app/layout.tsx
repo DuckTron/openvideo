@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Figtree } from "next/font/google";
+import { Geist, Geist_Mono, Figtree, Albert_Sans } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
@@ -14,6 +14,7 @@ const geist = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
+const albert = Albert_Sans({ subsets: ["latin"], variable: "--font-albert-sans" });
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -100,6 +101,7 @@ export default function RootLayout({
         geistMono.variable,
         figtree.variable,
         geist.variable,
+        albert.variable,
         "font-sans",
         figtreeHeading.variable,
       )}

@@ -79,9 +79,9 @@ export function TabBar() {
           return (
             <div
               className={cn(
-                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-3 px-0.5 gap-1.5",
+                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-16 py-3 gap-1.5",
                 isActive
-                  ? "bg-accent text-accent-foreground font-semibold"
+                  ? "bg-accent text-accent-foreground"
                   : "text-accent-foreground/80 hover:bg-accent hover:text-accent-foreground",
               )}
               onClick={() => {
@@ -99,13 +99,17 @@ export function TabBar() {
             >
               <Tooltip delayDuration={10}>
                 <TooltipTrigger asChild>
-                  <tab.icon className="size-[18px]" />
+                  {isActive ? (
+                    <tab.activeIcon className="size-[18px]" />
+                  ) : (
+                    <tab.icon className="size-[18px]" />
+                  )}
                 </TooltipTrigger>
                 <TooltipContent side="right" align="center" sideOffset={8}>
                   {tab.label}
                 </TooltipContent>
               </Tooltip>
-              <span className="text-[12px] leading-none mt-0.5 select-none text-center truncate max-w-full px-0.5">
+              <span className="text-[12px] leading-none mt-0.5 select-none text-center">
                 {tab.label}
               </span>
             </div>

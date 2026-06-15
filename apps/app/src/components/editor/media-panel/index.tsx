@@ -54,12 +54,6 @@ export function MediaPanel() {
           <div className="h-full flex flex-col">
             <div className="h-12 items-center flex justify-between px-6 shrink-0">
               <span className="text-sm font-medium">{getPanelTitle()}</span>
-              <button
-                onClick={handleClose}
-                className="p-1.5 hover:bg-white/5 rounded-md text-muted-foreground hover:text-white transition-colors cursor-pointer"
-              >
-                <RiCloseLine className="size-4" />
-              </button>
             </div>
             <div className="flex-1 overflow-auto">
               {hasSelection ? <PropertiesPanel /> : viewMap[activeTab]}

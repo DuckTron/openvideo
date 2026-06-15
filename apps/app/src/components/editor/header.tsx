@@ -32,7 +32,7 @@ export default function Header() {
         {/* Left Column: Logo & App Name */}
         <div className="flex items-center justify-start gap-1.5 select-none">
           <LogoIcons.scenify className="size-5 text-foreground" />
-          <span className="text-sm font-heading font-bold font-leading-5 lowercase">openvideo</span>
+          <span className="text-sm font-heading font-bold leading-5 lowercase">openvideo</span>
         </div>
 
         {/* Center Column: Project Space & Details */}

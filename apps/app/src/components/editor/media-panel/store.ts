@@ -1,41 +1,57 @@
 import {
-  RiImage2Line,
   RiText,
   RiClosedCaptioningLine,
+  RiClosedCaptioningFill,
   RiGitMergeLine,
+  RiGitMergeFill,
   RiSparkling2Line,
+  RiSparkling2Fill,
   RiShapesLine,
+  RiShapesFill,
   RiFolderOpenLine,
+  RiFolderOpenFill,
+  RiTBoxLine,
+  RiTBoxFill,
 } from "@remixicon/react";
 import { create } from "zustand";
 
 export type Tab = "assets" | "text" | "captions" | "effects" | "transitions" | "elements";
 
 export const tabs: {
-  [key in Tab]: { icon: React.ComponentType<any> | React.FC<any>; label: string };
+  [key in Tab]: {
+    icon: React.ComponentType<any> | React.FC<any>;
+    activeIcon: React.ComponentType<any> | React.FC<any>;
+    label: string;
+  };
 } = {
   assets: {
     icon: RiFolderOpenLine,
+    activeIcon: RiFolderOpenFill,
     label: "Assets",
   },
   text: {
-    icon: RiText,
+    icon: RiTBoxLine,
+    activeIcon: RiTBoxFill,
     label: "Text",
   },
   captions: {
     icon: RiClosedCaptioningLine,
+    activeIcon: RiClosedCaptioningFill,
     label: "Captions",
   },
   transitions: {
     icon: RiGitMergeLine,
+    activeIcon: RiGitMergeFill,
     label: "Transitions",
   },
   effects: {
     icon: RiSparkling2Line,
+    activeIcon: RiSparkling2Fill,
     label: "Effects",
   },
   elements: {
     icon: RiShapesLine,
+    activeIcon: RiShapesFill,
     label: "Elements",
   },
 };

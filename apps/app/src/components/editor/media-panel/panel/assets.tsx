@@ -22,6 +22,7 @@ import {
   RiDeleteBinLine,
   RiUploadLine,
   RiVideoLine,
+  RiShiningLine,
 } from "@remixicon/react";
 import type { MediaType } from "@/types/media";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
@@ -799,10 +800,8 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
               onClick={() => setIsGeneratorModalOpen(true)}
             >
               <div className="absolute inset-0 bg-primary/2 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-              <RiSparkling2Line
-                size={14}
-                className="text-primary group-hover/btn:scale-110 transition-transform duration-300"
-              />
+              <RiShiningLine size={14} />
+
               <span>AI Generate</span>
             </Button>
 

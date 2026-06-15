@@ -174,9 +174,9 @@ export default function ProjectsView() {
 
   return (
     <>
-      <main className="min-h-screen bg-card w-full flex flex-col">
+      <main className="min-h-screen w-full flex flex-col">
         {/* Header - matching editor style */}
-        <div className="h-12 flex items-center px-4 justify-between border-b sticky top-0 z-10 bg-card">
+        <div className="h-12 flex items-center px-4 justify-between border-b sticky top-0 z-10">
           <div className="flex items-center gap-3">
             {isMobile && (
               <Button size="icon" variant="ghost" onClick={toggleSidebar} className="size-8 -ml-2">
