@@ -21,6 +21,8 @@ import {
   Container,
   Graphics,
   CanvasTextMetrics,
+  BitmapFont,
+  Cache,
 } from "pixi.js";
 import { isTransparent, parseColor, resolveColor } from "../utils/color";
 import type { BaseSpriteEvents } from "../sprite/base-sprite";
@@ -261,6 +263,49 @@ export interface ICaptionOpts {
   textBoxStyle?: ITextBoxStyle;
 }
 
+function getOrInstallFont(styleOptions: any): string {
+  const parts: string[] = [];
+  parts.push(styleOptions.fontFamily || "Roboto");
+  parts.push(String(styleOptions.fontSize || 30));
+  parts.push(String(styleOptions.fontWeight || "normal"));
+  parts.push(String(styleOptions.fontStyle || "normal"));
+
+  if (styleOptions.fill !== undefined) {
+    if (typeof styleOptions.fill === "number") {
+      parts.push(`f_${styleOptions.fill}`);
+    } else {
+      parts.push("f_obj");
+    }
+  }
+
+  if (styleOptions.stroke) {
+    if (typeof styleOptions.stroke === "object") {
+      parts.push(
+        `s_${styleOptions.stroke.color}_${styleOptions.stroke.width}_${styleOptions.stroke.join || ""}`,
+      );
+    } else {
+      parts.push(`s_${styleOptions.stroke}`);
+    }
+  }
+
+  if (styleOptions.dropShadow) {
+    parts.push(
+      `ds_${styleOptions.dropShadow.color}_${styleOptions.dropShadow.alpha}_${styleOptions.dropShadow.blur}_${styleOptions.dropShadow.angle}_${styleOptions.dropShadow.distance}`,
+    );
+  }
+
+  const fontName = "installed_font_" + parts.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
+
+  if (!Cache.has(fontName) && !Cache.has(fontName + "-bitmap")) {
+    BitmapFont.install({
+      name: fontName,
+      style: styleOptions,
+    });
+  }
+
+  return fontName;
+}
+
 /**
  * Caption clip using Canvas 2D for rendering
  * Each instance represents a single caption segment
@@ -449,6 +494,7 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
   }
 
   set wordsPerLine(v: "single" | "multiple") {
+    if (this.opts.wordsPerLine === v) return;
     this.updateStyle({ wordsPerLine: v });
   }
 
@@ -457,6 +503,7 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
   }
 
   set fontFamily(v: string) {
+    if (this.opts.fontFamily === v) return;
     this.updateStyle({ fontFamily: v });
   }
 
@@ -465,6 +512,7 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
   }
 
   set fontUrl(v: string) {
+    if (this.opts.fontUrl === v) return;
     this.updateStyle({ fontUrl: v });
   }
 
@@ -1011,11 +1059,19 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       }
     }
 
-    this.textStyle = new TextStyle(styleOptions as Partial<TextStyleOptions>);
+    const fontName = getOrInstallFont(styleOptions);
+    this.textStyle = new TextStyle({
+      ...(styleOptions as Partial<TextStyleOptions>),
+      fontFamily: fontName,
+    });
 
     // Create base style for measurements (excluding layout properties)
     const { align, fill, ...rest } = styleOptions;
-    this.textStyleBase = new TextStyle(rest as Partial<TextStyleOptions>);
+    const baseFontName = getOrInstallFont(rest);
+    this.textStyleBase = new TextStyle({
+      ...(rest as Partial<TextStyleOptions>),
+      fontFamily: baseFontName,
+    });
 
     // 4. Refresh captions
     await this.refreshCaptions();
@@ -1406,14 +1462,16 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       this.updateState(this._lastTickTime);
 
       // CRITICAL: Render content to the texture
-      try {
-        const renderer = await this.getRenderer();
-        renderer.render({
-          container: this.pixiTextContainer,
-          target: this.renderTexture,
-        });
-      } catch (err) {
-        Log.warn("CaptionClip: Could not render captions during refresh", err);
+      if (this.externalRenderer != null || this.pixiApp?.renderer != null) {
+        try {
+          const renderer = await this.getRenderer();
+          renderer.render({
+            container: this.pixiTextContainer,
+            target: this.renderTexture,
+          });
+        } catch (err) {
+          Log.warn("CaptionClip: Could not render captions during refresh", err);
+        }
       }
 
       // 9. Dimension Tracking & Anchoring
@@ -1701,6 +1759,7 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
    */
   setRenderer(renderer: Application["renderer"]): void {
     this.externalRenderer = renderer;
+    this.refreshCaptions();
   }
 
   private async getRenderer(): Promise<Application["renderer"]> {

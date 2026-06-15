@@ -525,7 +525,11 @@ export abstract class BaseClip<T extends BaseSpriteEvents = BaseSpriteEvents>
     if (timing.fadeOut !== undefined) clip.timing.fadeOut = timing.fadeOut;
 
     if (json.style) {
-      clip.style = { ...clip.style, ...json.style };
+      const currentStyle = clip.style || {};
+      const newStyle = { ...currentStyle, ...json.style };
+      if (JSON.stringify(currentStyle) !== JSON.stringify(newStyle)) {
+        clip.style = newStyle;
+      }
     }
 
     // Apply animation if present

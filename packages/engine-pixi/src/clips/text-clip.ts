@@ -9,6 +9,8 @@ import {
   Container,
   Graphics,
   CanvasTextMetrics,
+  BitmapFont,
+  Cache,
 } from "pixi.js";
 import { OutlineFilter } from "../filters/outline-filter";
 import { DropShadowFilter } from "pixi-filters";
@@ -153,6 +155,49 @@ export interface ITextEvents extends BaseSpriteEvents {
       style: any;
     } & ITextOpts
   >;
+}
+
+function getOrInstallFont(styleOptions: any): string {
+  const parts: string[] = [];
+  parts.push(styleOptions.fontFamily || "Roboto");
+  parts.push(String(styleOptions.fontSize || 30));
+  parts.push(String(styleOptions.fontWeight || "normal"));
+  parts.push(String(styleOptions.fontStyle || "normal"));
+
+  if (styleOptions.fill !== undefined) {
+    if (typeof styleOptions.fill === "number") {
+      parts.push(`f_${styleOptions.fill}`);
+    } else {
+      parts.push("f_obj");
+    }
+  }
+
+  if (styleOptions.stroke) {
+    if (typeof styleOptions.stroke === "object") {
+      parts.push(
+        `s_${styleOptions.stroke.color}_${styleOptions.stroke.width}_${styleOptions.stroke.join || ""}`,
+      );
+    } else {
+      parts.push(`s_${styleOptions.stroke}`);
+    }
+  }
+
+  if (styleOptions.dropShadow) {
+    parts.push(
+      `ds_${styleOptions.dropShadow.color}_${styleOptions.dropShadow.alpha}_${styleOptions.dropShadow.blur}_${styleOptions.dropShadow.angle}_${styleOptions.dropShadow.distance}`,
+    );
+  }
+
+  const fontName = "installed_font_" + parts.join("_").replace(/[^a-zA-Z0-9_]/g, "_");
+
+  if (!Cache.has(fontName) && !Cache.has(fontName + "-bitmap")) {
+    BitmapFont.install({
+      name: fontName,
+      style: styleOptions,
+    });
+  }
+
+  return fontName;
 }
 
 /**
@@ -397,8 +442,17 @@ export class Text extends BaseClip<ITextEvents> {
     const styleOptions = this.createStyleFromOpts(opts);
     const { wordWrap, wordWrapWidth, lineHeight, letterSpacing, fill, ...rest } = styleOptions;
 
-    const style = new TextStyle(styleOptions);
-    const styleBase = new TextStyle(rest);
+    const fontName = getOrInstallFont(styleOptions);
+    const style = new TextStyle({
+      ...styleOptions,
+      fontFamily: fontName,
+    });
+
+    const baseFontName = getOrInstallFont(rest);
+    const styleBase = new TextStyle({
+      ...rest,
+      fontFamily: baseFontName,
+    });
 
     this.textStyle = style;
     this.textStyleBase = styleBase;
@@ -743,9 +797,17 @@ export class Text extends BaseClip<ITextEvents> {
     // 3. Create new style options
     const styleOptions = this.createStyleFromOpts(this.originalOpts);
     const { wordWrap, wordWrapWidth, lineHeight, letterSpacing, fill, ...rest } = styleOptions;
-    const styleBase = new TextStyle(rest);
+    const baseFontName = getOrInstallFont(rest);
+    const styleBase = new TextStyle({
+      ...rest,
+      fontFamily: baseFontName,
+    });
     // 3. Update TextStyle
-    const style = new TextStyle(styleOptions);
+    const fontName = getOrInstallFont(styleOptions);
+    const style = new TextStyle({
+      ...styleOptions,
+      fontFamily: fontName,
+    });
     this.textStyle = style;
     this.textStyleBase = styleBase;
 
