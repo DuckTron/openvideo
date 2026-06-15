@@ -1,4 +1,4 @@
-import { Upload } from "@phosphor-icons/react";
+import { RiUploadLine } from "@remixicon/react";
 
 interface MediaDragOverlayProps {
   isVisible: boolean;
@@ -30,7 +30,7 @@ export function MediaDragOverlay({
       onClick={handleClick}
     >
       <div className="flex items-center justify-center">
-        <Upload className="h-10 w-10 text-foreground" />
+        <RiUploadLine className="h-10 w-10 text-foreground" />
       </div>
 
       <div className="space-y-2">

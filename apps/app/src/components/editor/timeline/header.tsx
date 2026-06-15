@@ -15,16 +15,16 @@ import {
   DropdownMenuShortcut,
 } from "@/components/ui/dropdown-menu";
 import {
-  TrashIcon,
-  CopyIcon,
-  PlusIcon,
-  MinusIcon,
-  PlayIcon,
-  PauseIcon,
-  SkipBackIcon,
-  SkipForwardIcon,
-  SquareSplitHorizontalIcon,
-} from "@phosphor-icons/react";
+  RiDeleteBinLine,
+  RiFileCopyLine,
+  RiAddLine,
+  RiSubtractLine,
+  RiPlayFill,
+  RiPauseFill,
+  RiSkipBackLine,
+  RiSkipForwardLine,
+  RiSplitCellsHorizontal,
+} from "@remixicon/react";
 const Header = ({
   scale,
   setScale,
@@ -88,7 +88,7 @@ const Header = ({
               variant={"ghost"}
               className="flex items-center gap-1 px-2"
             >
-              <TrashIcon size={14} />
+              <RiDeleteBinLine size={14} />
             </Button>
 
             <Button
@@ -97,7 +97,7 @@ const Header = ({
               variant={"ghost"}
               className="flex items-center gap-1 px-2"
             >
-              <SquareSplitHorizontalIcon size={15} />
+              <RiSplitCellsHorizontal size={15} />
             </Button>
             <Button
               disabled={!selectedClip || isLocked}
@@ -105,7 +105,7 @@ const Header = ({
               variant={"ghost"}
               className="flex items-center gap-1 px-2"
             >
-              <CopyIcon size={15} />
+              <RiFileCopyLine size={15} />
             </Button>
           </div>
           <div className="flex items-center justify-center">
@@ -116,7 +116,7 @@ const Header = ({
                 variant={"ghost"}
                 size={"icon"}
               >
-                <SkipBackIcon size={14} />
+                <RiSkipBackLine size={14} />
               </Button>
               <Button
                 onClick={() => {
@@ -128,11 +128,7 @@ const Header = ({
                 variant={"ghost"}
                 size={"icon"}
               >
-                {isPlaying ? (
-                  <PauseIcon weight="fill" size={14} />
-                ) : (
-                  <PlayIcon weight="fill" size={14} />
-                )}
+                {isPlaying ? <RiPauseFill size={14} /> : <RiPlayFill size={14} />}
               </Button>
               <Button
                 className="hidden lg:inline-flex"
@@ -140,7 +136,7 @@ const Header = ({
                 variant={"ghost"}
                 size={"icon"}
               >
-                <SkipForwardIcon size={14} />
+                <RiSkipForwardLine size={14} />
               </Button>
             </div>
             <div
@@ -231,7 +227,7 @@ const ZoomControl = ({
     <div className="flex items-center justify-end select-none px-4">
       <div className="flex items-center rounded-md px-1.5 py-0.5 gap-1 h-8">
         <Button onClick={onZoomOutClick} variant={"ghost"} size={"icon"}>
-          <MinusIcon size={14} />
+          <RiSubtractLine size={14} />
         </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -309,7 +305,7 @@ const ZoomControl = ({
           </DropdownMenuContent>
         </DropdownMenu>
         <Button onClick={onZoomInClick} variant={"ghost"} size={"icon"}>
-          <PlusIcon size={14} />
+          <RiAddLine size={14} />
         </Button>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsDownUp, TextB, TextItalic, TextT } from "@phosphor-icons/react";
+import { RiArrowUpDownLine, RiBold, RiItalic, RiText } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group";
 import { NumberInput } from "@/components/ui/number-input";
@@ -50,7 +50,7 @@ export function CaptionStyleProperty({
 
       {/* Font Size */}
       <div className="flex items-center gap-4">
-        <TextT className="size-4 text-muted-foreground" />
+        <RiText className="size-4 text-muted-foreground" />
         <Slider
           value={[fs.localValue]}
           onValueChange={(v) => fs.handleChange(v[0])}
@@ -74,7 +74,7 @@ export function CaptionStyleProperty({
 
       {/* Line Height */}
       <div className="flex items-center gap-4">
-        <ArrowsDownUp className="size-4 text-muted-foreground" />
+        <RiArrowUpDownLine className="size-4 text-muted-foreground" />
         <Slider
           value={[lh.localValue]}
           onValueChange={(v) => lh.handleChange(v[0])}
@@ -102,7 +102,7 @@ export function CaptionStyleProperty({
           className="size-8"
           onClick={() => onFontWeightChange(fontWeight === "bold" ? "normal" : "bold")}
         >
-          <TextB className="size-4" />
+          <RiBold className="size-4" />
         </Button>
         <Button
           variant={fontStyle === "italic" ? "default" : "outline"}
@@ -110,7 +110,7 @@ export function CaptionStyleProperty({
           className="size-8"
           onClick={() => onFontStyleChange(fontStyle === "italic" ? "normal" : "italic")}
         >
-          <TextItalic className="size-4" />
+          <RiItalic className="size-4" />
         </Button>
       </div>
 

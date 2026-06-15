@@ -1,7 +1,7 @@
 "use client";
 
 import { Log } from "@openvideo/engine-pixi";
-import { CircleNotch, MagnifyingGlass, MusicNote } from "@phosphor-icons/react";
+import { RiLoader5Line, RiSearchLine, RiMusic2Line } from "@remixicon/react";
 import { AudioItem } from "./audio-item";
 import { useState, useEffect, useCallback } from "react";
 
@@ -87,7 +87,7 @@ export default function PanelMusic() {
       <div className="p-4">
         <InputGroup>
           <InputGroupAddon className="bg-secondary/30 pointer-events-none text-muted-foreground w-8 justify-center">
-            <MagnifyingGlass size={14} />
+            <RiSearchLine size={14} />
           </InputGroupAddon>
 
           <InputGroupInput
@@ -102,11 +102,11 @@ export default function PanelMusic() {
       <ScrollArea className="flex-1 px-4">
         {isLoading && searchResults.length === 0 ? (
           <div className="flex items-center justify-center py-20">
-            <CircleNotch className="animate-spin text-muted-foreground" size={32} />
+            <RiLoader5Line className="animate-spin text-muted-foreground" size={32} />
           </div>
         ) : searchResults.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
-            <MusicNote size={32} className="opacity-50" />
+            <RiMusic2Line size={32} className="opacity-50" />
             <span className="text-sm">No music found</span>
           </div>
         ) : (

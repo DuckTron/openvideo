@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Minus, Plus } from "@phosphor-icons/react";
+import { RiSubtractLine, RiAddLine } from "@remixicon/react";
 
 interface SectionHeaderProps {
   title: string;
@@ -20,7 +20,7 @@ export function SectionHeader({ title, hasContent, onAdd, onRemove }: SectionHea
         className="size-6 rounded-sm text-muted-foreground"
         onClick={hasContent ? onRemove : onAdd}
       >
-        {hasContent ? <Minus className="size-4" /> : <Plus className="size-4" />}
+        {hasContent ? <RiSubtractLine className="size-4" /> : <RiAddLine className="size-4" />}
       </Button>
     </div>
   );

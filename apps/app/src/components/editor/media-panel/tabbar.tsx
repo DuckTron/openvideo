@@ -10,7 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Copy, List, Plus } from "@phosphor-icons/react";
+import { RiFileCopyLine, RiListCheck, RiAddLine } from "@remixicon/react";
 import { useRouter } from "next/navigation";
 import { useProjectStore } from "@/stores/project-store";
 import { trpc } from "@/lib/trpc";
@@ -72,14 +72,14 @@ export function TabBar() {
   return (
     <div className="relative flex flex-col items-center border-r  gap-3 h-full bg-background shrink-0 ">
       {/* Tabs list */}
-      <div className="flex flex-col items-center py-2 px-2 gap-2.5 h-full">
+      <div className="flex flex-col items-center py-2 px-2 gap-1 h-full">
         {(Object.keys(tabs) as Tab[]).map((tabKey) => {
           const tab = tabs[tabKey];
           const isActive = activeTab === tabKey && isOpen && !hasSelection;
           return (
             <div
               className={cn(
-                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-2 px-0.5 gap-1.5",
+                "flex flex-col items-center justify-center flex-none cursor-pointer rounded-sm transition-all duration-200 w-full py-3 px-0.5 gap-1.5",
                 isActive
                   ? "bg-accent text-accent-foreground font-semibold"
                   : "text-accent-foreground/80 hover:bg-accent hover:text-accent-foreground",

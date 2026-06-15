@@ -1,32 +1,32 @@
 "use client";
 
 import {
-  ArrowUUpLeft,
-  ArrowUUpRight,
-  ArrowUp,
-  ArrowsCounterClockwise,
-  CaretLeft,
-  ClosedCaptioning,
-  Copy,
-  Download,
-  Funnel,
-  Image,
-  Keyboard,
-  MagnifyingGlass,
-  MagnifyingGlassMinus,
-  MagnifyingGlassPlus,
-  Paperclip,
-  Pencil,
-  Play,
-  Plus,
-  Robot,
-  Scissors,
-  Shapes,
-  Sparkle,
-  TextT,
-  Trash,
-  Upload,
-} from "@phosphor-icons/react";
+  RiArrowGoBackLine,
+  RiArrowGoForwardLine,
+  RiArrowUpLine,
+  RiRefreshLine,
+  RiArrowLeftSLine,
+  RiClosedCaptioningLine,
+  RiFileCopyLine,
+  RiDownloadLine,
+  RiFilterLine,
+  RiImage2Line,
+  RiKeyboardLine,
+  RiSearchLine,
+  RiZoomOutLine,
+  RiZoomInLine,
+  RiAttachmentLine,
+  RiPencilLine,
+  RiPlayLine,
+  RiAddLine,
+  RiRobotLine,
+  RiScissorsLine,
+  RiShapeLine,
+  RiSparkling2Line,
+  RiText,
+  RiDeleteBinLine,
+  RiUploadLine,
+} from "@remixicon/react";
 import { Icons } from "@/components/shared/icons";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -47,7 +47,7 @@ function FakeHeader() {
       {/* Left: Project Navigation */}
       <div className="flex items-center gap-4 w-[280px]">
         <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors">
-          <CaretLeft className="h-4 w-4" />
+          <RiArrowLeftSLine className="h-4 w-4" />
           <span className="text-sm font-medium">Projects</span>
         </button>
 
@@ -64,21 +64,21 @@ function FakeHeader() {
               value="editor"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Pencil className="h-3.5 w-3.5" />
+              <RiPencilLine className="h-3.5 w-3.5" />
               Editor
             </TabsTrigger>
             <TabsTrigger
               value="agent"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Robot className="h-3.5 w-3.5" />
+              <RiRobotLine className="h-3.5 w-3.5" />
               Agent
             </TabsTrigger>
             <TabsTrigger
               value="playground"
               className="hidden lg:flex text-xs gap-1.5 px-3 h-6 data-[state=active]:bg-background data-[state=active]:shadow-sm"
             >
-              <Play className="h-3.5 w-3.5" />
+              <RiPlayLine className="h-3.5 w-3.5" />
               Playground
             </TabsTrigger>
           </TabsList>
@@ -90,10 +90,10 @@ function FakeHeader() {
         {/* History Controls - hidden on small screens */}
         <div className="hidden sm:flex items-center gap-1">
           <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30">
-            <ArrowUUpLeft className="h-4 w-4" />
+            <RiArrowGoBackLine className="h-4 w-4" />
           </button>
           <button className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors disabled:opacity-30">
-            <ArrowUUpRight className="h-4 w-4" />
+            <RiArrowGoForwardLine className="h-4 w-4" />
           </button>
         </div>
 
@@ -102,11 +102,11 @@ function FakeHeader() {
         {/* Help & Export */}
         <div className="flex items-center gap-1">
           <button className="hidden sm:flex p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors">
-            <Keyboard className="h-4 w-4" />
+            <RiKeyboardLine className="h-4 w-4" />
           </button>
 
           <button className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 bg-foreground text-background text-xs font-medium rounded-md hover:bg-foreground/90 transition-colors">
-            <Download className="h-3.5 w-3.5" />
+            <RiDownloadLine className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Export</span>
           </button>
         </div>
@@ -148,12 +148,12 @@ function FakeAssetImage({ inUse = false, color }: { inUse?: boolean; color?: str
 
 function FakeMediaPanel() {
   const tabs = [
-    { icon: Image, label: "Assets", active: true },
-    { icon: TextT, label: "Text", active: false },
-    { icon: ClosedCaptioning, label: "Captions", active: false },
+    { icon: RiImage2Line, label: "Assets", active: true },
+    { icon: RiText, label: "Text", active: false },
+    { icon: RiClosedCaptioningLine, label: "Captions", active: false },
     { icon: Icons.transition, label: "Transitions", active: false },
-    { icon: Sparkle, label: "Effects", active: false },
-    { icon: Shapes, label: "Elements", active: false },
+    { icon: RiSparkling2Line, label: "Effects", active: false },
+    { icon: RiShapeLine, label: "Elements", active: false },
   ];
 
   return (
@@ -183,7 +183,7 @@ function FakeMediaPanel() {
       <div className="flex items-center gap-2 w-full px-4 py-3">
         {/* Search Input */}
         <div className="relative flex-1 min-w-0">
-          <MagnifyingGlass
+          <RiSearchLine
             size={14}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
           />
@@ -198,7 +198,7 @@ function FakeMediaPanel() {
           variant="outline"
           className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
         >
-          <Funnel size={15} />
+          <RiFilterLine size={15} />
         </Button>
       </div>
 
@@ -216,11 +216,11 @@ function FakeMediaPanel() {
       <div className={cn("shrink-0 bg-card p-3")}>
         <div className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-secondary/50 px-3 py-2">
           <button className="flex flex-1 items-center gap-3 text-left">
-            <Sparkle className="size-4 shrink-0 text-primary" />
+            <RiSparkling2Line className="size-4 shrink-0 text-primary" />
             <span className="text-sm text-muted-foreground">What you want to create</span>
           </button>
           <Button variant="ghost" size="icon" className="size-7 shrink-0">
-            <Upload className="size-4" />
+            <RiUploadLine className="size-4" />
           </Button>
         </div>
       </div>
@@ -236,13 +236,13 @@ function FakeTimelinePanel() {
         {/* Left: Track tools - hidden on small screens */}
         <div className="hidden sm:flex items-center gap-1">
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <Trash className="size-4" />
+            <RiDeleteBinLine className="size-4" />
           </button>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <Scissors className="size-4" />
+            <RiScissorsLine className="size-4" />
           </button>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <Copy className="size-4" />
+            <RiFileCopyLine className="size-4" />
           </button>
         </div>
 
@@ -296,13 +296,13 @@ function FakeTimelinePanel() {
         {/* Right: Zoom controls - hidden on small screens */}
         <div className="hidden sm:flex items-center justify-end gap-1 sm:gap-2">
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <MagnifyingGlassMinus className="size-4" />
+            <RiZoomOutLine className="size-4" />
           </button>
           <div className="hidden md:block w-20 h-1.5 bg-muted rounded-full overflow-hidden">
             <div className="w-1/3 h-full bg-muted-foreground/60 rounded-full" />
           </div>
           <button className="p-1.5 text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/50 rounded transition-colors">
-            <MagnifyingGlassPlus className="size-4" />
+            <RiZoomInLine className="size-4" />
           </button>
         </div>
       </div>
@@ -395,7 +395,7 @@ export function FakeAssistantPanel() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <ArrowsCounterClockwise className="w-3.5 h-3.5" />
+            <RiRefreshLine className="w-3.5 h-3.5" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
@@ -403,7 +403,7 @@ export function FakeAssistantPanel() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <RiAddLine className="w-3.5 h-3.5" />
             <span className="sr-only">New chat</span>
           </Button>
         </div>
@@ -454,14 +454,14 @@ export function FakeAssistantPanel() {
             />
             <InputGroupAddon align="block-end">
               <InputGroupButton variant="ghost" className="rounded-lg text-foreground">
-                <Paperclip className="w-4 h-4" />
+                <RiAttachmentLine className="w-4 h-4" />
               </InputGroupButton>
               <InputGroupButton
                 variant="default"
                 className="rounded-full ml-auto bg-foreground hover:bg-foreground/90 text-background"
                 size="icon-xs"
               >
-                <ArrowUp className="w-4 h-4" />
+                <RiArrowUpLine className="w-4 h-4" />
                 <span className="sr-only">Send</span>
               </InputGroupButton>
             </InputGroupAddon>

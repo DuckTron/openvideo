@@ -1,6 +1,6 @@
 "use client";
 
-import { TextAlignCenter, TextAlignLeft, TextAlignRight } from "@phosphor-icons/react";
+import { RiAlignCenter, RiAlignLeft, RiAlignRight } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -12,10 +12,10 @@ interface AlignmentPropertyProps {
 }
 
 export function AlignmentProperty({ value, onChange }: AlignmentPropertyProps) {
-  const alignments: { value: Alignment; icon: typeof TextAlignLeft }[] = [
-    { value: "left", icon: TextAlignLeft },
-    { value: "center", icon: TextAlignCenter },
-    { value: "right", icon: TextAlignRight },
+  const alignments: { value: Alignment; icon: typeof RiAlignLeft }[] = [
+    { value: "left", icon: RiAlignLeft },
+    { value: "center", icon: RiAlignCenter },
+    { value: "right", icon: RiAlignRight },
   ];
 
   return (

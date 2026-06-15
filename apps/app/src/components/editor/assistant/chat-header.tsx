@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowsCounterClockwise, Plus, Sidebar } from "@phosphor-icons/react";
+import { RiRefreshLine, RiAddLine, RiSideBarLine } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 
 interface ChatHeaderProps {
@@ -31,7 +31,7 @@ export function ChatHeader({
             className="text-muted-foreground hover:text-foreground"
             onClick={onRefresh}
           >
-            <ArrowsCounterClockwise className="size-4" />
+            <RiRefreshLine className="size-4" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
@@ -40,7 +40,7 @@ export function ChatHeader({
             className="text-muted-foreground hover:text-foreground"
             onClick={onNewChat}
           >
-            <Plus className="size-4" />
+            <RiAddLine className="size-4" />
             <span className="sr-only">New chat</span>
           </Button>
           {onClose && (
@@ -50,7 +50,7 @@ export function ChatHeader({
               className="text-muted-foreground hover:text-foreground"
               onClick={onClose}
             >
-              <Sidebar className="size-4" />
+              <RiSideBarLine className="size-4" />
               <span className="sr-only">Close assistant</span>
             </Button>
           )}

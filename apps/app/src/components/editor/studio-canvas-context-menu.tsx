@@ -4,16 +4,16 @@ import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
-  ArrowClockwise,
-  CaretRight,
-  Clipboard,
-  Copy,
-  Eye,
-  FlipHorizontal,
-  FlipVertical,
-  Lock,
-  Trash,
-} from "@phosphor-icons/react";
+  RiArrowGoForwardLine,
+  RiArrowRightSLine,
+  RiClipboardLine,
+  RiFileCopyLine,
+  RiEyeLine,
+  RiFlipHorizontalLine,
+  RiFlipVerticalLine,
+  RiLockLine,
+  RiDeleteBinLine,
+} from "@remixicon/react";
 import { core, projectStore } from "@/lib/project";
 import { nanoid } from "nanoid";
 import type { AnyClip } from "@openvideo/core";
@@ -142,7 +142,7 @@ function MenuSub({ trigger, children }: { trigger: React.ReactNode; children: Re
         className="group relative flex w-full cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground"
       >
         {trigger}
-        <CaretRight className="ml-auto w-4 h-4" />
+        <RiArrowRightSLine className="ml-auto w-4 h-4" />
       </button>
       {open && (
         <div
@@ -300,13 +300,13 @@ export function StudioContextMenuContent({ state, onClose }: StudioContextMenuCo
         }}
       >
         <MenuItem onClick={wrapWithClose(handleCopy)}>
-          <Copy className="w-4 h-4" />
+          <RiFileCopyLine className="w-4 h-4" />
           Copy
           <Shortcut>⌘ C</Shortcut>
         </MenuItem>
 
         <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-          <Clipboard className="w-4 h-4" />
+          <RiClipboardLine className="w-4 h-4" />
           Paste
           <Shortcut>⌘ V</Shortcut>
         </MenuItem>
@@ -314,13 +314,13 @@ export function StudioContextMenuContent({ state, onClose }: StudioContextMenuCo
         <MenuSeparator />
 
         <MenuItem onClick={wrapWithClose(handleToggleVisibility)}>
-          <Eye className="w-4 h-4" />
+          <RiEyeLine className="w-4 h-4" />
           Hide
           <Shortcut>⌘ H</Shortcut>
         </MenuItem>
 
         <MenuItem onClick={wrapWithClose(handleToggleLock)}>
-          <Lock className="w-4 h-4" />
+          <RiLockLine className="w-4 h-4" />
           Lock
           <Shortcut>⌘ L</Shortcut>
         </MenuItem>
@@ -328,7 +328,7 @@ export function StudioContextMenuContent({ state, onClose }: StudioContextMenuCo
         <MenuSub
           trigger={
             <>
-              <FlipHorizontal className="w-4 h-4" />
+              <RiFlipHorizontalLine className="w-4 h-4" />
               Flip
             </>
           }
@@ -338,14 +338,14 @@ export function StudioContextMenuContent({ state, onClose }: StudioContextMenuCo
         </MenuSub>
 
         <MenuItem onClick={wrapWithClose(() => {})}>
-          <ArrowClockwise className="w-4 h-4" />
+          <RiArrowGoForwardLine className="w-4 h-4" />
           Rotate 90°
         </MenuItem>
 
         <MenuSeparator />
 
         <MenuItem onClick={wrapWithClose(handleDelete)} destructive>
-          <Trash className="w-4 h-4" />
+          <RiDeleteBinLine className="w-4 h-4" />
           Delete
           <Shortcut>⌫</Shortcut>
         </MenuItem>
@@ -365,7 +365,7 @@ export function StudioContextMenuContent({ state, onClose }: StudioContextMenuCo
       }}
     >
       <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-        <Clipboard className="w-4 h-4" />
+        <RiClipboardLine className="w-4 h-4" />
         Paste
         <Shortcut>⌘ V</Shortcut>
       </MenuItem>

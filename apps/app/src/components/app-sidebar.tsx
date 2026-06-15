@@ -17,18 +17,18 @@ import { Button } from "./ui/button";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import {
-  Bell,
-  CaretUpDown,
-  DiscordLogo,
-  Folder,
-  Moon,
-  Play,
-  Plus,
-  SignOut,
-  Sun,
-  Trash,
-  Users,
-} from "@phosphor-icons/react";
+  RiNotification3Line,
+  RiArrowUpDownLine,
+  RiDiscordLine,
+  RiFolderLine,
+  RiMoonLine,
+  RiPlayLine,
+  RiAddLine,
+  RiLogoutBoxLine,
+  RiSunLine,
+  RiDeleteBinLine,
+  RiGroupLine,
+} from "@remixicon/react";
 import { useTheme } from "next-themes";
 import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -64,10 +64,10 @@ export function AppSidebar() {
   };
 
   const navItems = [
-    { id: "my-files", label: "My Files", icon: Folder, href: "/spaces" },
-    { id: "shared", label: "Shared with me", icon: Users, href: "/shared" },
-    { id: "apps", label: "Apps", icon: Play, href: "/apps" },
-    { id: "trash", label: "Trash", icon: Trash, href: "/trash" },
+    { id: "my-files", label: "My Files", icon: RiFolderLine, href: "/spaces" },
+    { id: "shared", label: "Shared with me", icon: RiGroupLine, href: "/shared" },
+    { id: "apps", label: "Apps", icon: RiPlayLine, href: "/apps" },
+    { id: "trash", label: "Trash", icon: RiDeleteBinLine, href: "/trash" },
   ];
   console.log({ session });
 
@@ -102,7 +102,7 @@ export function AppSidebar() {
                         {session?.user?.email}
                       </span>
                     </div>
-                    <CaretUpDown className="ml-auto" />
+                    <RiArrowUpDownLine className="ml-auto" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
@@ -125,15 +125,15 @@ export function AppSidebar() {
                     <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
                       <span>Theme</span>
                       {theme === "dark" ? (
-                        <Moon className="ml-auto size-4" />
+                        <RiMoonLine className="ml-auto size-4" />
                       ) : (
-                        <Sun className="ml-auto size-4" />
+                        <RiSunLine className="ml-auto size-4" />
                       )}
                     </DropdownMenuItem>
                   </DropdownMenuGroup>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleSignOut}>
-                    <SignOut className="mr-2 size-4" />
+                    <RiLogoutBoxLine className="mr-2 size-4" />
                     Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -148,7 +148,7 @@ export function AppSidebar() {
             }}
             className="w-full my-0.5"
           >
-            <Plus className="mr-2" />
+            <RiAddLine className="mr-2" />
             Create New File
           </Button>
         </SidebarHeader>
@@ -182,7 +182,7 @@ export function AppSidebar() {
               <Popover>
                 <PopoverTrigger asChild>
                   <SidebarMenuButton className="px-4" tooltip="Notifications">
-                    <Bell />
+                    <RiNotification3Line />
 
                     <span>Notifications</span>
                   </SidebarMenuButton>
@@ -203,7 +203,7 @@ export function AppSidebar() {
                   rel="noopener noreferrer"
                   onClick={handleMobileClose}
                 >
-                  <DiscordLogo />
+                  <RiDiscordLine />
                   <span>Discord</span>
                 </Link>
               </SidebarMenuButton>

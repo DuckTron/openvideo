@@ -2,15 +2,15 @@
 
 import React, { useState, useMemo } from "react";
 import {
-  CaretUpDown,
-  Check,
-  TextAlignCenter,
-  TextAlignLeft,
-  TextAlignRight,
-  TextStrikethrough,
-  TextT,
-  TextUnderline,
-} from "@phosphor-icons/react";
+  RiArrowUpDownLine,
+  RiCheckLine,
+  RiAlignCenter,
+  RiAlignLeft,
+  RiAlignRight,
+  RiStrikethrough,
+  RiText,
+  RiUnderline,
+} from "@remixicon/react";
 import { TextOverline } from "@/components/shared/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -68,7 +68,7 @@ const FontPicker = React.memo(
           }}
         >
           <span className="flex-1 text-left">{family.family}</span>
-          {currentFamily.family === family.family && <Check className="size-4 ml-2" />}
+          {currentFamily.family === family.family && <RiCheckLine className="size-4 ml-2" />}
         </button>
       ));
     }, [currentFamily.family, handleFontChange]);
@@ -83,7 +83,7 @@ const FontPicker = React.memo(
             className="w-full h-7 justify-between px-3 border-input text-xs relative"
           >
             <span className="truncate">{currentFamily.family}</span>
-            <CaretUpDown className="size-4 opacity-50 shrink-0 absolute right-2" />
+            <RiArrowUpDownLine className="size-4 opacity-50 shrink-0 absolute right-2" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 gap-0" align="start">
@@ -208,7 +208,7 @@ export function TextGroupProperty({
               className="pl-2 bg-transparent text-xs!"
             />
             <InputGroupAddon align="inline-end">
-              <TextT className="size-3.5" />
+              <RiText className="size-3.5" />
             </InputGroupAddon>
           </InputGroup>
         </div>
@@ -218,9 +218,9 @@ export function TextGroupProperty({
           <span className="text-xs text-muted-foreground">Align</span>
           <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
             {[
-              { icon: TextAlignLeft, value: "left" },
-              { icon: TextAlignCenter, value: "center" },
-              { icon: TextAlignRight, value: "right" },
+              { icon: RiAlignLeft, value: "left" },
+              { icon: RiAlignCenter, value: "center" },
+              { icon: RiAlignRight, value: "right" },
             ].map((item) => (
               <button
                 key={item.value}
@@ -243,9 +243,9 @@ export function TextGroupProperty({
           <span className="text-xs text-muted-foreground">Decoration</span>
           <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
             {[
-              { icon: TextUnderline, value: "underline", active: underline },
+              { icon: RiUnderline, value: "underline", active: underline },
               { icon: TextOverline, value: "overline", active: overline },
-              { icon: TextStrikethrough, value: "strikethrough", active: linethrough },
+              { icon: RiStrikethrough, value: "strikethrough", active: linethrough },
             ].map((item) => (
               <button
                 key={item.value}

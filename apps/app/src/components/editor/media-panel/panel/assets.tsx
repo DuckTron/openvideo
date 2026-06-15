@@ -6,23 +6,23 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useStudioStore } from "@/stores/studio-store";
 import { core } from "@/lib/project";
 import {
-  ArrowsCounterClockwise,
-  CircleNotch,
-  Clock,
-  DotsThree,
-  File,
-  Funnel,
-  Image,
-  Info,
-  Link,
-  MagnifyingGlass,
-  MusicNote,
-  Plus,
-  Sparkle,
-  Trash,
-  Upload,
-  VideoCamera,
-} from "@phosphor-icons/react";
+  RiRefreshLine,
+  RiLoader5Line,
+  RiTimeLine,
+  RiMoreLine,
+  RiFile3Line,
+  RiFilterLine,
+  RiImage2Line,
+  RiInformationLine,
+  RiLink,
+  RiSearchLine,
+  RiMusic2Line,
+  RiAddLine,
+  RiSparkling2Line,
+  RiDeleteBinLine,
+  RiUploadLine,
+  RiVideoLine,
+} from "@remixicon/react";
 import type { MediaType } from "@/types/media";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
 import { trpc } from "@/lib/trpc";
@@ -34,6 +34,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { useProjectStore } from "@/stores/project-store";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
 import { Badge } from "@/components/ui/badge";
@@ -167,7 +173,7 @@ function AssetCard({
       </div>
     ) : (
       <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
-        <MusicNote size={24} className="text-primary" />
+        <RiMusic2Line size={24} className="text-primary" />
       </div>
     );
 
@@ -194,16 +200,16 @@ function AssetCard({
         className="flex flex-col gap-1.5 group cursor-pointer"
         onClick={() => !isTemp && onSelect(asset)}
       >
-        <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary/30 border border-border/40 group-hover:border-border transition-all duration-200 flex items-center justify-center select-none shadow-sm group-hover:shadow-md group-hover:scale-[1.02]">
+        <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary/15 border border-border/30 group-hover:border-border/60 group-hover:bg-secondary/25 transition-all duration-300 flex items-center justify-center select-none shadow-[0_2px_8px_-3px_rgba(0,0,0,0.3)] group-hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.5)] group-hover:scale-[1.02]">
           {/* Media Type Icon & In Use Badge (Top Left) */}
           <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10">
-            <div className="p-1 rounded-md bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none">
-              {asset.type === "image" && <Image size={11} strokeWidth={2.5} />}
-              {asset.type === "video" && <VideoCamera size={11} strokeWidth={2.5} />}
-              {asset.type === "audio" && <MusicNote size={11} strokeWidth={2.5} />}
+            <div className="p-1 rounded-md bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none border border-border/10 shadow-sm">
+              {asset.type === "image" && <RiImage2Line size={11} strokeWidth={2.5} />}
+              {asset.type === "video" && <RiVideoLine size={11} strokeWidth={2.5} />}
+              {asset.type === "audio" && <RiMusic2Line size={11} strokeWidth={2.5} />}
             </div>
             {isInUse && (
-              <div className="px-1.5 py-0.5 rounded-md bg-primary text-[8px] text-primary-foreground font-semibold">
+              <div className="px-1.5 py-0.5 rounded-md bg-primary text-[8px] text-primary-foreground font-semibold shadow-sm">
                 In Use
               </div>
             )}
@@ -258,8 +264,10 @@ function AssetCard({
 
               {/* Uploading Status Overlay */}
               {isUploading ? (
-                <div className="flex flex-col items-center gap-1.5 w-full">
-                  <CircleNotch className="animate-spin text-primary size-5" />
+                <div className="flex flex-col items-center gap-2 w-full px-3">
+                  <div className="p-2 rounded-full bg-primary/10 text-primary">
+                    <RiLoader5Line className="animate-spin size-4" />
+                  </div>
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
                     {asset.uploadProgress !== undefined && asset.uploadProgress !== null ? (
                       asset.uploadProgress === 100 ? (
@@ -274,7 +282,7 @@ function AssetCard({
                   {asset.uploadProgress !== undefined &&
                     asset.uploadProgress !== null &&
                     asset.uploadProgress < 100 && (
-                      <div className="w-full h-1 bg-border rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-border/50 rounded-full overflow-hidden">
                         <div
                           className="h-full bg-primary transition-all duration-300"
                           style={{ width: `${asset.uploadProgress}%` }}
@@ -286,15 +294,15 @@ function AssetCard({
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-center gap-1.5">
                         <Badge
                           variant="destructive"
-                          className="text-[9px] h-4 px-1.5 gap-1 hover:bg-destructive"
+                          className="text-[9px] h-5 px-2 gap-1 hover:bg-destructive shadow-sm"
                         >
-                          <Info size={10} />
+                          <RiInformationLine size={10} />
                           Failed
                         </Badge>
-                        <span className="text-[9px] text-destructive max-w-[80px] truncate text-center">
+                        <span className="text-[9px] text-destructive/85 max-w-[80px] truncate text-center font-medium">
                           {asset.indexingError || "Error indexing"}
                         </span>
                       </div>
@@ -308,7 +316,9 @@ function AssetCard({
               ) : asset.indexingStatus === "completed" /* No badge for completed audio */ ? null : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <CircleNotch className="animate-spin text-amber-500 size-4" />
+                  <div className="p-2 rounded-full bg-amber-500/10 text-amber-500 animate-pulse">
+                    <RiLoader5Line className="animate-spin size-4" />
+                  </div>
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
                     Analyzing
                   </div>
@@ -319,17 +329,17 @@ function AssetCard({
 
           {/* Indexing status overlay (on preview) */}
           {showPreview && asset.indexingStatus !== "completed" && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] flex items-center justify-center z-20 px-3">
+            <div className="absolute inset-0 bg-black/70 backdrop-blur-[2px] flex items-center justify-center z-20 px-3 transition-opacity duration-300">
               {asset.indexingStatus === "failed" ? (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <div className="flex flex-col items-center gap-1">
+                      <div className="flex flex-col items-center gap-1.5">
                         <Badge
                           variant="destructive"
                           className="text-[9px] h-5 px-2 gap-1 hover:bg-destructive"
                         >
-                          <Info size={10} />
+                          <RiInformationLine size={10} />
                           Failed
                         </Badge>
                         <span className="text-[9px] text-destructive-foreground/85 max-w-[80px] truncate text-center font-medium">
@@ -346,7 +356,9 @@ function AssetCard({
               ) : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <CircleNotch className="animate-spin text-amber-500 size-4" />
+                  <div className="p-2 rounded-full bg-amber-500/20 text-amber-400">
+                    <RiLoader5Line className="animate-spin size-4" />
+                  </div>
                   <div className="text-[10px] font-semibold text-white/90 text-center">
                     Analyzing
                   </div>
@@ -358,7 +370,7 @@ function AssetCard({
           {/* Duration Badge & Info Button */}
           {(asset.type === "video" || asset.type === "audio") && asset.duration && (
             <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 z-10">
-              <span className="px-1.5 py-0.5 rounded-md bg-background/80 backdrop-blur-md text-[9px] text-foreground font-semibold">
+              <span className="px-1.5 py-0.5 rounded-md bg-background/80 backdrop-blur-md text-[9px] text-foreground font-semibold shadow-sm border border-border/10">
                 {formatDuration(asset.duration)}
               </span>
             </div>
@@ -375,7 +387,7 @@ function AssetCard({
                     className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/80 backdrop-blur-md opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-all duration-200 hover:bg-secondary hover:text-foreground hover:scale-110 z-20"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <DotsThree size={12} className="text-foreground" />
+                    <RiMoreLine size={12} className="text-foreground" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-32 py-2">
@@ -418,7 +430,7 @@ function AssetCard({
                   onAdd(asset);
                 }}
               >
-                <Plus size={10} strokeWidth={3} />
+                <RiAddLine size={10} strokeWidth={3} />
               </button>
             </>
           )}
@@ -456,7 +468,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // AI Semantic Search State
-  const [isSemanticMode, setIsSemanticMode] = useState(false);
+  const isSemanticMode = true;
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
   // Debounce semantic search query
@@ -707,7 +719,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
   if (!isLoaded || isAssetsStoreLoading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <CircleNotch className="animate-spin text-muted-foreground" size={24} />
+        <RiLoader5Line className="animate-spin text-muted-foreground" size={24} />
       </div>
     );
   }
@@ -726,116 +738,119 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
       {/* ── Uploads area (scrollable) ── */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
         {/* Search, Filter, Generate, Upload Row (always visible) */}
-        <div className="flex items-center gap-2 w-full px-4 py-3">
-          {/* Search Input */}
-          <div className="relative flex-1 min-w-0">
-            <MagnifyingGlass
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            />
-            <input
-              placeholder={isSemanticMode ? "Find quotes or topics..." : "Search assets..."}
-              className="w-full h-9 pl-9 pr-3 text-[13px] bg-secondary/50 border border-border/60 rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-border focus:bg-background transition-all"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+        <div className="flex flex-col gap-2 px-4 py-3 border-b border-border/40 bg-background/20 backdrop-blur-md">
+          {/* Row 1: Search & Filter */}
+          <div className="flex items-center gap-2 w-full">
+            {/* Search Input Container using shadcn components */}
+            <InputGroup>
+              <InputGroupAddon align="inline-start">
+                <RiSearchLine size={14} className="text-muted-foreground" />
+              </InputGroupAddon>
+              <InputGroupInput
+                placeholder="Find quotes or topics..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="text-[13px] placeholder:text-muted-foreground/70"
+              />
+            </InputGroup>
+
+            {/* Filter Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="h-9 w-9 p-0 shrink-0 bg-secondary/30 hover:bg-secondary border-border/40 text-foreground flex items-center justify-center rounded-lg transition-colors"
+                >
+                  <RiFilterLine size={15} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="border-border bg-popover text-popover-foreground rounded-xl w-36"
+              >
+                {[
+                  { value: "all", label: "All Assets" },
+                  { value: "image", label: "Images" },
+                  { value: "video", label: "Videos" },
+                  { value: "audio", label: "Audio" },
+                ].map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => setFilterType(option.value as any)}
+                    className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
+                  >
+                    <span>{option.label}</span>
+                    {filterType === option.value && (
+                      <div className="size-1.5 rounded-full bg-foreground" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
-          {/* AI Search Toggle */}
-          <Button
-            variant={isSemanticMode ? "default" : "outline"}
-            size="sm"
-            onClick={() => setIsSemanticMode(!isSemanticMode)}
-            className={`h-9 px-3 gap-1.5 text-xs rounded-lg transition-all shrink-0 ${
-              isSemanticMode
-                ? "bg-gradient-to-r from-primary to-primary/80 hover:opacity-90 text-primary-foreground shadow-md shadow-primary/10 border-none font-semibold"
-                : "bg-secondary/50 hover:bg-secondary border-border/60 text-muted-foreground hover:text-foreground font-medium"
-            }`}
-            title="AI Semantic Search (find specific quotes or topics)"
-          >
-            <Sparkle size={14} className={isSemanticMode ? "animate-pulse" : ""} />
-            <span>AI Search</span>
-          </Button>
-
-          {/* Filter Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                className="h-9 w-9 p-0 shrink-0 bg-secondary/50 hover:bg-secondary border-border/60 text-foreground flex items-center justify-center rounded-lg transition-colors"
-              >
-                <Funnel size={15} />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border-border bg-popover text-popover-foreground rounded-xl w-36"
+          {/* Row 2: Action Buttons */}
+          <div className="grid grid-cols-2 gap-2 w-full">
+            {/* Generate Button (Premium AI/Sparkling styling using theme variables) */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs font-semibold rounded-lg bg-primary/5 hover:bg-primary/15 border-primary/20 hover:border-primary/45 text-foreground transition-all duration-300 relative overflow-hidden group/btn"
+              onClick={() => setIsGeneratorModalOpen(true)}
             >
-              {[
-                { value: "all", label: "All Assets" },
-                { value: "image", label: "Images" },
-                { value: "video", label: "Videos" },
-                { value: "audio", label: "Audio" },
-              ].map((option) => (
-                <DropdownMenuItem
-                  key={option.value}
-                  onClick={() => setFilterType(option.value as any)}
-                  className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
-                >
-                  <span>{option.label}</span>
-                  {filterType === option.value && (
-                    <div className="size-1.5 rounded-full bg-foreground" />
-                  )}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <div className="absolute inset-0 bg-primary/2 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
+              <RiSparkling2Line
+                size={14}
+                className="text-primary group-hover/btn:scale-110 transition-transform duration-300"
+              />
+              <span>AI Generate</span>
+            </Button>
 
-          {/* Generate Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-            onClick={() => setIsGeneratorModalOpen(true)}
-          >
-            <Sparkle size={14} />
-            <span>Generate</span>
-          </Button>
-
-          {/* Upload Button */}
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-9 gap-1.5 px-3 text-xs border-border/60 bg-secondary/50 hover:bg-secondary text-foreground"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload size={14} />
-            <span>Upload</span>
-          </Button>
+            {/* Upload Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-1.5 text-xs font-medium rounded-lg border-border/40 bg-secondary/30 hover:bg-secondary text-foreground hover:border-border transition-all duration-200"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <RiUploadLine size={14} />
+              <span>Upload</span>
+            </Button>
+          </div>
         </div>
 
         {files.length === 0 ? (
           /* Empty state */
-          <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
-            <div className="mb-4 text-muted-foreground">
-              <Image size={24} strokeWidth={1.5} />
+          <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div
+              className="w-full max-w-[280px] p-6 rounded-2xl border border-dashed border-border/40 bg-secondary/5 hover:bg-secondary/10 hover:border-border/60 transition-all duration-300 flex flex-col items-center gap-4 group cursor-pointer"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <div className="size-12 rounded-xl bg-secondary/30 flex items-center justify-center text-muted-foreground group-hover:text-primary group-hover:bg-primary/10 transition-all duration-300 shadow-inner">
+                <RiUploadLine
+                  size={22}
+                  className="group-hover:scale-110 transition-transform duration-300 text-foreground/70 group-hover:text-primary"
+                />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-foreground mb-1">Upload Your Media</h3>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Drag and drop files here, or click to browse. Supports video, audio, and images.
+                </p>
+              </div>
             </div>
-            <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed max-w-[210px]">
-              Drag and drop your assets here, or use the buttons above to upload or generate.
-            </p>
           </div>
         ) : isSemanticMode && searchQuery.trim().length >= 3 ? (
           /* AI Semantic Search Results */
           <ScrollArea className="flex-1 px-4">
             {isSemanticFetching ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
-                <CircleNotch className="animate-spin text-primary" size={24} />
+                <RiLoader5Line className="animate-spin text-primary" size={24} />
                 <span className="text-xs">Searching with Gemini AI...</span>
               </div>
             ) : !semanticResults || semanticResults.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground text-center">
-                <Sparkle size={28} className="text-primary opacity-40 animate-pulse" />
+                <RiSparkling2Line size={28} className="text-primary opacity-40 animate-pulse" />
                 <span className="text-sm font-semibold text-foreground/80">
                   No AI matches found
                 </span>
@@ -902,7 +917,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                               />
                             )
                           ) : (
-                            <MusicNote size={20} className="text-primary" />
+                            <RiMusic2Line size={20} className="text-primary" />
                           )}
                         </div>
 
@@ -912,7 +927,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                           </h4>
                           {timestampStr && (
                             <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-0.5 font-mono">
-                              <Clock size={10} />
+                              <RiTimeLine size={10} />
                               <span>{timestampStr}</span>
                             </div>
                           )}
@@ -935,7 +950,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                             setSelectedAssetId(result.assetId);
                           }}
                         >
-                          <Info size={12} />
+                          <RiInformationLine size={12} />
                           Details
                         </Button>
 
@@ -952,7 +967,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                             });
                           }}
                         >
-                          <Plus size={11} strokeWidth={2.5} />
+                          <RiAddLine size={11} strokeWidth={2.5} />
                           Add Trimmed Segment
                         </Button>
                       </div>
@@ -972,7 +987,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
             )}
             {filteredAssets.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 gap-2 text-muted-foreground">
-                <Image size={28} className="opacity-40" />
+                <RiImage2Line size={28} className="opacity-40" />
                 <span className="text-xs">No matches found.</span>
               </div>
             ) : (
@@ -1027,7 +1042,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                 {selectedAsset.type === "audio" && (
                   <div className="flex flex-col items-center justify-center gap-4">
                     <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MusicNote size={28} className="text-primary" />
+                      <RiMusic2Line size={28} className="text-primary" />
                     </div>
                     <audio src={selectedAsset.src} controls className="w-48" />
                   </div>
@@ -1078,7 +1093,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                 <div className="flex flex-col gap-3 text-sm">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <File size={14} />
+                      <RiFile3Line size={14} />
                       File Size
                     </span>
                     <span className="font-medium font-mono">{formatBytes(selectedAsset.size)}</span>
@@ -1087,7 +1102,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   {selectedAsset.duration && (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground flex items-center gap-2">
-                        <Clock size={14} />
+                        <RiTimeLine size={14} />
                         Duration
                       </span>
                       <span className="font-medium font-mono">
@@ -1098,7 +1113,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
 
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground flex items-center gap-2">
-                      <Link size={14} />
+                      <RiLink size={14} />
                       Source
                     </span>
                     <a
@@ -1125,12 +1140,12 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                     <AlertTitle className="text-xs flex items-center gap-2">
                       {selectedAsset.indexingStatus === "failed" ? (
                         <>
-                          <Info size={12} />
+                          <RiInformationLine size={12} />
                           Indexing Failed
                         </>
                       ) : (
                         <>
-                          <CircleNotch size={12} className="animate-spin" />
+                          <RiLoader5Line size={12} className="animate-spin" />
                           Indexing
                         </>
                       )}
@@ -1174,7 +1189,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                       setSelectedAssetId(null);
                     }}
                   >
-                    <Plus data-icon="inline-start" />
+                    <RiAddLine data-icon="inline-start" />
                     Add to Timeline
                   </Button>
                   <div className="flex gap-2">
@@ -1192,7 +1207,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         selectedAsset.indexingStatus === "processing"
                       }
                     >
-                      <ArrowsCounterClockwise
+                      <RiRefreshLine
                         data-icon="inline-start"
                         className={
                           selectedAsset.indexingStatus === "processing" ? "animate-spin" : ""
@@ -1208,7 +1223,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         setSelectedAssetId(null);
                       }}
                     >
-                      <Trash data-icon="inline-start" />
+                      <RiDeleteBinLine data-icon="inline-start" />
                       Delete
                     </Button>
                   </div>

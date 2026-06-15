@@ -7,7 +7,14 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Brain, Image, Scissors, Sparkle, Users, VideoCamera } from "@phosphor-icons/react";
+import {
+  RiBrainLine,
+  RiImage2Line,
+  RiScissorsLine,
+  RiSparkling2Line,
+  RiGroupLine,
+  RiVideoLine,
+} from "@remixicon/react";
 import React from "react";
 import { toast } from "sonner";
 
@@ -152,14 +159,14 @@ export default function HomeView() {
               index={4}
               title="Product Image Ads"
               description="Generate dynamic, fast-pacing promo videos from your product image assets."
-              icon={Image}
+              icon={RiImage2Line}
               href="/script-to-video?mode=product-image-ad"
             />
             <ModeCard
               index={3}
               title="Product Video Ads"
               description="Generate high-converting promo videos from your product assets and descriptions."
-              icon={Scissors}
+              icon={RiScissorsLine}
               href="/script-to-video?mode=product-video-ad"
             />
 
@@ -167,7 +174,7 @@ export default function HomeView() {
               index={0}
               title="UGC Video Ads"
               description="Create authentic user-style ads with AI avatars interacting with your product."
-              icon={VideoCamera}
+              icon={RiVideoLine}
               href="/script-to-video?mode=ugc-video-ad"
             />
 
@@ -175,7 +182,7 @@ export default function HomeView() {
               index={2}
               title="Fake UGC Ads"
               description="High-converting AI-generated UGC style ads using lifestyle visuals and avatars."
-              icon={Sparkle}
+              icon={RiSparkling2Line}
               href="/script-to-video?mode=fake-ugc-video-ad"
             />
 
@@ -183,7 +190,7 @@ export default function HomeView() {
               index={1}
               title="Character-Driven Ad"
               description="Generate multi-character ads with native lip-sync and cinematic consistency."
-              icon={Users}
+              icon={RiGroupLine}
               href="/script-to-video?mode=character-driven-ad"
             />
 
@@ -234,7 +241,7 @@ export default function HomeView() {
               index={9}
               title="Clone Videos"
               description="Finds good videos and clones it with minimal edits."
-              icon={Sparkle}
+              icon={RiSparkling2Line}
               isCreating={isCreating === "viral-videos"}
               onClick={() => setIsViralDialogOpen(true)}
             />

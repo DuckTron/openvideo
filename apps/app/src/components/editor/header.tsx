@@ -6,8 +6,8 @@ import { usePanelStore } from "@/stores/panel-store";
 import { Button } from "@/components/ui/button";
 import { LogoIcons } from "@/components/shared/logos";
 import { ExportModal } from "./export-modal";
-import { Sidebar } from "@phosphor-icons/react";
-import { LockSimpleIcon, CaretDownIcon } from "@phosphor-icons/react";
+import { RiSideBarLine } from "@remixicon/react";
+import { RiLockLine, RiArrowDownSLine } from "@remixicon/react";
 
 export default function Header() {
   const { projectName } = useProjectStore();
@@ -32,18 +32,18 @@ export default function Header() {
         {/* Left Column: Logo & App Name */}
         <div className="flex items-center justify-start gap-1.5 select-none">
           <LogoIcons.scenify className="size-5 text-foreground" />
-          <span className="text-sm font-semibold lowercase">openvideo</span>
+          <span className="text-sm font-heading font-bold font-leading-5 lowercase">openvideo</span>
         </div>
 
         {/* Center Column: Project Space & Details */}
-        <div className="flex items-center justify-center gap-1.5 text-sm font-semibold">
-          <LockSimpleIcon size={14} className=" shrink-0" />
+        <div className="flex items-center justify-center gap-1.5 text-xs font-semibold">
+          <RiLockLine size={14} className=" shrink-0" />
           <span className=" font-medium">Personal</span>
           <span className="px-1">/</span>
           <span className="text-foreground truncate max-w-[200px]">
             {projectName || "Untitled video"}
           </span>
-          <CaretDownIcon size={12} className="shrink-0 ml-0.5" />
+          <RiArrowDownSLine size={12} className="shrink-0 ml-0.5" />
         </div>
 
         {/* Right Column: Aspect Ratio and Export Button */}
@@ -63,7 +63,7 @@ export default function Header() {
               size="icon"
               className="text-muted-foreground hover:text-foreground"
             >
-              <Sidebar className="size-4" />
+              <RiSideBarLine className="size-4" />
               <span className="sr-only">Open assistant</span>
             </Button>
           )}

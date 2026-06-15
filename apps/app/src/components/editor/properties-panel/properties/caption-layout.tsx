@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  TextAlignCenter,
-  TextAlignJustify,
-  TextAlignLeft,
-  TextAlignRight,
-} from "@phosphor-icons/react";
+import { RiAlignCenter, RiAlignJustify, RiAlignLeft, RiAlignRight } from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -38,9 +33,9 @@ export function CaptionLayoutProperty({
   onMaxLinesChange,
 }: CaptionLayoutPropertyProps) {
   const alignments = [
-    { value: "left" as const, icon: TextAlignLeft },
-    { value: "center" as const, icon: TextAlignCenter },
-    { value: "right" as const, icon: TextAlignRight },
+    { value: "left" as const, icon: RiAlignLeft },
+    { value: "center" as const, icon: RiAlignCenter },
+    { value: "right" as const, icon: RiAlignRight },
   ];
 
   return (

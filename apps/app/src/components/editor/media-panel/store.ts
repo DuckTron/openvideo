@@ -1,42 +1,41 @@
 import {
-  type IconProps,
-  ImageIcon,
-  TextTIcon,
-  ClosedCaptioningIcon,
-  ArrowsMergeIcon,
-  SparkleIcon,
-  CirclesThreeIcon,
-  FolderOpenIcon,
-} from "@phosphor-icons/react";
+  RiImage2Line,
+  RiText,
+  RiClosedCaptioningLine,
+  RiGitMergeLine,
+  RiSparkling2Line,
+  RiShapesLine,
+  RiFolderOpenLine,
+} from "@remixicon/react";
 import { create } from "zustand";
 
 export type Tab = "assets" | "text" | "captions" | "effects" | "transitions" | "elements";
 
 export const tabs: {
-  [key in Tab]: { icon: React.ComponentType<IconProps> | React.FC<any>; label: string };
+  [key in Tab]: { icon: React.ComponentType<any> | React.FC<any>; label: string };
 } = {
   assets: {
-    icon: FolderOpenIcon,
+    icon: RiFolderOpenLine,
     label: "Assets",
   },
   text: {
-    icon: TextTIcon,
+    icon: RiText,
     label: "Text",
   },
   captions: {
-    icon: ClosedCaptioningIcon,
+    icon: RiClosedCaptioningLine,
     label: "Captions",
   },
   transitions: {
-    icon: ArrowsMergeIcon,
+    icon: RiGitMergeLine,
     label: "Transitions",
   },
   effects: {
-    icon: SparkleIcon,
+    icon: RiSparkling2Line,
     label: "Effects",
   },
   elements: {
-    icon: CirclesThreeIcon,
+    icon: RiShapesLine,
     label: "Elements",
   },
 };

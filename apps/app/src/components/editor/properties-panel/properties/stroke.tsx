@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowsDownUp } from "@phosphor-icons/react";
+import { RiArrowUpDownLine } from "@remixicon/react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   ColorPicker,
@@ -98,7 +98,7 @@ export function StrokeProperty({
             <span className="text-xs text-muted-foreground">Width</span>
             <InputGroup className="w-[160px]">
               <InputGroupAddon align="inline-start">
-                <ArrowsDownUp className="size-3.5" />
+                <RiArrowUpDownLine className="size-3.5" />
               </InputGroupAddon>
               <NumberInput
                 value={width || 0}

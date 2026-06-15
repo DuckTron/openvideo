@@ -12,7 +12,14 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Clipboard, Copy, DotsThree, Lock, LockOpen, Trash } from "@phosphor-icons/react";
+import {
+  RiClipboardLine,
+  RiFileCopyLine,
+  RiMoreLine,
+  RiLockLine,
+  RiLockUnlockLine,
+  RiDeleteBinLine,
+} from "@remixicon/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { core, projectStore } from "@/lib/project";
@@ -119,7 +126,7 @@ export function StudioContextMenu() {
                 "w-9 h-9 rounded-full transition-all hover:bg-accent/50 active:scale-90",
               )}
             >
-              <DotsThree className="w-4 h-4" />
+              <RiMoreLine className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
@@ -133,19 +140,19 @@ export function StudioContextMenu() {
           {!isLocked && (
             <>
               <DropdownMenuItem onClick={handleCopy} disabled={!selectedClip}>
-                <Copy />
+                <RiFileCopyLine />
                 Copy
                 <DropdownMenuShortcut>⌘ C</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handlePaste} disabled={!hasClipboard}>
-                <Clipboard />
+                <RiClipboardLine />
                 Paste
                 <DropdownMenuShortcut>⌘ V</DropdownMenuShortcut>
               </DropdownMenuItem>
 
               <DropdownMenuItem onClick={handleDuplicate} disabled={!selectedClip}>
-                <Copy />
+                <RiFileCopyLine />
                 Duplicate
                 <DropdownMenuShortcut>⌘ D</DropdownMenuShortcut>
               </DropdownMenuItem>
@@ -153,14 +160,14 @@ export function StudioContextMenu() {
           )}
 
           <DropdownMenuItem onClick={handleToggleLock} disabled={!selectedClip}>
-            {isLocked ? <LockOpen /> : <Lock />}
+            {isLocked ? <RiLockUnlockLine /> : <RiLockLine />}
             {isLocked ? "Unlock" : "Lock"}
             <DropdownMenuShortcut>⌘ L</DropdownMenuShortcut>
           </DropdownMenuItem>
 
           {!isLocked && (
             <DropdownMenuItem onClick={handleDelete} disabled={!selectedClip}>
-              <Trash />
+              <RiDeleteBinLine />
               Delete
               <DropdownMenuShortcut>⌫</DropdownMenuShortcut>
             </DropdownMenuItem>

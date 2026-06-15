@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { MusicNote, Pause, Play } from "@phosphor-icons/react";
+import { RiMusic2Line, RiPauseLine, RiPlayLine } from "@remixicon/react";
 import { useRef, useState, useEffect } from "react";
 import Draggable from "@/components/shared/draggable";
 
@@ -55,7 +55,7 @@ export const AudioItem = ({
       }}
       renderCustomPreview={
         <div className="px-3 py-2 bg-black rounded border border-primary shadow-xl flex items-center gap-2 pointer-events-none">
-          <MusicNote className="size-4" />
+          <RiMusic2Line className="size-4" />
           <span className="text-xs font-medium truncate max-w-[150px]">{item.text}</span>
         </div>
       }
@@ -76,9 +76,9 @@ export const AudioItem = ({
           onClick={togglePlay}
         >
           {isPlaying ? (
-            <Pause className="size-4 fill-current" />
+            <RiPauseLine className="size-4 fill-current" />
           ) : (
-            <Play className="size-4 fill-current ml-0.5" />
+            <RiPlayLine className="size-4 fill-current ml-0.5" />
           )}
         </Button>
 

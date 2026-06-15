@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
-import { Diamond, Pencil, Plus, Trash } from "@phosphor-icons/react";
+import { RiDiamondLine, RiPencilLine, RiAddLine, RiDeleteBinLine } from "@remixicon/react";
 import { SectionHeader } from "./section-header";
 import { Badge } from "@/components/ui/badge";
 
@@ -49,7 +49,7 @@ export function AnimationsProperty({
             className="w-full gap-1.5 text-xs h-7 hover:bg-secondary/60"
             onClick={onAdd}
           >
-            <Plus className="size-3.5" />
+            <RiAddLine className="size-3.5" />
             Add Animation
           </Button>
           <div className="flex flex-col gap-1.5">
@@ -66,7 +66,7 @@ export function AnimationsProperty({
                   className="flex items-center gap-2 p-2 bg-secondary/20 hover:bg-secondary/30 rounded-md group border border-transparent hover:border-secondary/50 transition-colors"
                 >
                   <div className="flex items-center justify-center size-7 rounded bg-primary/10 text-primary shrink-0">
-                    <Diamond className="size-3.5" />
+                    <RiDiamondLine className="size-3.5" />
                   </div>
                   <div className="flex flex-col flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -84,7 +84,7 @@ export function AnimationsProperty({
                       className="size-6 hover:bg-secondary"
                       onClick={() => onEdit(anim.id)}
                     >
-                      <Pencil className="size-3" />
+                      <RiPencilLine className="size-3" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -92,7 +92,7 @@ export function AnimationsProperty({
                       className="size-6 hover:bg-secondary text-muted-foreground hover:text-red-400"
                       onClick={() => onDelete(anim.id)}
                     >
-                      <Trash className="size-3" />
+                      <RiDeleteBinLine className="size-3" />
                     </Button>
                   </div>
                 </div>

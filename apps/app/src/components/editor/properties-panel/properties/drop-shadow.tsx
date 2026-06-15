@@ -1,6 +1,6 @@
 "use client";
 
-import { Drop, Ruler } from "@phosphor-icons/react";
+import { RiDropLine, RiRulerLine } from "@remixicon/react";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
   ColorPicker,
@@ -57,7 +57,7 @@ export function DropShadowProperty({
           <div className="grid grid-cols-2 gap-2">
             <InputGroup className="h-7">
               <InputGroupAddon align="inline-start">
-                <Ruler className="size-3.5" />
+                <RiRulerLine className="size-3.5" />
               </InputGroupAddon>
               <NumberInput value={distance || 0} onChange={onDistanceChange} />
             </InputGroup>
@@ -73,7 +73,7 @@ export function DropShadowProperty({
           <div className="flex gap-2">
             <InputGroup className="flex-1 h-7">
               <InputGroupAddon align="inline-start">
-                <Drop className="size-3.5" />
+                <RiDropLine className="size-3.5" />
               </InputGroupAddon>
               <NumberInput value={blur || 0} onChange={onBlurChange} />
             </InputGroup>

@@ -4,16 +4,16 @@ import * as React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import {
-  CaretRight,
-  Clipboard,
-  Copy,
-  Lock,
-  LockOpen,
-  Scissors,
-  SpeakerHigh,
-  SpeakerSlash,
-  Trash,
-} from "@phosphor-icons/react";
+  RiArrowRightSLine,
+  RiClipboardLine,
+  RiFileCopyLine,
+  RiLockLine,
+  RiLockUnlockLine,
+  RiScissorsLine,
+  RiVolumeUpLine,
+  RiVolumeMuteLine,
+  RiDeleteBinLine,
+} from "@remixicon/react";
 import { core, projectStore } from "@/lib/project";
 import { nanoid } from "nanoid";
 import type { AnyClip } from "@openvideo/core";
@@ -289,7 +289,7 @@ function MenuSub({ trigger, children }: { trigger: React.ReactNode; children: Re
         className="group relative flex w-full cursor-default items-center gap-2 rounded-md px-2 py-1.5 text-sm outline-none select-none hover:bg-accent hover:text-accent-foreground"
       >
         {trigger}
-        <CaretRight className="ml-auto w-4 h-4" />
+        <RiArrowRightSLine className="ml-auto w-4 h-4" />
       </button>
       {open && (
         <div
@@ -406,19 +406,19 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
         {!isLocked && (
           <>
             <MenuItem onClick={wrapWithClose(handleCopy)}>
-              <Copy className="w-4 h-4" />
+              <RiFileCopyLine className="w-4 h-4" />
               Copy
               <Shortcut>⌘ C</Shortcut>
             </MenuItem>
 
             <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-              <Clipboard className="w-4 h-4" />
+              <RiClipboardLine className="w-4 h-4" />
               Paste
               <Shortcut>⌘ V</Shortcut>
             </MenuItem>
 
             <MenuItem onClick={wrapWithClose(handleDuplicate)}>
-              <Copy className="w-4 h-4" />
+              <RiFileCopyLine className="w-4 h-4" />
               Duplicate
               <Shortcut>⌘ D</Shortcut>
             </MenuItem>
@@ -429,7 +429,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
 
         {!isLocked && (
           <MenuItem onClick={wrapWithClose(handleSplit)}>
-            <Scissors className="w-4 h-4" />
+            <RiScissorsLine className="w-4 h-4" />
             Split at Playhead
             <Shortcut>⌘ K</Shortcut>
           </MenuItem>
@@ -438,13 +438,17 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
         <MenuSeparator />
 
         <MenuItem onClick={wrapWithClose(handleToggleMute)}>
-          {isMuted ? <SpeakerHigh className="w-4 h-4" /> : <SpeakerSlash className="w-4 h-4" />}
+          {isMuted ? (
+            <RiVolumeUpLine className="w-4 h-4" />
+          ) : (
+            <RiVolumeMuteLine className="w-4 h-4" />
+          )}
           {isMuted ? "Unmute" : "Mute"}
           <Shortcut>⌘ ⇧ M</Shortcut>
         </MenuItem>
 
         <MenuItem onClick={wrapWithClose(handleToggleLock)}>
-          {isLocked ? <LockOpen className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+          {isLocked ? <RiLockUnlockLine className="w-4 h-4" /> : <RiLockLine className="w-4 h-4" />}
           {isLocked ? "Unlock" : "Lock"}
           <Shortcut>⌘ L</Shortcut>
         </MenuItem>
@@ -453,7 +457,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
           <>
             <MenuSeparator />
             <MenuItem onClick={wrapWithClose(handleDelete)} destructive>
-              <Trash className="w-4 h-4" />
+              <RiDeleteBinLine className="w-4 h-4" />
               Delete
               <Shortcut>⌫</Shortcut>
             </MenuItem>
@@ -475,7 +479,7 @@ export function TimelineContextMenuContent({ state, onClose }: TimelineContextMe
       }}
     >
       <MenuItem onClick={wrapWithClose(handlePaste)} disabled={!hasClipboard}>
-        <Clipboard className="w-4 h-4" />
+        <RiClipboardLine className="w-4 h-4" />
         Paste at Playhead
         <Shortcut>⌘ V</Shortcut>
       </MenuItem>

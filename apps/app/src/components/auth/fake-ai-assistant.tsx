@@ -3,14 +3,14 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ArrowUp,
-  ArrowsCounterClockwise,
-  PaperPlaneRight,
-  Paperclip,
-  Plus,
-  Sparkle,
-  X,
-} from "@phosphor-icons/react";
+  RiArrowUpLine,
+  RiRefreshLine,
+  RiSendPlaneLine,
+  RiAttachmentLine,
+  RiAddLine,
+  RiSparkling2Line,
+  RiCloseLine,
+} from "@remixicon/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -83,7 +83,7 @@ export function FakeAIAssistant() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <ArrowsCounterClockwise className="w-3.5 h-3.5" />
+            <RiRefreshLine className="w-3.5 h-3.5" />
             <span className="sr-only">Refresh</span>
           </Button>
           <Button
@@ -91,7 +91,7 @@ export function FakeAIAssistant() {
             size="icon"
             className="h-7 w-7 text-muted-foreground hover:text-foreground"
           >
-            <Plus className="w-3.5 h-3.5" />
+            <RiAddLine className="w-3.5 h-3.5" />
             <span className="sr-only">New chat</span>
           </Button>
         </div>
@@ -152,14 +152,14 @@ export function FakeAIAssistant() {
         <div className="flex items-center gap-2 px-3 py-3 bg-muted/50 rounded-sm border border-border/50">
           <span className="text-sm text-muted-foreground flex-1">Ask me anything...</span>
           <Button variant="ghost" className="h-7 w-7 p-0 rounded-lg text-foreground">
-            <Paperclip className="w-4 h-4" />
+            <RiAttachmentLine className="w-4 h-4" />
           </Button>
           <Button
             variant="default"
             className="rounded-full ml-auto bg-foreground hover:bg-foreground/90 text-background h-7 w-7 p-0"
             size="icon"
           >
-            <ArrowUp className="w-4 h-4" />
+            <RiArrowUpLine className="w-4 h-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>

@@ -1,10 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { Warning, User, Image, Crop, Check, List, CircleNotch } from "@phosphor-icons/react";
-import type { Icon as PhosphorIcon } from "@phosphor-icons/react";
+import {
+  RiAlertLine,
+  RiUserLine,
+  RiImage2Line,
+  RiCropLine,
+  RiCheckLine,
+  RiListCheck,
+  RiLoader5Line,
+} from "@remixicon/react";
 
-export type Icon = PhosphorIcon;
+export type Icon = React.ComponentType<React.SVGProps<SVGSVGElement>>;
 
 export const TextOverline = React.forwardRef<SVGSVGElement, React.ComponentPropsWithoutRef<"svg">>(
   (props, ref) => (
@@ -18,7 +25,7 @@ TextOverline.displayName = "TextOverline";
 type SVGIconProps = React.SVGProps<SVGSVGElement>;
 
 export const Icons = {
-  spinner: CircleNotch,
+  spinner: RiLoader5Line,
   gitHub: ({ ...props }: SVGIconProps) => (
     <svg
       aria-hidden="true"
@@ -88,11 +95,11 @@ export const Icons = {
       />
     </svg>
   ),
-  user: User,
-  video: Image,
-  warning: Warning,
-  crop: Crop,
-  check: Check,
+  user: RiUserLine,
+  video: RiImage2Line,
+  warning: RiAlertLine,
+  crop: RiCropLine,
+  check: RiCheckLine,
   discord: ({ ...props }: SVGIconProps) => (
     <svg
       viewBox="0 0 256 199"
@@ -123,7 +130,7 @@ export const Icons = {
       <path d="M9 18c-4.51 2-5-2-7-2" />
     </svg>
   ),
-  menu: List,
+  menu: RiListCheck,
   sparkle: ({ ...props }: SVGIconProps) => (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
       <path

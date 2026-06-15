@@ -7,20 +7,20 @@ import { useGeneratedStore } from "@/stores/generated-store";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
-  ArrowUp,
-  CaretDown,
-  Clock,
-  DeviceMobile,
-  Gear,
-  Image,
-  Microphone,
-  MusicNote,
-  Sparkle,
-  Upload,
-  User,
-  VideoCamera,
-  Waveform,
-} from "@phosphor-icons/react";
+  RiArrowUpLine,
+  RiArrowDownSLine,
+  RiTimeLine,
+  RiCellphoneLine,
+  RiSettings3Line,
+  RiImage2Line,
+  RiMicLine,
+  RiMusic2Line,
+  RiSparkling2Line,
+  RiUploadLine,
+  RiUserLine,
+  RiVideoLine,
+  RiPulseLine,
+} from "@remixicon/react";
 
 export type GenerateAssetType = "video" | "image" | "lip-sync" | "voiceover" | "music" | "sfx";
 
@@ -35,37 +35,37 @@ const ASSET_TYPES: AssetTypeOption[] = [
   {
     id: "video",
     label: "Video",
-    icon: VideoCamera,
+    icon: RiVideoLine,
     placeholder: "Describe your video idea...",
   },
   {
     id: "image",
     label: "Image",
-    icon: Image,
+    icon: RiImage2Line,
     placeholder: "Describe the image you want...",
   },
   {
     id: "lip-sync",
     label: "Lip Sync",
-    icon: User,
+    icon: RiUserLine,
     placeholder: "Character and dialogue for lip sync...",
   },
   {
     id: "voiceover",
     label: "Voiceover",
-    icon: Microphone,
+    icon: RiMicLine,
     placeholder: "Text to convert to voiceover...",
   },
   {
     id: "music",
     label: "Music",
-    icon: MusicNote,
+    icon: RiMusic2Line,
     placeholder: "Music mood or style...",
   },
   {
     id: "sfx",
     label: "SFX",
-    icon: Waveform,
+    icon: RiPulseLine,
     placeholder: "Describe the sound effect...",
   },
 ];
@@ -187,7 +187,7 @@ export function AssetGeneratorExpandable({
             className="group flex flex-1 items-center gap-3 text-left"
           >
             <div className="relative">
-              <Sparkle className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110" />
+              <RiSparkling2Line className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110" />
               <div className="absolute inset-0 size-4 animate-pulse rounded-full bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
@@ -200,7 +200,7 @@ export function AssetGeneratorExpandable({
             className="h-7 gap-1.5 px-2 text-xs border-border/60 bg-background hover:bg-primary/10 hover:text-primary hover:border-primary/30"
             onClick={onUploadClick}
           >
-            <Upload className="size-3.5" />
+            <RiUploadLine className="size-3.5" />
             <span>Upload</span>
           </Button>
         </div>
@@ -245,7 +245,7 @@ export function AssetGeneratorExpandable({
             <PopoverTrigger asChild>
               <Button variant="secondary" size="sm" className="h-8 gap-1 px-2 text-xs">
                 <CurrentIcon className="size-3.5" />
-                <CaretDown className="size-3" />
+                <RiArrowDownSLine className="size-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -283,8 +283,8 @@ export function AssetGeneratorExpandable({
           <Popover open={modelOpen} onOpenChange={setModelOpen}>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                <Gear className="size-3.5" />
-                <CaretDown className="size-3" />
+                <RiSettings3Line className="size-3.5" />
+                <RiArrowDownSLine className="size-3" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
@@ -317,8 +317,8 @@ export function AssetGeneratorExpandable({
             <Popover open={ratioOpen} onOpenChange={setRatioOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                  <DeviceMobile className="size-3.5" />
-                  <CaretDown className="size-3" />
+                  <RiCellphoneLine className="size-3.5" />
+                  <RiArrowDownSLine className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -351,8 +351,8 @@ export function AssetGeneratorExpandable({
             <Popover open={durationOpen} onOpenChange={setDurationOpen}>
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
-                  <Clock className="size-3.5" />
-                  <CaretDown className="size-3" />
+                  <RiTimeLine className="size-3.5" />
+                  <RiArrowDownSLine className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -386,7 +386,7 @@ export function AssetGeneratorExpandable({
               <PopoverTrigger asChild>
                 <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs">
                   <span className="font-medium text-foreground">{quantity}</span>
-                  <CaretDown className="size-3" />
+                  <RiArrowDownSLine className="size-3" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -425,7 +425,7 @@ export function AssetGeneratorExpandable({
           >
             {/* {loading ? <IconLoader2 className="size-4 animate-spin" /> : "Generate"} */}
 
-            <ArrowUp className="w-4 h-4" />
+            <RiArrowUpLine className="w-4 h-4" />
             <span className="sr-only">Send</span>
           </Button>
         </div>
