@@ -822,7 +822,6 @@ export class Text extends BaseClip<ITextEvents> {
    */
   private async refreshText(): Promise<void> {
     const style = this.textStyle;
-    const styleBase = this.textStyleBase;
 
     let textToRender = this.text;
     const textCase = this.originalOpts.textCase;
@@ -965,15 +964,40 @@ export class Text extends BaseClip<ITextEvents> {
     const fontSize = style.fontSize ?? 40;
     const lineHeight = fontSize * lineHeightMultiplier;
 
-    // Heuristics for space width
-    const metrics = CanvasTextMetrics.measureText(" ", styleBase as TextStyle);
+    // Measure space width using the clip's ACTUAL font family.
+    // styleBase.fontFamily is the Pixi bitmap cache key (e.g.
+    // "installed_font_Roboto_40_normal_normal") which the browser Canvas 2D API
+    // does not recognise — it falls back to Arial/system-ui.
+    // Instead we use the original font family so the measurement reflects
+    // the real font's advance width for a space character.
+    const _spaceFs = this.originalOpts.fontSize || 40;
+    const _spaceFamily = this.originalOpts.fontFamily || "Arial";
+    const _spaceWeight = String(this.originalOpts.fontWeight || "normal");
+    const _spaceStyle = this.originalOpts.fontStyle || "normal";
+    const _fontSpec = `${_spaceStyle} ${_spaceWeight} ${_spaceFs}px "${_spaceFamily}"`;
+
+    if (typeof document !== "undefined") {
+      try {
+        await document.fonts.load(_fontSpec);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+
+    const _spaceMeasureStyle = new TextStyle({
+      fontFamily: _spaceFamily,
+      fontSize: _spaceFs,
+      fontWeight: _spaceWeight as TextStyle["fontWeight"],
+      fontStyle: _spaceStyle as TextStyle["fontStyle"],
+    });
+    const metrics = CanvasTextMetrics.measureText(" ", _spaceMeasureStyle);
 
     const tempSpace = new SplitBitmapText({
       text: " ",
       style: this.textStyleBase,
     });
     const spaceWidth = Math.ceil(
-      tempSpace.getLocalBounds().width || tempSpace.width || metrics.width,
+      tempSpace.getLocalBounds().width || tempSpace.width || metrics.width || _spaceFs * 0.25,
     );
     tempSpace.destroy();
 

@@ -1013,30 +1013,51 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       });
       this.wordTexts = [];
 
-      // Measure space width using textStyleBase — same approach as TextClip.
-      // textStyleBase.fontFamily is the installed bitmap font name, which the
-      // browser 2D canvas does not recognise, so it falls back to the system
-      // default font (Arial/sans-serif). Using the same style as TextClip
-      // guarantees both clips produce identical inter-word gaps for the same
-      // font settings.
-      const metrics = CanvasTextMetrics.measureText(" ", this.textStyleBase);
+      // Measure space width using the clip's ACTUAL font family.
+      // this.textStyleBase.fontFamily is the installed bitmap font cache key
+      // (e.g. "installed_font_Roboto_30_normal_normal") which the browser's
+      // Canvas 2D API does not recognise — it falls back to Arial/system-ui.
+      // Instead we use the original font family so the measurement reflects
+      // the real font's advance width for a space character.
+      const _spaceFs = this.opts.fontSize || 30;
+      const _spaceFamily = this.opts.fontFamily || "Arial";
+      const _spaceWeight = String(this.opts.fontWeight || "normal");
+      const _spaceStyle = this.opts.fontStyle || "normal";
+      const _fontSpec = `${_spaceStyle} ${_spaceWeight} ${_spaceFs}px "${_spaceFamily}"`;
 
+      // Trigger font loading so the browser has it in the CSS font set.
+      // We're already inside refreshCaptions (async) and document.fonts.ready
+      // was awaited above, but custom fontUrl fonts need an explicit load call.
+      if (typeof document !== "undefined") {
+        try {
+          await document.fonts.load(_fontSpec);
+        } catch (_) {
+          /* ignore */
+        }
+      }
+
+      // Build a plain TextStyle with the real CSS font name so CanvasTextMetrics
+      // can measure with the correct font metrics.
+      const _spaceMeasureStyle = new TextStyle({
+        fontFamily: _spaceFamily,
+        fontSize: _spaceFs,
+        fontWeight: _spaceWeight as TextStyle["fontWeight"],
+        fontStyle: _spaceStyle as TextStyle["fontStyle"],
+      });
+      const metrics = CanvasTextMetrics.measureText(" ", _spaceMeasureStyle);
+
+      // SplitBitmapText space glyphs have zero width — fall through to metrics.
       const tempSpace = new SplitBitmapText({
         text: " ",
         style: this.textStyleBase,
       });
       const spaceWidth = Math.ceil(
-        tempSpace.getLocalBounds().width ||
-          tempSpace.width ||
-          metrics.width ||
-          (this.opts.fontSize || 30) * 0.25,
+        tempSpace.getLocalBounds().width || tempSpace.width || metrics.width || _spaceFs * 0.25,
       );
       tempSpace.destroy();
 
-      // NOTE: letterSpacing is applied per-character *inside* SplitBitmapText
-      // (set on each wordText below). We do NOT add it to the inter-word gap
-      // because TextClip also does not — using bare spaceWidth keeps both
-      // clips visually identical.
+      // letterSpacing is applied per-character inside SplitBitmapText.
+      // We do NOT add it to the inter-word gap (same convention as TextClip).
       const flattenedWords: CaptionSplitBitmapText[] = [];
 
       this.opts.words.forEach((segment, segmentIndex) => {
