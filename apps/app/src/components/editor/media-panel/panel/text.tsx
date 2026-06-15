@@ -110,12 +110,14 @@ export default function PanelText() {
         name: "Text",
         text: "Add Text",
         style: {
-          fontSize: 120,
-          fontFamily: DEFAULT_FONT.postScriptName,
+          fontSize: 80,
+          fontFamily: "Bangers-Regular",
+          fontWeight: "700",
+          fontStyle: "normal",
           align: "center",
           wordWrap: true,
           wordWrapWidth: 600,
-          fontUrl: DEFAULT_FONT.url,
+          fontUrl: "https://fonts.gstatic.com/s/poppins/v15/pxiByp8kv8JHgFVrLCz7V1tvFP-KUEg.ttf",
         },
         // style: {
         //   fontSize: 80,
@@ -138,7 +140,7 @@ export default function PanelText() {
         },
         left: 240,
         top: 898.0000000000003,
-        width: 600,
+        width: 590,
         // height: 124,
       });
     } catch (error) {

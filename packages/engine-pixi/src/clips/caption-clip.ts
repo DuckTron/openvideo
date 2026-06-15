@@ -23,7 +23,10 @@ import {
   CanvasTextMetrics,
   BitmapFont,
   Cache,
+  Color,
 } from "pixi.js";
+import { OutlineFilter } from "../filters/outline-filter";
+import { DropShadowFilter } from "pixi-filters";
 import { isTransparent, parseColor, resolveColor } from "../utils/color";
 import type { BaseSpriteEvents } from "../sprite/base-sprite";
 
@@ -710,6 +713,8 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
   private wordTexts: CaptionSplitBitmapText[] = [];
   private textStyle!: TextStyle;
   private textStyleBase!: TextStyle;
+  private outlineFilter: OutlineFilter | null = null;
+  private dropShadowFilter: DropShadowFilter | null = null;
   private _refreshing = false;
   private _needsRefresh = false;
   private externalRenderer: Application["renderer"] | null = null;
@@ -801,55 +806,10 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       styleOptions.fill = 0xffffff;
     }
 
-    const isTransparent = (color?: string | number | null) => color === "transparent";
-
-    // Handle stroke - can be color or advanced stroke object (same as TextClip)
-    if (opts.stroke && typeof opts.stroke === "object" && "color" in opts.stroke) {
-      if (!isTransparent(opts.stroke.color)) {
-        const strokeColor = parseColor(opts.stroke.color);
-        if (strokeColor !== undefined) {
-          styleOptions.stroke = {
-            color: strokeColor,
-            width: opts.stroke.width,
-          };
-          if (opts.stroke.join) {
-            styleOptions.stroke.join = opts.stroke.join as LineJoin;
-          }
-        }
-      }
-    } else {
-      const strokeVal = (opts.stroke as string | number | null) ?? undefined;
-      if (!isTransparent(strokeVal)) {
-        const strokeColor = parseColor(strokeVal);
-        if (strokeColor !== undefined) {
-          styleOptions.stroke = {
-            color: strokeColor,
-            width: this.opts.strokeWidth ?? 0,
-          };
-        } else if (this.opts.strokeWidth && this.opts.strokeWidth > 0) {
-          styleOptions.stroke = {
-            color: 0x000000,
-            width: this.opts.strokeWidth,
-          };
-        }
-      }
-    }
-
-    // Only add dropShadow if provided (same as TextClip)
-    if (opts.shadow) {
-      const shadowColor = parseColor(opts.shadow.color);
-      if (shadowColor !== undefined) {
-        const dx = opts.shadow.offsetX ?? 0;
-        const dy = opts.shadow.offsetY ?? 0;
-        styleOptions.dropShadow = {
-          color: shadowColor,
-          alpha: opts.shadow.alpha ?? 0.5,
-          blur: opts.shadow.blur ?? 4,
-          angle: Math.atan2(dy, dx),
-          distance: Math.sqrt(dx * dx + dy * dy),
-        };
-      }
-    }
+    // NOTE: stroke and shadow are intentionally NOT added to TextStyle.
+    // They are applied as OutlineFilter / DropShadowFilter in refreshCaptions()
+    // so they never inflate bitmap character bounding boxes (which would break
+    // letter-spacing and word-width measurements).
 
     const style = new TextStyle(styleOptions as Partial<TextStyleOptions>);
     this.textStyle = style;
@@ -999,65 +959,10 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       styleOptions.fill = 0xffffff;
     }
 
-    // Handle stroke
-    const hasStroke =
-      opts.stroke !== undefined ||
-      opts.strokeWidth !== undefined ||
-      this.originalOpts?.stroke ||
-      this.originalOpts?.strokeWidth;
-    if (hasStroke) {
-      if (
-        this.originalOpts?.stroke &&
-        typeof this.originalOpts.stroke === "object" &&
-        "color" in this.originalOpts.stroke
-      ) {
-        const strokeColor = parseColor(this.originalOpts.stroke.color);
-        if (strokeColor !== undefined) {
-          styleOptions.stroke = {
-            color: strokeColor,
-            width: this.originalOpts.stroke.width,
-          };
-          if (this.originalOpts.stroke.join) {
-            styleOptions.stroke.join = this.originalOpts.stroke.join;
-          }
-        }
-      } else if (this.originalOpts?.stroke) {
-        const stroke = this.originalOpts.stroke;
-        const strokeColor = parseColor(
-          typeof stroke === "object" && stroke !== null && "color" in stroke
-            ? (stroke as { color: string | number }).color
-            : (stroke as string | number),
-        );
-        const strokeWidth =
-          opts.strokeWidth !== undefined
-            ? opts.strokeWidth
-            : this.originalOpts?.strokeWidth !== undefined
-              ? this.originalOpts.strokeWidth
-              : 0;
-        if (strokeColor !== undefined) {
-          styleOptions.stroke = { color: strokeColor, width: strokeWidth };
-        } else if (strokeWidth > 0) {
-          styleOptions.stroke = { color: 0x000000, width: strokeWidth };
-        }
-      }
-    }
-
-    // Handle shadow
-    const shadow = opts.shadow !== undefined ? opts.shadow : this.originalOpts?.shadow;
-    if (shadow) {
-      const shadowColor = parseColor(shadow.color);
-      if (shadowColor !== undefined) {
-        const dx = shadow.offsetX ?? 0;
-        const dy = shadow.offsetY ?? 0;
-        styleOptions.dropShadow = {
-          color: shadowColor,
-          alpha: shadow.alpha !== undefined ? shadow.alpha : 0.5,
-          blur: shadow.blur !== undefined ? shadow.blur : 4,
-          angle: Math.atan2(dy, dx),
-          distance: Math.sqrt(dx * dx + dy * dy),
-        };
-      }
-    }
+    // NOTE: stroke and shadow are intentionally NOT added to TextStyle.
+    // They are applied as OutlineFilter / DropShadowFilter in refreshCaptions()
+    // so they never inflate bitmap character bounding boxes (which would break
+    // letter-spacing and word-width measurements).
 
     const fontName = getOrInstallFont(styleOptions);
     this.textStyle = new TextStyle({
@@ -1108,9 +1013,30 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       });
       this.wordTexts = [];
 
-      const metrics = CanvasTextMetrics.measureText(" ", this.textStyle);
+      // Measure space width using textStyleBase — same approach as TextClip.
+      // textStyleBase.fontFamily is the installed bitmap font name, which the
+      // browser 2D canvas does not recognise, so it falls back to the system
+      // default font (Arial/sans-serif). Using the same style as TextClip
+      // guarantees both clips produce identical inter-word gaps for the same
+      // font settings.
+      const metrics = CanvasTextMetrics.measureText(" ", this.textStyleBase);
 
-      // 3. Create rendered word objects (flatten segments into individual words)
+      const tempSpace = new SplitBitmapText({
+        text: " ",
+        style: this.textStyleBase,
+      });
+      const spaceWidth = Math.ceil(
+        tempSpace.getLocalBounds().width ||
+          tempSpace.width ||
+          metrics.width ||
+          (this.opts.fontSize || 30) * 0.25,
+      );
+      tempSpace.destroy();
+
+      // NOTE: letterSpacing is applied per-character *inside* SplitBitmapText
+      // (set on each wordText below). We do NOT add it to the inter-word gap
+      // because TextClip also does not — using bare spaceWidth keeps both
+      // clips visually identical.
       const flattenedWords: CaptionSplitBitmapText[] = [];
 
       this.opts.words.forEach((segment, segmentIndex) => {
@@ -1153,20 +1079,88 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
 
       this.wordTexts = flattenedWords;
 
+      // ── STROKE (OutlineFilter per word) ──────────────────────────────────
+      const strokeOpt = this.originalOpts?.stroke;
+      const strokeWidth =
+        (strokeOpt !== null && typeof strokeOpt === "object" && "width" in strokeOpt
+          ? strokeOpt.width
+          : undefined) ??
+        this.opts.strokeWidth ??
+        0;
+      const hasStroke = strokeOpt != null && strokeWidth > 0;
+
+      if (hasStroke) {
+        let strokeColor = 0x000000;
+        if (typeof strokeOpt === "object" && strokeOpt !== null && "color" in strokeOpt) {
+          const parsed = parseColor((strokeOpt as { color: string | number }).color);
+          if (parsed !== undefined) strokeColor = parsed;
+        } else if (typeof strokeOpt === "string" || typeof strokeOpt === "number") {
+          const parsed = parseColor(strokeOpt);
+          if (parsed !== undefined) strokeColor = parsed;
+        }
+
+        if (this.outlineFilter) {
+          this.outlineFilter.thickness = strokeWidth;
+          const uniforms = this.outlineFilter.resources.outlineUniforms.uniforms;
+          uniforms.uBorderColor = new Color(strokeColor);
+        } else {
+          this.outlineFilter = new OutlineFilter({
+            thickness: strokeWidth,
+            borderColor: strokeColor,
+          });
+        }
+        this.wordTexts.forEach((w) => {
+          w.filters = [this.outlineFilter!];
+        });
+      } else {
+        if (this.outlineFilter) {
+          this.wordTexts.forEach((w) => {
+            w.filters = [];
+          });
+          this.outlineFilter = null;
+        }
+      }
+
+      // ── SHADOW (DropShadowFilter on container) ───────────────────────────
+      const shadowOpt = this.originalOpts?.shadow;
+      if (shadowOpt) {
+        let offsetX = shadowOpt.offsetX ?? 0;
+        let offsetY = shadowOpt.offsetY ?? 0;
+        const shadowColor = parseColor(shadowOpt.color ?? "#000000");
+        const shadowAlpha = shadowOpt.alpha ?? 1;
+        const shadowBlur = shadowOpt.blur ?? 4;
+        const shadowFilterPadding = Math.ceil(
+          shadowBlur * 2 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+        );
+        if (shadowColor !== undefined) {
+          if (this.dropShadowFilter) {
+            this.dropShadowFilter.color = shadowColor;
+            this.dropShadowFilter.alpha = shadowAlpha;
+            this.dropShadowFilter.blur = shadowBlur;
+            this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
+            this.dropShadowFilter.padding = shadowFilterPadding;
+          } else {
+            this.dropShadowFilter = new DropShadowFilter({
+              color: shadowColor,
+              alpha: shadowAlpha,
+              blur: shadowBlur,
+              offset: { x: offsetX, y: offsetY },
+            });
+            this.dropShadowFilter.padding = shadowFilterPadding;
+          }
+          this.pixiTextContainer!.filters = [this.dropShadowFilter];
+        }
+      } else {
+        if (this.dropShadowFilter) {
+          this.pixiTextContainer!.filters = [];
+          this.dropShadowFilter = null;
+        }
+      }
+
       // 4. Calculate Layout (Lines)
       const paddingX = this._visualPaddingX;
       const paddingY = this._visualPaddingY;
       const lineHeight = this.opts.lineHeight * (this.opts.fontSize || 30);
-
-      // Measure space width precisely for this Bitmap font
-      const tempSpace = new SplitBitmapText({
-        text: " ",
-        style: this.textStyleBase,
-      });
-      const spaceWidth = Math.ceil(
-        tempSpace.getLocalBounds().width || tempSpace.width || metrics.width,
-      );
-      tempSpace.destroy();
 
       const isAutoWidthNow =
         !this._isWidthConstrained &&
@@ -1427,13 +1421,26 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       // have room to move without hard-clipping at the clip boundary.
       // The clip bounding box / selection handles are unaffected — they use _width/_height.
       const ANIM_PAD = 300;
-      const paddedWidth = containerWidth + ANIM_PAD * 2;
-      const paddedHeight = containerHeight + ANIM_PAD * 2;
+      // Extra padding for OutlineFilter so stroke is never clipped at texture edge
+      const filterPadding = strokeWidth > 0 ? strokeWidth * 2.1 : 0;
+      // Extra padding for DropShadowFilter so blurred shadow is never clipped
+      let shadowPadding = 0;
+      if (this.dropShadowFilter) {
+        const shadowBlur = this.dropShadowFilter.blur ?? 0;
+        const shadowOffset = this.dropShadowFilter.offset;
+        const shadowDistance = shadowOffset
+          ? Math.sqrt(shadowOffset.x ** 2 + shadowOffset.y ** 2)
+          : 0;
+        shadowPadding = shadowBlur + shadowDistance;
+      }
+      const totalPad = ANIM_PAD + filterPadding + shadowPadding;
+      const paddedWidth = containerWidth + totalPad * 2;
+      const paddedHeight = containerHeight + totalPad * 2;
 
       // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
       if (this.pixiTextContainer) {
-        this.pixiTextContainer.x = ANIM_PAD;
-        this.pixiTextContainer.y = ANIM_PAD;
+        this.pixiTextContainer.x = totalPad;
+        this.pixiTextContainer.y = totalPad;
       }
 
       // Reuse or recreate RenderTexture with padded dimensions
@@ -1455,8 +1462,8 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
         });
       }
 
-      // Store for PixiSpriteRenderer anchor compensation
-      this.renderTexturePadding = ANIM_PAD;
+      // Store for PixiSpriteRenderer anchor compensation (total pad = anim + filter/shadow bleed)
+      this.renderTexturePadding = totalPad;
 
       // Apply active states before rendering to avoid flicker during editing
       this.updateState(this._lastTickTime);
@@ -1643,8 +1650,16 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       wordText.tint = 0xffffff;
 
       const applyColor = (obj: any) => {
-        // Skip background elements
-        if (obj.label === "bgRect" || obj.label === "tiktokBackground") return;
+        // Skip background elements — bgRect_N are now in lineContainer, not wordText,
+        // but guard defensively in case of stale children from previous renders.
+        if (
+          obj.label === "bgRect" ||
+          obj.label === "tiktokBackground" ||
+          obj.label === "rectBackground" ||
+          obj.label === "containerBackground" ||
+          (typeof obj.label === "string" && obj.label.startsWith("bgRect_"))
+        )
+          return;
 
         if ("tint" in obj) {
           obj.tint = textColor;
@@ -1661,29 +1676,53 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       wordText.children.forEach(applyColor);
 
       // -------- BACKGROUND --------
-      const existingBg = wordText.getChildByLabel("bgRect") as Graphics | null;
-      // const isTiktok = this.opts.textBoxStyle.style === 'tiktok';
+      // bgRect lives in lineContainer (wordText.parent), NOT inside wordText.
+      // This prevents the OutlineFilter on wordText from also outlining the background pill.
+      const parentContainer = wordText.parent as Container | null;
+      const bgLabel = `bgRect_${segmentIndex}`;
+      const existingBg = parentContainer
+        ? (parentContainer.getChildByLabel(bgLabel) as Graphics | null)
+        : null;
 
-      if (isActive) {
+      // Only draw an active-word highlight when the fill is a real, opaque color.
+      // "transparent" / "none" / undefined all mean "no background".
+      const hasActiveBg =
+        isActive &&
+        !!this.opts.activeFill &&
+        !isTransparent(this.opts.activeFill) &&
+        this.opts.activeFill !== "none";
+
+      if (hasActiveBg && parentContainer) {
         const { color: bgColor, alpha: bgAlpha } = resolveColor(this.opts.activeFill, 0xffa500);
 
         const padding = 15;
         const paddingX = 40;
+
+        // Measure text glyphs in wordText local space (hide bg so it doesn't widen bounds)
         if (existingBg) existingBg.visible = false;
-        const bounds = wordText.getLocalBounds();
+        const localBounds = wordText.getLocalBounds();
         if (existingBg) existingBg.visible = true;
+
         const cornerRadius = 10;
+        const sx = wordText.scale.x;
+        const sy = wordText.scale.y;
+
+        // Convert local bounds to lineContainer (parent) space.
+        // wordText.x/y is the pivot-point position in parent space; pivot offsets the origin.
+        const parentX = wordText.x + (localBounds.x - wordText.pivot.x) * sx;
+        const parentY = wordText.y + (localBounds.y - wordText.pivot.y) * sy;
+        const parentW = localBounds.width * sx;
+        const parentH = localBounds.height * sy;
 
         const bg = existingBg ?? new Graphics();
-
-        bg.label = "bgRect";
+        bg.label = bgLabel;
         bg.clear();
 
         bg.roundRect(
-          bounds.x - paddingX / 2,
-          bounds.y - padding / 2, // extraPadding is already applied to wordText.y
-          bounds.width + paddingX,
-          bounds.height + padding,
+          parentX - paddingX / 2,
+          parentY - padding / 2,
+          parentW + paddingX,
+          parentH + padding,
           cornerRadius,
         );
 
@@ -1691,11 +1730,13 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
         bg.tint = 0xffffff;
 
         if (!existingBg) {
-          wordText.addChildAt(bg, 0);
+          // Insert at index 0 so it renders behind the word text
+          parentContainer.addChildAt(bg, 0);
         }
       } else {
-        if (existingBg) {
-          wordText.removeChild(existingBg);
+        // Remove stale background (word became inactive, or fill is transparent)
+        if (existingBg && parentContainer) {
+          parentContainer.removeChild(existingBg);
           existingBg.destroy();
         }
       }
