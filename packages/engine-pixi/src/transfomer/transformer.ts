@@ -89,14 +89,44 @@ export class Transformer extends Container {
       mr: new Handle("mr", "ew-resize", cb),
       mt: new Handle("mt", "ns-resize", cb),
       mb: new Handle("mb", "ns-resize", cb),
-      rot: new Handle("rot", "crosshair", {
+      rot_tl: new Handle("rot_tl", "crosshair", {
+        beginDrag: (_c, s) => this.#beginRotateDrag(s),
+        updateDrag: (_c, p) => this.#rotate(p),
+        endDrag: () => this.#endDrag(),
+      }),
+      rot_tr: new Handle("rot_tr", "crosshair", {
+        beginDrag: (_c, s) => this.#beginRotateDrag(s),
+        updateDrag: (_c, p) => this.#rotate(p),
+        endDrag: () => this.#endDrag(),
+      }),
+      rot_bl: new Handle("rot_bl", "crosshair", {
+        beginDrag: (_c, s) => this.#beginRotateDrag(s),
+        updateDrag: (_c, p) => this.#rotate(p),
+        endDrag: () => this.#endDrag(),
+      }),
+      rot_br: new Handle("rot_br", "crosshair", {
         beginDrag: (_c, s) => this.#beginRotateDrag(s),
         updateDrag: (_c, p) => this.#rotate(p),
         endDrag: () => this.#endDrag(),
       }),
     };
 
-    this.addChild(this.selectionOutlines, this.wireframe, ...Object.values(this.#handles));
+    this.addChild(
+      this.selectionOutlines,
+      this.wireframe,
+      this.#handles.rot_tl,
+      this.#handles.rot_tr,
+      this.#handles.rot_bl,
+      this.#handles.rot_br,
+      this.#handles.tl,
+      this.#handles.tr,
+      this.#handles.bl,
+      this.#handles.br,
+      this.#handles.ml,
+      this.#handles.mr,
+      this.#handles.mt,
+      this.#handles.mb,
+    );
     this.#bindEvents();
 
     // Hide initially to prevent FOUC (Flash of Unpositioned Content)
@@ -565,12 +595,17 @@ export class Transformer extends Container {
       this.#handles.mr,
       this.#handles.mt,
       this.#handles.mb,
-      this.#handles.rot,
+      this.#handles.rot_tl,
+      this.#handles.rot_tr,
+      this.#handles.rot_bl,
+      this.#handles.rot_br,
     ];
 
     for (const h of handles) {
       h.scale.set(handleScale);
     }
+
+    const hasRot = visibleHandles.includes("rot");
 
     // Set visibility based on clip's visible handles
     this.#handles.tl.visible = visibleHandles.includes("tl");
@@ -581,7 +616,10 @@ export class Transformer extends Container {
     this.#handles.mr.visible = visibleHandles.includes("mr");
     this.#handles.mt.visible = visibleHandles.includes("mt");
     this.#handles.mb.visible = visibleHandles.includes("mb");
-    this.#handles.rot.visible = visibleHandles.includes("rot");
+    this.#handles.rot_tl.visible = hasRot;
+    this.#handles.rot_tr.visible = hasRot;
+    this.#handles.rot_bl.visible = hasRot;
+    this.#handles.rot_br.visible = hasRot;
 
     this.#handles.tl.position.set(r.x, r.y);
     this.#handles.tr.position.set(r.x + r.width, r.y);
@@ -593,8 +631,39 @@ export class Transformer extends Container {
     this.#handles.mt.position.set(cx, r.y);
     this.#handles.mb.position.set(cx, r.y + r.height);
 
-    // Adjust rotation handle offset based on scale
-    this.#handles.rot.position.set(cx, r.y - 30 * handleScale);
+    this.#handles.rot_tl.position.set(r.x, r.y);
+    this.#handles.rot_tr.position.set(r.x + r.width, r.y);
+    this.#handles.rot_bl.position.set(r.x, r.y + r.height);
+    this.#handles.rot_br.position.set(r.x + r.width, r.y + r.height);
+
+    // Dynamic rotation cursor generator
+    const getRotationCursor = (cornerX: number, cornerY: number) => {
+      const dx = cornerX - cx;
+      const dy = cornerY - cy;
+      const tangentAngle = Math.atan2(dx, -dy);
+      const totalAngle = angle + tangentAngle;
+      const angleDeg = Math.round((totalAngle * 180) / Math.PI) - 90;
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+        <g transform="rotate(${angleDeg} 16 16)">
+          <path d="M 24 10 A 10 10 0 0 1 24 22" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
+          <path d="M 20 10 L 24 10 L 24 6" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 24 26 L 24 22 L 20 22" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 24 10 A 10 10 0 0 1 24 22" fill="none" stroke="black" stroke-width="2" stroke-linecap="round"/>
+          <path d="M 20 10 L 24 10 L 24 6" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 24 26 L 24 22 L 20 22" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </g>
+      </svg>`;
+
+      const encoded = encodeURIComponent(svg).replace(/'/g, "%27").replace(/"/g, "%22");
+
+      return `url('data:image/svg+xml;utf8,${encoded}') 16 16, auto`;
+    };
+
+    this.#handles.rot_tl.cursor = getRotationCursor(r.x, r.y);
+    this.#handles.rot_tr.cursor = getRotationCursor(r.x + r.width, r.y);
+    this.#handles.rot_bl.cursor = getRotationCursor(r.x, r.y + r.height);
+    this.#handles.rot_br.cursor = getRotationCursor(r.x + r.width, r.y + r.height);
 
     // Update selection outlines
     this.#drawSelectionOutlines(handleScale);

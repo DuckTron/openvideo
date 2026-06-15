@@ -1,7 +1,7 @@
 import { type FederatedPointerEvent, Graphics, type Point, Rectangle, Circle } from "pixi.js";
 
 export type Side = "ml" | "mr" | "mt" | "mb";
-type Corner = "tl" | "tr" | "bl" | "br" | "rot";
+type Corner = "tl" | "tr" | "bl" | "br" | "rot" | "rot_tl" | "rot_tr" | "rot_bl" | "rot_br";
 export type HandleKind = Corner | Side;
 interface Callbacks {
   beginDrag: (handle: HandleKind, start: Point) => void;
@@ -33,7 +33,15 @@ export class Handle extends Graphics {
     this.clear();
     const primaryColor = 0x0284c7;
 
-    if (this.handle === "rot") {
+    if (this.handle === "rot_tl") {
+      this.hitArea = new Rectangle(-30, -30, 35, 35);
+    } else if (this.handle === "rot_tr") {
+      this.hitArea = new Rectangle(-5, -30, 35, 35);
+    } else if (this.handle === "rot_bl") {
+      this.hitArea = new Rectangle(-30, -5, 35, 35);
+    } else if (this.handle === "rot_br") {
+      this.hitArea = new Rectangle(-5, -5, 35, 35);
+    } else if (this.handle === "rot") {
       // Draw rotation handle (circle with arrow)
       this.circle(0, 0, 8);
       this.fill({ color: "#ffffff" });
@@ -75,7 +83,9 @@ export class Handle extends Graphics {
 
   #onDown = (e: FederatedPointerEvent) => {
     this.#isDragging = true;
-    this.cursor = "grabbing";
+    if (!this.handle.startsWith("rot")) {
+      this.cursor = "grabbing";
+    }
     this.callbacks.beginDrag(this.handle, e.global);
   };
 
@@ -87,7 +97,9 @@ export class Handle extends Graphics {
   #onUp = (_e: FederatedPointerEvent) => {
     if (!this.#isDragging) return;
     this.#isDragging = false;
-    this.cursor = "pointer";
+    if (!this.handle.startsWith("rot")) {
+      this.cursor = "pointer";
+    }
     this.callbacks.endDrag();
   };
 }
