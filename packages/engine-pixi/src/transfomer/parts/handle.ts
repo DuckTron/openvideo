@@ -34,13 +34,13 @@ export class Handle extends Graphics {
     const primaryColor = 0x0284c7;
 
     if (this.handle === "rot_tl") {
-      this.hitArea = new Rectangle(-30, -30, 35, 35);
+      this.hitArea = new Rectangle(-22, -22, 24, 24);
     } else if (this.handle === "rot_tr") {
-      this.hitArea = new Rectangle(-5, -30, 35, 35);
+      this.hitArea = new Rectangle(-2, -22, 24, 24);
     } else if (this.handle === "rot_bl") {
-      this.hitArea = new Rectangle(-30, -5, 35, 35);
+      this.hitArea = new Rectangle(-22, -2, 24, 24);
     } else if (this.handle === "rot_br") {
-      this.hitArea = new Rectangle(-5, -5, 35, 35);
+      this.hitArea = new Rectangle(-2, -2, 24, 24);
     } else if (this.handle === "rot") {
       // Draw rotation handle (circle with arrow)
       this.circle(0, 0, 8);
@@ -70,14 +70,14 @@ export class Handle extends Graphics {
       this.roundRect(-width / 2, -height / 2, width, height, 3);
       this.fill({ color: "#ffffff" });
       this.stroke({ width: 1, color: primaryColor });
-      this.hitArea = new Rectangle(-15, -15, 30, 30);
+      this.hitArea = new Rectangle(-10, -10, 20, 20);
     } else {
       // Draw centered rectangle (8x8) for resizing handles (corners)
       this.rect(-4, -4, 8, 8);
       this.fill({ color: "#ffffff" });
       this.stroke({ width: 1, color: primaryColor });
       // Hit area should be larger than visual representation for better UX
-      this.hitArea = new Rectangle(-15, -15, 30, 30);
+      this.hitArea = new Rectangle(-10, -10, 20, 20);
     }
   }
 
