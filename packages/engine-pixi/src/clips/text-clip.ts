@@ -715,12 +715,9 @@ export class Text extends BaseClip<ITextEvents> {
 
   async clone() {
     await this.ready;
-    // Use originalOpts when available (especially for gradients and complex objects)
-    // Fall back to extracting from TextStyle for simple properties
     const style = this.textStyle;
     const originalOpts = this.originalOpts || {};
 
-    // Helper to convert color to number
     const colorToNumber = (color: any): number | undefined => {
       if (color === undefined || color === null) return undefined;
       if (typeof color === "number") return color;
@@ -728,7 +725,8 @@ export class Text extends BaseClip<ITextEvents> {
       return undefined;
     };
 
-    // Start with original options (preserves gradients and complex objects)
+    const { stroke, strokeWidth } = this._cloneStrokeOpts(colorToNumber);
+
     const opts: ITextOpts = {
       fontSize: originalOpts.fontSize ?? style.fontSize,
       fontFamily:
@@ -745,60 +743,12 @@ export class Text extends BaseClip<ITextEvents> {
         (style.align === "justify" ? "left" : (style.align as "left" | "center" | "right")),
       textCase: originalOpts.textCase,
       textDecoration: originalOpts.textDecoration,
+      color: this._cloneColorOpts(colorToNumber),
+      stroke,
+      strokeWidth,
+      shadow: this._cloneShadowOpts(colorToNumber),
     };
 
-    // Handle color - prefer originalOpts to preserve gradients
-    if (
-      originalOpts.color &&
-      typeof originalOpts.color === "object" &&
-      "type" in originalOpts.color &&
-      originalOpts.color.type === "gradient"
-    ) {
-      opts.color = originalOpts.color;
-    } else {
-      // Extract simple color fill from style
-      const fillColor = colorToNumber(style.fill);
-      opts.color = fillColor ?? 0xffffff;
-    }
-
-    // Handle stroke - prefer originalOpts to preserve advanced stroke options
-    if (
-      originalOpts.stroke &&
-      typeof originalOpts.stroke === "object" &&
-      "color" in originalOpts.stroke
-    ) {
-      opts.stroke = originalOpts.stroke;
-    } else {
-      // Extract simple stroke color from style
-      const strokeColor = colorToNumber(style.stroke);
-      if (strokeColor !== undefined) {
-        opts.stroke = strokeColor;
-        opts.strokeWidth = originalOpts.strokeWidth ?? (style as any).strokeThickness ?? 0;
-      } else {
-        opts.strokeWidth = originalOpts.strokeWidth ?? (style as any).strokeThickness ?? 0;
-      }
-    }
-
-    // Extract shadow if present
-    if (originalOpts.shadow) {
-      opts.shadow = originalOpts.shadow;
-    } else if (style.dropShadow) {
-      const ds = style.dropShadow;
-      const shadowColor = colorToNumber(ds.color);
-      if (shadowColor !== undefined) {
-        const angle = ds.angle ?? 0;
-        const distance = ds.distance ?? 0;
-        opts.shadow = {
-          color: shadowColor,
-          alpha: ds.alpha,
-          blur: ds.blur,
-          offsetX: Math.cos(angle) * distance,
-          offsetY: Math.sin(angle) * distance,
-        };
-      }
-    }
-
-    // Extract other properties
     if (originalOpts.wordWrap !== undefined) {
       opts.wordWrap = originalOpts.wordWrap;
       opts.wordWrapWidth = originalOpts.wordWrapWidth;
@@ -807,14 +757,11 @@ export class Text extends BaseClip<ITextEvents> {
       opts.wordWrapWidth = style.wordWrapWidth;
     }
 
-    // Preserve background options
     if (originalOpts.background !== undefined) opts.background = originalOpts.background;
 
     if (originalOpts.lineHeight !== undefined) {
       opts.lineHeight = originalOpts.lineHeight;
     } else if (style.lineHeight !== undefined) {
-      // CRITICAL: style.lineHeight is absolute pixels, but ITextOpts.lineHeight is a multiplier
-      // Convert back to multiplier by dividing by fontSize
       const fontSize = opts.fontSize ?? style.fontSize ?? 40;
       opts.lineHeight = style.lineHeight / fontSize;
     }
@@ -827,7 +774,6 @@ export class Text extends BaseClip<ITextEvents> {
     const newClip = new Text(this.text, opts) as this;
     await newClip.ready;
     this.copyStateTo(newClip);
-    // Copy id and effects
     newClip.id = this.id;
     newClip.effects = [...this.effects];
     return newClip;
@@ -838,69 +784,15 @@ export class Text extends BaseClip<ITextEvents> {
    * This is used for dynamic updates like resizing with text reflow
    */
   async updateStyle(opts: Partial<ITextOpts>): Promise<void> {
-    // 1. Flatten style object if it exists (allows compatibility with editor's updates)
-    let processedOpts = { ...opts };
-    if ((opts as any).style) {
-      processedOpts = { ...processedOpts, ...(opts as any).style };
-      delete (processedOpts as any).style;
-    }
+    const processedOpts = this._normalizeStyleOpts(opts);
 
-    if ((processedOpts as any).fill !== undefined) {
-      processedOpts.color = (processedOpts as any).fill;
-      delete (processedOpts as any).fill;
-    }
-
-    if ((processedOpts as any).dropShadow !== undefined) {
-      processedOpts.shadow = (processedOpts as any).dropShadow;
-      delete (processedOpts as any).dropShadow;
-    }
-
-    // Map textAlign to align (UI uses textAlign, internal uses align)
-    if ((processedOpts as any).textAlign !== undefined) {
-      processedOpts.align = (processedOpts as any).textAlign;
-      delete (processedOpts as any).textAlign;
-    }
-
-    // Map boolean decoration flags to textDecoration (UI sends booleans, internal uses enum)
-    const hasUnderline = (processedOpts as any).underline;
-    const hasOverline = (processedOpts as any).overline;
-    const hasLinethrough = (processedOpts as any).linethrough;
-    if (hasUnderline !== undefined || hasOverline !== undefined || hasLinethrough !== undefined) {
-      if (hasUnderline) {
-        processedOpts.textDecoration = "underline";
-      } else if (hasOverline) {
-        processedOpts.textDecoration = "overline";
-      } else if (hasLinethrough) {
-        processedOpts.textDecoration = "line-through";
-      } else {
-        processedOpts.textDecoration = "none";
-      }
-      delete (processedOpts as any).underline;
-      delete (processedOpts as any).overline;
-      delete (processedOpts as any).linethrough;
-    }
-
-    // 2. Update originalOpts with new values
+    // Update originalOpts with new values
     this.originalOpts = { ...this.originalOpts, ...processedOpts };
 
-    // 3. Create new style options
-    const styleOptions = this.createStyleFromOpts(this.originalOpts);
-    const { wordWrap, wordWrapWidth, lineHeight, letterSpacing, fill, ...rest } = styleOptions;
-    const baseFontName = getOrInstallFont(rest);
-    const styleBase = new TextStyle({
-      ...rest,
-      fontFamily: baseFontName,
-    });
-    // 3. Update TextStyle
-    const fontName = getOrInstallFont(styleOptions);
-    const style = new TextStyle({
-      ...styleOptions,
-      fontFamily: fontName,
-    });
-    this.textStyle = style;
-    this.textStyleBase = styleBase;
+    // Rebuild TextStyle instances
+    this._buildTextStyles();
 
-    // 4. Refresh text and texture
+    // Refresh text and texture
     await this.refreshText();
     this.emit("propsChange", opts);
   }
@@ -934,9 +826,6 @@ export class Text extends BaseClip<ITextEvents> {
     // Snapshot layout-relevant state BEFORE any await so concurrent mutations
     // (e.g. updateStyle() called from the store while fonts.ready is pending)
     // cannot change the values we use for word-wrap layout.
-    // Use _targetWidth (set exclusively by the width setter) rather than _width
-    // (which _doRefreshText itself overwrites with the measured containerWidth at
-    // the end of each run — so it would give a stale value on the _needsRefresh re-run).
     const snapshotWidth = this._targetWidth;
     const snapshotWordWrap = this.originalOpts.wordWrap;
     const snapshotWordWrapWidth = this.originalOpts.wordWrapWidth;
@@ -946,39 +835,11 @@ export class Text extends BaseClip<ITextEvents> {
       await document.fonts.ready;
     }
 
-    // Re-build textStyle here (after font load) so the BitmapFont atlas is built
-    // with real glyph metrics — not fallback-font metrics from before the URL loaded.
-    // This is critical for correct word-width measurement via SplitBitmapText.
-    const styleOptions = this.createStyleFromOpts(this.originalOpts);
-    const {
-      wordWrap: _ww,
-      wordWrapWidth: _www,
-      lineHeight: _lh,
-      letterSpacing: _ls,
-      fill: _f,
-      ...rest
-    } = styleOptions;
-    // Invalidate cached BitmapFonts so they are rebuilt with the now-loaded font.
-    const fontName = getOrInstallFont(styleOptions);
-    this.textStyle = new TextStyle({ ...styleOptions, fontFamily: fontName });
-    const baseFontName = getOrInstallFont(rest);
-    this.textStyleBase = new TextStyle({ ...rest, fontFamily: baseFontName });
+    // Re-build textStyle after font load so BitmapFont atlas uses real glyph metrics.
+    this._buildTextStyles();
 
     const style = this.textStyle;
-
-    let textToRender = this.text;
-    const textCase = this.originalOpts.textCase;
-
-    if (textCase === "uppercase") {
-      textToRender = textToRender.toUpperCase();
-    } else if (textCase === "lowercase") {
-      textToRender = textToRender.toLowerCase();
-    } else if (textCase === "title") {
-      textToRender = textToRender.replace(
-        /\w\S*/g,
-        (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
-      );
-    }
+    const textToRender = this._applyTextCase(this.text);
 
     if (!this.pixiTextContainer) {
       this.pixiTextContainer = new Container();
@@ -986,194 +847,22 @@ export class Text extends BaseClip<ITextEvents> {
       this.pixiTextContainer.removeChildren();
     }
 
-    // Split text into words for SplitBitmapText
-    const words = textToRender.split(/\s+/).filter((v) => v.length > 0);
-
-    // Use textStyle for words (includes fill color), shadow handled separately via DropShadowFilter
-    const styleForWords = this.textStyle;
-
-    // Create a text-only container to hold words (for applying shadow filter only to text)
-    const textOnlyContainer = new Container();
-    textOnlyContainer.label = "TextOnlyContainer";
-
-    // Cleanup old word texts
-    this.wordTexts.forEach((w) => w.destroy());
-    this.wordTexts = words.map((wordStr) => {
-      const wordText = new SplitBitmapText({
-        text: wordStr,
-        style: styleForWords,
-      });
-      // Add to text-only container (not main container) so shadow filter only affects text
-      textOnlyContainer.addChild(wordText);
-      return wordText;
-    });
-
-    // Apply OutlineFilter for outline effect only
-    const strokeOpt = this.originalOpts.stroke;
-
-    // Check for width in stroke object or as separate strokeWidth property
-    const strokeWidth =
-      (strokeOpt !== null && typeof strokeOpt === "object" && "width" in strokeOpt
-        ? strokeOpt.width
-        : undefined) ??
-      this.originalOpts.strokeWidth ??
-      0;
-    const hasStroke = strokeOpt != null && strokeWidth > 0;
-
-    if (hasStroke) {
-      // Determine stroke color
-      let strokeColor = 0x000000; // default black
-      if (typeof strokeOpt === "object" && "color" in strokeOpt) {
-        const parsed = parseColor(strokeOpt.color);
-        if (parsed !== undefined) strokeColor = parsed;
-      } else if (typeof strokeOpt === "string" || typeof strokeOpt === "number") {
-        const parsed = parseColor(strokeOpt);
-        if (parsed !== undefined) strokeColor = parsed;
-      }
-
-      // Create or update OutlineFilter for outline
-      if (this.outlineFilter) {
-        this.outlineFilter.thickness = strokeWidth;
-        // CRITICAL: Update filter padding when thickness changes to prevent clipping
-        // Padding must be >= thickness * 4 to account for 16-direction sampling in shader
-        this.outlineFilter.padding = strokeWidth * 4;
-        const uniforms = this.outlineFilter.resources.outlineUniforms.uniforms;
-        uniforms.uBorderColor = new Color(strokeColor);
-      } else {
-        this.outlineFilter = new OutlineFilter({
-          thickness: strokeWidth,
-          borderColor: strokeColor,
-        });
-      }
-
-      // Apply filter to all word texts (already in textOnlyContainer)
-      this.wordTexts.forEach((wordText) => {
-        wordText.filters = [this.outlineFilter!];
-      });
-    } else {
-      // Remove filter if no stroke
-      if (this.outlineFilter) {
-        this.wordTexts.forEach((wordText) => {
-          wordText.filters = [];
-        });
-        this.outlineFilter = null;
-      }
-    }
-
-    // Apply DropShadowFilter to text-only container (not the main container with background)
-    // This ensures shadow only applies to text, not the background
-    const shadowOpt = this.originalOpts.shadow;
-    if (shadowOpt) {
-      const offsetX = shadowOpt.offsetX ?? 0;
-      const offsetY = shadowOpt.offsetY ?? 0;
-      const shadowColor = parseColor(shadowOpt.color ?? "#000000");
-      const shadowAlpha = shadowOpt.alpha ?? 1;
-      const shadowBlur = shadowOpt.blur ?? 4;
-
-      // The filter's internal render pass needs enough padding to fit the blurred shadow.
-      // Without this, high blur values cause the shadow to be clipped at the filter boundary.
-      // padding must be >= blur * 2 + the max offset so the blurred shadow is never cut off.
-      const shadowFilterPadding = Math.ceil(
-        shadowBlur * 2.5 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
-      );
-
-      if (shadowColor !== undefined) {
-        if (this.dropShadowFilter) {
-          this.dropShadowFilter.color = shadowColor;
-          this.dropShadowFilter.alpha = shadowAlpha;
-          this.dropShadowFilter.blur = shadowBlur;
-          this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
-          // padding is a base Filter property — set after construction
-          this.dropShadowFilter.padding = shadowFilterPadding;
-        } else {
-          this.dropShadowFilter = new DropShadowFilter({
-            color: shadowColor,
-            alpha: shadowAlpha,
-            blur: shadowBlur,
-            offset: { x: offsetX, y: offsetY },
-          });
-          // padding is a base Filter property — set after construction
-          this.dropShadowFilter.padding = shadowFilterPadding;
-        }
-
-        textOnlyContainer.filters = [this.dropShadowFilter];
-      }
-    } else {
-      // Remove shadow filter if no shadow
-      if (this.dropShadowFilter) {
-        textOnlyContainer.filters = [];
-        this.dropShadowFilter = null;
-      }
-    }
+    const { textOnlyContainer, words } = this._buildWordObjects(textToRender);
+    const strokeWidth = this._applyStrokeFilter();
+    this._applyShadowFilter(textOnlyContainer);
 
     // Add text-only container (with shadow) to main container
     this.pixiTextContainer.addChild(textOnlyContainer);
 
-    // 4. Calculate Layout (Lines) - mostly following CaptionClip logic
-    const decoration = this.originalOpts.textDecoration || (this.originalOpts as any).verticalAlign;
+    // Measure space width and text height
+    const { spaceWidth, measuredTextHeight } = await this._measureSpaceAndHeight();
+    this._spaceWidth = spaceWidth;
+
     const lineHeightMultiplier = this.originalOpts.lineHeight ?? 1;
     const fontSize = style.fontSize ?? 40;
     const lineHeight = fontSize * lineHeightMultiplier;
 
-    // Measure space width using the clip's ACTUAL font family.
-    // styleBase.fontFamily is the Pixi bitmap cache key (e.g.
-    // "installed_font_Roboto_40_normal_normal") which the browser Canvas 2D API
-    // does not recognise — it falls back to Arial/system-ui.
-    // Instead we use the original font family so the measurement reflects
-    // the real font's advance width for a space character.
-    const _spaceFs = this.originalOpts.fontSize || 40;
-    const _spaceFamily = this.originalOpts.fontFamily || "Arial";
-    const _spaceWeight = String(this.originalOpts.fontWeight || "normal");
-    const _spaceStyle = this.originalOpts.fontStyle || "normal";
-    const _fontSpec = `${_spaceStyle} ${_spaceWeight} ${_spaceFs}px "${_spaceFamily}"`;
-
-    if (typeof document !== "undefined") {
-      try {
-        await document.fonts.load(_fontSpec);
-      } catch (_) {
-        /* ignore */
-      }
-    }
-
-    const _spaceMeasureStyle = new TextStyle({
-      fontFamily: _spaceFamily,
-      fontSize: _spaceFs,
-      fontWeight: _spaceWeight as TextStyle["fontWeight"],
-      fontStyle: _spaceStyle as TextStyle["fontStyle"],
-    });
-    const metrics = CanvasTextMetrics.measureText(" ", _spaceMeasureStyle);
-
-    // Measure the ACTUAL visual text height using canvas text metrics.
-    // getLocalBounds().height for SplitBitmapText often includes font metrics padding
-    // (ascent/descent space beyond visible glyphs), which causes inaccurate vertical centering.
-    // CanvasTextMetrics.fontProperties gives the font-specific ascent + descent which is
-    // closer to the actual visual text height than the bitmap font bounding box.
-    const _textMeasureStyle = new TextStyle({
-      fontFamily: _spaceFamily,
-      fontSize: _spaceFs,
-      fontWeight: _spaceWeight as TextStyle["fontWeight"],
-      fontStyle: _spaceStyle as TextStyle["fontStyle"],
-    });
-    const textMeasureMetrics = CanvasTextMetrics.measureText("Hg", _textMeasureStyle);
-    const fontProps = textMeasureMetrics.fontProperties;
-    const measuredTextHeight =
-      fontProps && fontProps.ascent > 0
-        ? Math.ceil(fontProps.ascent + fontProps.descent)
-        : fontSize;
-
-    const tempSpace = new SplitBitmapText({
-      text: " ",
-      style: this.textStyleBase,
-    });
-    const spaceWidth = Math.ceil(
-      tempSpace.getLocalBounds().width || tempSpace.width || metrics.width || _spaceFs * 0.25,
-    );
-    tempSpace.destroy();
-
-    // Derive wrapWidth from the snapshotted _width captured before any await.
-    // This prevents concurrent updateStyle() or width-setter calls from corrupting
-    // the layout value after we resumed from document.fonts.ready.
-    // Always apply padding for consistent text positioning.
+    // Derive wrapWidth from snapshotted state to prevent concurrent mutation corruption.
     let wrapWidth: number;
     if (snapshotWordWrap) {
       if (snapshotWidth > 0) {
@@ -1185,6 +874,273 @@ export class Text extends BaseClip<ITextEvents> {
     } else {
       wrapWidth = 1e5;
     }
+
+    const lines = this._breakIntoLines(wrapWidth, lineHeight);
+
+    const bgColorOpt = this.originalOpts.background?.color;
+    const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
+    const bgOpacity = this.originalOpts.background?.opacity ?? 1;
+    const bgBorderRadius = this.originalOpts.background?.borderRadius ?? 4;
+    const bgPadX = this.originalOpts.background?.paddingX ?? 8;
+    const bgPadY = this.originalOpts.background?.paddingY ?? 4;
+
+    const { containerWidth, containerHeight, contentHeight } = this._calculateDimensions(
+      lines,
+      measuredTextHeight,
+      snapshotWidth,
+      snapshotWordWrap,
+      snapshotWordWrapWidth,
+      snapshotBackground,
+      bgPadX,
+      bgPadY,
+    );
+
+    const lineRects = this._positionWords(
+      lines,
+      containerWidth,
+      containerHeight,
+      contentHeight,
+      measuredTextHeight,
+      bgPadX,
+      hasBg,
+    );
+
+    const decorationGraphics = this._drawDecoration(lines, containerWidth, bgPadX);
+    if (decorationGraphics) this.pixiTextContainer.addChild(decorationGraphics);
+
+    const bgGraphics = this._buildBackground(lineRects, bgColorOpt, bgOpacity, bgBorderRadius);
+    if (bgGraphics) this.pixiTextContainer.addChildAt(bgGraphics, 0);
+
+    this._createRenderTexture(containerWidth, containerHeight, strokeWidth);
+
+    // Update clip dimensions (logical/unpadded — used for selection handles and layout)
+    this._meta.width = containerWidth;
+    this._meta.height = containerHeight;
+    (this as any)._width = containerWidth;
+    (this as any)._height = containerHeight;
+
+    if (this.duration === 0 && this._meta.duration !== Infinity) {
+      this.duration = this._meta.duration;
+      this.display.to = this.display.from + this.duration;
+    }
+
+    // Populate cache for fast layout updates during transform
+    this._populateWordCache(
+      words,
+      textOnlyContainer,
+      spaceWidth,
+      measuredTextHeight,
+      lineHeightMultiplier,
+      fontSize,
+    );
+  }
+
+  /**
+   * Apply text case transformation to a string.
+   */
+  private _applyTextCase(text: string): string {
+    const textCase = this.originalOpts.textCase;
+    if (textCase === "uppercase") return text.toUpperCase();
+    if (textCase === "lowercase") return text.toLowerCase();
+    if (textCase === "title")
+      return text.replace(
+        /\w\S*/g,
+        (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
+      );
+    return text;
+  }
+
+  /**
+   * Rebuild TextStyle instances from current opts and install BitmapFonts.
+   * Returns { fontName, baseFontName }.
+   */
+  private _buildTextStyles(): { fontName: string; baseFontName: string } {
+    const styleOptions = this.createStyleFromOpts(this.originalOpts);
+    const {
+      wordWrap: _ww,
+      wordWrapWidth: _www,
+      lineHeight: _lh,
+      letterSpacing: _ls,
+      fill: _f,
+      ...rest
+    } = styleOptions;
+    const fontName = getOrInstallFont(styleOptions);
+    this.textStyle = new TextStyle({ ...styleOptions, fontFamily: fontName });
+    const baseFontName = getOrInstallFont(rest);
+    this.textStyleBase = new TextStyle({ ...rest, fontFamily: baseFontName });
+    return { fontName, baseFontName };
+  }
+
+  /**
+   * Create SplitBitmapText objects for each word and set up the text-only container.
+   */
+  private _buildWordObjects(textToRender: string): {
+    textOnlyContainer: Container;
+    words: string[];
+  } {
+    const words = textToRender.split(/\s+/).filter((v) => v.length > 0);
+    const textOnlyContainer = new Container();
+    textOnlyContainer.label = "TextOnlyContainer";
+
+    this.wordTexts.forEach((w) => w.destroy());
+    this.wordTexts = words.map((wordStr) => {
+      const wordText = new SplitBitmapText({ text: wordStr, style: this.textStyle });
+      textOnlyContainer.addChild(wordText);
+      return wordText;
+    });
+
+    return { textOnlyContainer, words };
+  }
+
+  /**
+   * Create or update the OutlineFilter on each word based on current stroke opts.
+   * Returns the effective strokeWidth (0 if no stroke).
+   */
+  private _applyStrokeFilter(): number {
+    const strokeOpt = this.originalOpts.stroke;
+    const strokeWidth =
+      (strokeOpt !== null && typeof strokeOpt === "object" && "width" in strokeOpt
+        ? strokeOpt.width
+        : undefined) ??
+      this.originalOpts.strokeWidth ??
+      0;
+    const hasStroke = strokeOpt != null && strokeWidth > 0;
+
+    if (hasStroke) {
+      let strokeColor = 0x000000;
+      if (typeof strokeOpt === "object" && "color" in strokeOpt) {
+        const parsed = parseColor(strokeOpt.color);
+        if (parsed !== undefined) strokeColor = parsed;
+      } else if (typeof strokeOpt === "string" || typeof strokeOpt === "number") {
+        const parsed = parseColor(strokeOpt);
+        if (parsed !== undefined) strokeColor = parsed;
+      }
+
+      if (this.outlineFilter) {
+        this.outlineFilter.thickness = strokeWidth;
+        this.outlineFilter.padding = strokeWidth * 4;
+        const uniforms = this.outlineFilter.resources.outlineUniforms.uniforms;
+        uniforms.uBorderColor = new Color(strokeColor);
+      } else {
+        this.outlineFilter = new OutlineFilter({
+          thickness: strokeWidth,
+          borderColor: strokeColor,
+        });
+      }
+
+      this.wordTexts.forEach((wordText) => {
+        wordText.filters = [this.outlineFilter!];
+      });
+    } else {
+      if (this.outlineFilter) {
+        this.wordTexts.forEach((wordText) => {
+          wordText.filters = [];
+        });
+        this.outlineFilter = null;
+      }
+    }
+
+    return hasStroke ? strokeWidth : 0;
+  }
+
+  /**
+   * Create or update the DropShadowFilter on the text-only container.
+   */
+  private _applyShadowFilter(textOnlyContainer: Container): void {
+    const shadowOpt = this.originalOpts.shadow;
+    if (shadowOpt) {
+      const offsetX = shadowOpt.offsetX ?? 0;
+      const offsetY = shadowOpt.offsetY ?? 0;
+      const shadowColor = parseColor(shadowOpt.color ?? "#000000");
+      const shadowAlpha = shadowOpt.alpha ?? 1;
+      const shadowBlur = shadowOpt.blur ?? 4;
+      const shadowFilterPadding = Math.ceil(
+        shadowBlur * 2.5 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+      );
+
+      if (shadowColor !== undefined) {
+        if (this.dropShadowFilter) {
+          this.dropShadowFilter.color = shadowColor;
+          this.dropShadowFilter.alpha = shadowAlpha;
+          this.dropShadowFilter.blur = shadowBlur;
+          this.dropShadowFilter.offset = { x: offsetX, y: offsetY };
+          this.dropShadowFilter.padding = shadowFilterPadding;
+        } else {
+          this.dropShadowFilter = new DropShadowFilter({
+            color: shadowColor,
+            alpha: shadowAlpha,
+            blur: shadowBlur,
+            offset: { x: offsetX, y: offsetY },
+          });
+          this.dropShadowFilter.padding = shadowFilterPadding;
+        }
+        textOnlyContainer.filters = [this.dropShadowFilter];
+      }
+    } else {
+      if (this.dropShadowFilter) {
+        textOnlyContainer.filters = [];
+        this.dropShadowFilter = null;
+      }
+    }
+  }
+
+  /**
+   * Measure space width and actual visual text height using CanvasTextMetrics.
+   * Returns { spaceWidth, measuredTextHeight }.
+   */
+  private async _measureSpaceAndHeight(): Promise<{
+    spaceWidth: number;
+    measuredTextHeight: number;
+  }> {
+    const spaceFs = this.originalOpts.fontSize || 40;
+    const spaceFamily = this.originalOpts.fontFamily || "Arial";
+    const spaceWeight = String(this.originalOpts.fontWeight || "normal");
+    const spaceStyle = this.originalOpts.fontStyle || "normal";
+    const fontSpec = `${spaceStyle} ${spaceWeight} ${spaceFs}px "${spaceFamily}"`;
+
+    if (typeof document !== "undefined") {
+      try {
+        await document.fonts.load(fontSpec);
+      } catch (_) {
+        /* ignore */
+      }
+    }
+
+    const spaceMeasureStyle = new TextStyle({
+      fontFamily: spaceFamily,
+      fontSize: spaceFs,
+      fontWeight: spaceWeight as TextStyle["fontWeight"],
+      fontStyle: spaceStyle as TextStyle["fontStyle"],
+    });
+    const metrics = CanvasTextMetrics.measureText(" ", spaceMeasureStyle);
+
+    const textMeasureStyle = new TextStyle({
+      fontFamily: spaceFamily,
+      fontSize: spaceFs,
+      fontWeight: spaceWeight as TextStyle["fontWeight"],
+      fontStyle: spaceStyle as TextStyle["fontStyle"],
+    });
+    const textMeasureMetrics = CanvasTextMetrics.measureText("Hg", textMeasureStyle);
+    const fontProps = textMeasureMetrics.fontProperties;
+    const measuredTextHeight =
+      fontProps && fontProps.ascent > 0 ? Math.ceil(fontProps.ascent + fontProps.descent) : spaceFs;
+
+    const tempSpace = new SplitBitmapText({ text: " ", style: this.textStyleBase });
+    const spaceWidth = Math.ceil(
+      tempSpace.getLocalBounds().width || tempSpace.width || metrics.width || spaceFs * 0.25,
+    );
+    tempSpace.destroy();
+
+    return { spaceWidth, measuredTextHeight };
+  }
+
+  /**
+   * Break word objects into wrapped lines given a wrap width.
+   */
+  private _breakIntoLines(
+    wrapWidth: number,
+    lineHeight: number,
+  ): { words: SplitBitmapText[]; width: number; height: number }[] {
     const lines: { words: SplitBitmapText[]; width: number; height: number }[] = [];
     let currentLine: SplitBitmapText[] = [];
     let currentLineWidth = 0;
@@ -1194,8 +1150,9 @@ export class Text extends BaseClip<ITextEvents> {
       const bounds = wordText.getLocalBounds();
       const wordWidth = Math.ceil(bounds.width || wordText.width);
       const wordHeight = Math.ceil(bounds.height || wordText.height);
+      const projectedWidth =
+        currentLineWidth + (currentLineWidth > 0 ? this._spaceWidth : 0) + wordWidth;
 
-      const projectedWidth = currentLineWidth + (currentLineWidth > 0 ? spaceWidth : 0) + wordWidth;
       if (projectedWidth <= wrapWidth || currentLine.length === 0) {
         currentLine.push(wordText);
         currentLineWidth = projectedWidth;
@@ -1221,27 +1178,32 @@ export class Text extends BaseClip<ITextEvents> {
         height: Math.max(currentLineHeight, lineHeight),
       });
     }
+    return lines;
+  }
 
-    // Background line options (declared early so line-height and bounding-box logic can use them)
-    const bgColorOpt = this.originalOpts.background?.color;
-    const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
-    const bgOpacity = this.originalOpts.background?.opacity ?? 1;
-    const bgBorderRadius = this.originalOpts.background?.borderRadius ?? 4;
-    // Always apply padding for consistent text positioning, regardless of background visibility
-    const bgPadX = this.originalOpts.background?.paddingX ?? 8;
-    const bgPadY = this.originalOpts.background?.paddingY ?? 4;
-
-    // When background is enabled, expand each line's height by the vertical padding so the
-    // background rect tightly wraps the actual rendered glyphs with `bgPadY` on each side.
-    // We intentionally do NOT use measuredTextHeight here because CanvasTextMetrics returns
-    // CSS font-line-height metrics (e.g. 101px) which can be significantly larger than the
-    // actual bitmap-text bounding box height (e.g. 80px), inflating the bg rect unnecessarily.
+  /**
+   * Calculate container dimensions from line measurements.
+   */
+  private _calculateDimensions(
+    lines: { words: SplitBitmapText[]; width: number; height: number }[],
+    measuredTextHeight: number,
+    snapshotWidth: number,
+    snapshotWordWrap: boolean | undefined,
+    snapshotWordWrapWidth: number | undefined,
+    snapshotBackground: ITextOpts["background"],
+    bgPadX: number,
+    bgPadY: number,
+  ): {
+    containerWidth: number;
+    containerHeight: number;
+    contentWidth: number;
+    contentHeight: number;
+  } {
     const bgLineHeight = measuredTextHeight + bgPadY * 2;
     lines.forEach((line) => {
       line.height = Math.max(line.height, bgLineHeight);
     });
 
-    // 5. Dimension Calculation
     let maxLineWidth = 0;
     let totalHeight = 0;
     lines.forEach((line) => {
@@ -1249,34 +1211,20 @@ export class Text extends BaseClip<ITextEvents> {
       totalHeight += line.height;
     });
 
-    const textWidth = maxLineWidth;
-    const textHeight = totalHeight;
-
-    let contentWidth = textWidth;
+    let contentWidth = maxLineWidth;
     if (snapshotWordWrap && snapshotWidth > 0) {
-      // Expand to the inner text area (target minus bg padding on both sides) so that
-      // after contentWidth += bgPadX * 2 below, containerWidth == snapshotWidth exactly.
-      // Without this, the bounding box grows by bgPadX*2 every time a resize completes.
-      // Always apply padding for consistent wrap calculation
       const snapshotBgPadX = snapshotBackground?.paddingX ?? 8;
       const innerTargetWidth = snapshotWidth - snapshotBgPadX * 2;
       contentWidth = Math.max(contentWidth, innerTargetWidth);
     } else if (snapshotWordWrap && snapshotWordWrapWidth != null && snapshotWordWrapWidth > 0) {
       contentWidth = Math.max(contentWidth, snapshotWordWrapWidth);
     }
-    let contentHeight = textHeight;
+    const contentHeight = totalHeight;
 
-    // Bounding box must include background horizontal padding so the bg rect
-    // is fully enclosed within the clip's logical dimensions.
     contentWidth += bgPadX * 2;
-    contentHeight = totalHeight; // already includes bg line height
 
-    // Use _targetWidth (the resize target) rather than _width (which this function
-    // itself overwrites with the measured output at the end, so it would give a
-    // stale value on the _needsRefresh re-run).
     const effectiveWidth = snapshotWidth > 0 ? snapshotWidth : ((this as any)._width as number);
     const isAutoWidth = effectiveWidth === 0;
-    // Auto-height when: no explicit height set OR height is 0
     const isAutoHeight = !this._explicitHeight || this.height === 0;
 
     const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, effectiveWidth);
@@ -1284,21 +1232,29 @@ export class Text extends BaseClip<ITextEvents> {
       ? contentHeight
       : Math.max(contentHeight, this.height || 0);
 
-    // 6. Positioning words within the container
-    let startY = 0;
-    const finalVAlign = (this.originalOpts as any).verticalAlign || "top";
-    if (finalVAlign === "center") {
-      startY = (containerHeight - contentHeight) / 2;
-    } else if (finalVAlign === "bottom") {
-      startY = containerHeight - contentHeight;
-    }
+    return { containerWidth, containerHeight, contentWidth, contentHeight };
+  }
 
-    // Background line options (bg variables declared above)
+  /**
+   * Position word objects within their lines in the container.
+   * Returns per-line background rects if background is active.
+   */
+  private _positionWords(
+    lines: { words: SplitBitmapText[]; width: number; height: number }[],
+    containerWidth: number,
+    containerHeight: number,
+    contentHeight: number,
+    measuredTextHeight: number,
+    bgPadX: number,
+    hasBg: boolean,
+  ): { x: number; y: number; w: number; h: number }[] {
+    const finalVAlign = (this.originalOpts as any).verticalAlign || "top";
+    let startY = 0;
+    if (finalVAlign === "center") startY = (containerHeight - contentHeight) / 2;
+    else if (finalVAlign === "bottom") startY = containerHeight - contentHeight;
+
     let currentY = startY;
-    const graphics = new Graphics();
-    const bgGraphics = hasBg ? new Graphics() : null;
     const lineRects: { x: number; y: number; w: number; h: number }[] = [];
-    let hasDecoration = false;
 
     lines.forEach((line) => {
       let currentX = 0;
@@ -1308,7 +1264,6 @@ export class Text extends BaseClip<ITextEvents> {
       } else if (finalAlign === "right") {
         currentX = containerWidth - line.width - bgPadX * 2;
       } else {
-        // Left-aligned: offset text by padding so content is inset consistently
         currentX = bgPadX;
       }
 
@@ -1316,18 +1271,13 @@ export class Text extends BaseClip<ITextEvents> {
 
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
-        // Vertically center word within the line height.
-        // When bg is enabled, line.height = measuredTextHeight + bgPadY*2,
-        // so text is automatically centered inside the background rect.
-
         wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 9);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
-          (wordIndex < line.words.length - 1 ? spaceWidth : 0);
+          (wordIndex < line.words.length - 1 ? this._spaceWidth : 0);
       });
 
-      // Collect per-line background rectangle for TikTok-style continuous rounded path
-      if (hasBg && bgGraphics) {
+      if (hasBg) {
         lineRects.push({
           x: lineXStart - bgPadX,
           y: currentY,
@@ -1336,65 +1286,95 @@ export class Text extends BaseClip<ITextEvents> {
         });
       }
 
-      // Handle Text Decoration
-      if (
-        decoration &&
-        decoration !== "none" &&
-        ["underline", "overline", "strikethrough", "line-through"].includes(decoration)
-      ) {
-        hasDecoration = true;
-        const finalDecoration = decoration === "strikethrough" ? "line-through" : decoration;
-        const lineThickness = Math.max(1, fontSize / 12);
-
-        // Determine Line Color
-        let lineColor = 0xffffff;
-        if (typeof style.fill === "number") {
-          lineColor = style.fill;
-        } else if (style.fill && typeof style.fill === "object" && "fill" in style.fill) {
-          lineColor = 0xffffff;
-        }
-
-        let yOffset = 0;
-        if (finalDecoration === "underline") {
-          yOffset = line.height;
-        } else if (finalDecoration === "line-through") {
-          yOffset = line.height / 2;
-        } else if (finalDecoration === "overline") {
-          yOffset = 0;
-        }
-
-        graphics.rect(lineXStart, currentY + yOffset, line.width, lineThickness);
-        graphics.fill(lineColor);
-      }
-
       currentY += line.height;
     });
 
-    if (hasDecoration) {
-      this.pixiTextContainer.addChild(graphics);
+    return lineRects;
+  }
+
+  /**
+   * Draw text decoration lines (underline / overline / strikethrough) into a Graphics object.
+   * Returns the Graphics instance if decoration was drawn, or null.
+   */
+  private _drawDecoration(
+    lines: { words: SplitBitmapText[]; width: number; height: number }[],
+    containerWidth: number,
+    bgPadX: number,
+  ): Graphics | null {
+    const decoration = this.originalOpts.textDecoration || (this.originalOpts as any).verticalAlign;
+    if (
+      !decoration ||
+      decoration === "none" ||
+      !["underline", "overline", "strikethrough", "line-through"].includes(decoration)
+    ) {
+      return null;
     }
 
-    // Add background graphics behind text (TikTok-style continuous rounded path)
-    if (bgGraphics && lineRects.length > 0) {
-      const parsedBgColor = parseColor(bgColorOpt);
-      this.drawRoundedTiktokPath(
-        bgGraphics,
-        lineRects,
-        bgBorderRadius,
-        parsedBgColor ?? 0x000000,
-        bgOpacity,
-      );
-      this.pixiTextContainer.addChildAt(bgGraphics, 0);
-    }
+    const style = this.textStyle;
+    const fontSize = style.fontSize ?? 40;
+    const finalDecoration = decoration === "strikethrough" ? "line-through" : decoration;
+    const lineThickness = Math.max(1, fontSize / 12);
 
-    // Add transparent padding around the texture so animation transforms (slide, zoom)
-    // have room to move without hard-clipping at the clip boundary.
-    // The clip bounding box / selection handles are unaffected — they use _width/_height
-    // which remain the logical (unpadded) content dimensions.
+    let lineColor = 0xffffff;
+    if (typeof style.fill === "number") lineColor = style.fill;
+
+    const graphics = new Graphics();
+    let currentY = 0;
+
+    lines.forEach((line) => {
+      let lineXStart = bgPadX;
+      const finalAlign = this.textAlign;
+      if (finalAlign === "center") lineXStart = (containerWidth - line.width) / 2;
+      else if (finalAlign === "right") lineXStart = containerWidth - line.width - bgPadX * 2;
+
+      let yOffset = 0;
+      if (finalDecoration === "underline") yOffset = line.height;
+      else if (finalDecoration === "line-through") yOffset = line.height / 2;
+
+      graphics.rect(lineXStart, currentY + yOffset, line.width, lineThickness);
+      graphics.fill(lineColor);
+      currentY += line.height;
+    });
+
+    return graphics;
+  }
+
+  /**
+   * Build background graphics for the text container (TikTok-style per-line background).
+   * Returns the Graphics instance or null if no background.
+   */
+  private _buildBackground(
+    lineRects: { x: number; y: number; w: number; h: number }[],
+    bgColorOpt: string | undefined,
+    bgOpacity: number,
+    bgBorderRadius: number,
+  ): Graphics | null {
+    if (!lineRects.length || !bgColorOpt || bgColorOpt === "transparent" || bgColorOpt === "") {
+      return null;
+    }
+    const parsedBgColor = parseColor(bgColorOpt);
+    const bgGraphics = new Graphics();
+    this.drawRoundedTiktokPath(
+      bgGraphics,
+      lineRects,
+      bgBorderRadius,
+      parsedBgColor ?? 0x000000,
+      bgOpacity,
+    );
+    return bgGraphics;
+  }
+
+  /**
+   * Calculate padding and create a new RenderTexture sized to fit the content plus animation/filter padding.
+   * Updates this.renderTexturePadding and this.renderTexture.
+   */
+  private _createRenderTexture(
+    containerWidth: number,
+    containerHeight: number,
+    strokeWidth: number,
+  ): void {
     const ANIM_PAD = 300;
-    // Add filter padding to prevent stroke from being cropped in the render texture
     const filterPadding = strokeWidth > 0 ? strokeWidth * 2.1 : 0;
-    // Add shadow padding to prevent shadow blur from being cropped
     let shadowPadding = 0;
     if (this.dropShadowFilter) {
       const shadowBlur = this.dropShadowFilter.blur ?? 0;
@@ -1408,47 +1388,117 @@ export class Text extends BaseClip<ITextEvents> {
     const paddedWidth = containerWidth + totalPad * 2;
     const paddedHeight = containerHeight + totalPad * 2;
 
-    // Shift all content inside pixiTextContainer so it lands in the centre of the padded texture
     if (this.pixiTextContainer) {
       this.pixiTextContainer.x = totalPad;
       this.pixiTextContainer.y = totalPad;
     }
 
-    // Reuse or resize render texture efficiently
-    if (this.renderTexture) {
-      this.renderTexture.destroy();
-    }
-    this.renderTexture = RenderTexture.create({
-      width: paddedWidth,
-      height: paddedHeight,
-    });
-
-    // Store the padding so PixiSpriteRenderer can compensate the sprite anchor offset
+    if (this.renderTexture) this.renderTexture.destroy();
+    this.renderTexture = RenderTexture.create({ width: paddedWidth, height: paddedHeight });
     this.renderTexturePadding = totalPad;
+  }
 
-    // Update clip dimensions — these are the LOGICAL (unpadded) dimensions used for
-    // selection handles, layout, and transforms. Do NOT use paddedWidth/Height here.
-    this._meta.width = containerWidth;
-    this._meta.height = containerHeight;
+  /**
+   * Normalize raw incoming style opts (flatten nested style, map legacy keys).
+   */
+  private _normalizeStyleOpts(opts: Partial<ITextOpts>): Partial<ITextOpts> {
+    let processed = { ...opts } as any;
 
-    (this as any)._width = containerWidth;
-    // Use containerHeight which is: contentHeight (auto) or Math.max(contentHeight, explicitHeight)
-    (this as any)._height = containerHeight;
-
-    if (this.duration === 0 && this._meta.duration !== Infinity) {
-      this.duration = this._meta.duration;
-      this.display.to = this.display.from + this.duration;
+    if (processed.style) {
+      processed = { ...processed, ...processed.style };
+      delete processed.style;
+    }
+    if (processed.fill !== undefined) {
+      processed.color = processed.fill;
+      delete processed.fill;
+    }
+    if (processed.dropShadow !== undefined) {
+      processed.shadow = processed.dropShadow;
+      delete processed.dropShadow;
+    }
+    if (processed.textAlign !== undefined) {
+      processed.align = processed.textAlign;
+      delete processed.textAlign;
     }
 
-    // Populate cache for fast layout updates during transform
-    this._populateWordCache(
-      words,
-      textOnlyContainer,
-      spaceWidth,
-      measuredTextHeight,
-      lineHeightMultiplier,
-      fontSize,
-    );
+    const hasUnderline = processed.underline;
+    const hasOverline = processed.overline;
+    const hasLinethrough = processed.linethrough;
+    if (hasUnderline !== undefined || hasOverline !== undefined || hasLinethrough !== undefined) {
+      if (hasUnderline) processed.textDecoration = "underline";
+      else if (hasOverline) processed.textDecoration = "overline";
+      else if (hasLinethrough) processed.textDecoration = "line-through";
+      else processed.textDecoration = "none";
+      delete processed.underline;
+      delete processed.overline;
+      delete processed.linethrough;
+    }
+
+    return processed as Partial<ITextOpts>;
+  }
+
+  /**
+   * Extract clone-safe color opts from originalOpts / textStyle.
+   */
+  private _cloneColorOpts(colorToNumber: (c: any) => number | undefined): ITextOpts["color"] {
+    const originalOpts = this.originalOpts;
+    if (
+      originalOpts.color &&
+      typeof originalOpts.color === "object" &&
+      "type" in originalOpts.color &&
+      originalOpts.color.type === "gradient"
+    ) {
+      return originalOpts.color;
+    }
+    return colorToNumber(this.textStyle.fill) ?? 0xffffff;
+  }
+
+  /**
+   * Extract clone-safe stroke opts from originalOpts / textStyle.
+   */
+  private _cloneStrokeOpts(colorToNumber: (c: any) => number | undefined): {
+    stroke: ITextOpts["stroke"];
+    strokeWidth: number;
+  } {
+    const originalOpts = this.originalOpts;
+    const style = this.textStyle;
+    if (
+      originalOpts.stroke &&
+      typeof originalOpts.stroke === "object" &&
+      "color" in originalOpts.stroke
+    ) {
+      return { stroke: originalOpts.stroke, strokeWidth: 0 };
+    }
+    const strokeColor = colorToNumber(style.stroke);
+    const strokeWidth = originalOpts.strokeWidth ?? (style as any).strokeThickness ?? 0;
+    return { stroke: strokeColor !== undefined ? strokeColor : undefined, strokeWidth };
+  }
+
+  /**
+   * Extract clone-safe shadow opts from originalOpts / textStyle.
+   */
+  private _cloneShadowOpts(
+    colorToNumber: (c: any) => number | undefined,
+  ): ITextOpts["shadow"] | undefined {
+    const originalOpts = this.originalOpts;
+    const style = this.textStyle;
+    if (originalOpts.shadow) return originalOpts.shadow;
+    if (style.dropShadow) {
+      const ds = style.dropShadow;
+      const shadowColor = colorToNumber(ds.color);
+      if (shadowColor !== undefined) {
+        const angle = ds.angle ?? 0;
+        const distance = ds.distance ?? 0;
+        return {
+          color: shadowColor,
+          alpha: ds.alpha,
+          blur: ds.blur,
+          offsetX: Math.cos(angle) * distance,
+          offsetY: Math.sin(angle) * distance,
+        };
+      }
+    }
+    return undefined;
   }
 
   /**
