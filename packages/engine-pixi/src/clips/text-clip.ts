@@ -1164,6 +1164,7 @@ export class Text extends BaseClip<ITextEvents> {
     let currentY = startY;
     const graphics = new Graphics();
     const bgGraphics = hasBg ? new Graphics() : null;
+    const lineRects: { x: number; y: number; w: number; h: number }[] = [];
     let hasDecoration = false;
 
     lines.forEach((line) => {
@@ -1191,17 +1192,14 @@ export class Text extends BaseClip<ITextEvents> {
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
       });
 
-      // Draw per-line background rectangle
+      // Collect per-line background rectangle for TikTok-style continuous rounded path
       if (hasBg && bgGraphics) {
-        const parsedBgColor = parseColor(bgColorOpt);
-        // Background fills the full line height (which already = measuredTextHeight + bgPadY*2).
-        // This ensures text is vertically centered within the rect.
-        const bgX = lineXStart - bgPadX;
-        const bgY = currentY;
-        const bgW = line.width + bgPadX * 2;
-        const bgH = line.height;
-        bgGraphics.roundRect(bgX, bgY, bgW, bgH, bgBorderRadius);
-        bgGraphics.fill({ color: parsedBgColor ?? 0x000000, alpha: bgOpacity });
+        lineRects.push({
+          x: lineXStart - bgPadX,
+          y: currentY,
+          w: line.width + bgPadX * 2,
+          h: line.height,
+        });
       }
 
       // Handle Text Decoration
@@ -1242,8 +1240,16 @@ export class Text extends BaseClip<ITextEvents> {
       this.pixiTextContainer.addChild(graphics);
     }
 
-    // Add background graphics behind text (per-line rounded rects)
-    if (bgGraphics) {
+    // Add background graphics behind text (TikTok-style continuous rounded path)
+    if (bgGraphics && lineRects.length > 0) {
+      const parsedBgColor = parseColor(bgColorOpt);
+      this.drawRoundedTiktokPath(
+        bgGraphics,
+        lineRects,
+        bgBorderRadius,
+        parsedBgColor ?? 0x000000,
+        bgOpacity,
+      );
       this.pixiTextContainer.addChildAt(bgGraphics, 0);
     }
 
@@ -1350,6 +1356,106 @@ export class Text extends BaseClip<ITextEvents> {
     // This prevents bounding box issues with native TextStyle shadow
 
     return styleOptions;
+  }
+
+  /**
+   * Draw a continuous rounded path around multiple line rectangles (TikTok-style caption background).
+   * Aligns nearby edges, then traces the outer contour using arcTo for smooth rounded joins between lines.
+   */
+  private drawRoundedTiktokPath(
+    graphics: Graphics,
+    rects: { x: number; y: number; w: number; h: number }[],
+    radius: number,
+    color: number,
+    alpha: number = 1,
+  ) {
+    if (rects.length === 0) return;
+
+    // --- Align edges that are close to each other ---
+    // The threshold must be at least 2 * radius, otherwise the two arcTo calls
+    // for the inner and outer corners will overlap and cause rendering glitches.
+    const threshold = Math.max(radius * 0.8, 15);
+    let changed = true;
+    let passes = 0;
+    while (changed && passes < 5) {
+      changed = false;
+      passes++;
+      for (let i = 0; i < rects.length; i++) {
+        for (let j = i + 1; j < rects.length; j++) {
+          const r1Right = rects[i].x + rects[i].w;
+          const r2Right = rects[j].x + rects[j].w;
+          if (Math.abs(r1Right - r2Right) > 0.1 && Math.abs(r1Right - r2Right) < threshold) {
+            const maxR = Math.max(r1Right, r2Right);
+            rects[i].w = maxR - rects[i].x;
+            rects[j].w = maxR - rects[j].x;
+            changed = true;
+          }
+
+          if (
+            Math.abs(rects[i].x - rects[j].x) > 0.1 &&
+            Math.abs(rects[i].x - rects[j].x) < threshold
+          ) {
+            const minX = Math.min(rects[i].x, rects[j].x);
+            rects[i].w += rects[i].x - minX;
+            rects[i].x = minX;
+            rects[j].w += rects[j].x - minX;
+            rects[j].x = minX;
+            changed = true;
+          }
+        }
+      }
+    }
+
+    const points: { x: number; y: number }[] = [];
+
+    // Right side (top to bottom)
+    points.push({ x: rects[0].x, y: rects[0].y });
+    points.push({ x: rects[0].x + rects[0].w, y: rects[0].y });
+
+    for (let i = 0; i < rects.length - 1; i++) {
+      const r1 = rects[i];
+      const r2 = rects[i + 1];
+      if (Math.abs(r1.x + r1.w - (r2.x + r2.w)) > 0.1) {
+        const midY = (r1.y + r1.h + r2.y) / 2;
+        points.push({ x: r1.x + r1.w, y: midY });
+        points.push({ x: r2.x + r2.w, y: midY });
+      }
+    }
+
+    points.push({
+      x: rects[rects.length - 1].x + rects[rects.length - 1].w,
+      y: rects[rects.length - 1].y + rects[rects.length - 1].h,
+    });
+    points.push({
+      x: rects[rects.length - 1].x,
+      y: rects[rects.length - 1].y + rects[rects.length - 1].h,
+    });
+
+    // Left side (bottom to top)
+    for (let i = rects.length - 1; i > 0; i--) {
+      const r1 = rects[i];
+      const r2 = rects[i - 1];
+      if (Math.abs(r1.x - r2.x) > 0.1) {
+        const midY = (r1.y + r2.y + r2.h) / 2;
+        points.push({ x: r1.x, y: midY });
+        points.push({ x: r2.x, y: midY });
+      }
+    }
+
+    graphics.clear();
+
+    // Start at the midpoint between the last and first point so the first corner is rounded
+    const pLast = points[points.length - 1];
+    const pFirst = points[0];
+    graphics.moveTo((pLast.x + pFirst.x) / 2, (pLast.y + pFirst.y) / 2);
+
+    for (let i = 0; i < points.length; i++) {
+      const p1 = points[i];
+      const p2 = points[(i + 1) % points.length];
+      graphics.arcTo(p1.x, p1.y, (p1.x + p2.x) / 2, (p1.y + p2.y) / 2, radius);
+    }
+
+    graphics.fill({ color, alpha });
   }
 
   destroy(): void {
