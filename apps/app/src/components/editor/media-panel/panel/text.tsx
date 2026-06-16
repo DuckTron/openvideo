@@ -118,13 +118,13 @@ export default function PanelText() {
           wordWrap: true,
           wordWrapWidth: 600,
           fontUrl: "https://fonts.gstatic.com/s/poppins/v15/pxiByp8kv8JHgFVrLCz7V1tvFP-KUEg.ttf",
-          background: {
-            color: "#ff0000",
-            opacity: 1,
-            borderRadius: 4,
-            paddingX: 8,
-            paddingY: 4,
-          },
+          // background: {
+          //   color: "#ff0000",
+          //   opacity: 1,
+          //   borderRadius: 4,
+          //   paddingX: 8,
+          //   paddingY: 4,
+          // },
         },
         timing: {
           display: { from: 0, to: 5_000_000 },

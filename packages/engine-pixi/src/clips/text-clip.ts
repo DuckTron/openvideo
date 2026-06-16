@@ -1094,12 +1094,10 @@ export class Text extends BaseClip<ITextEvents> {
     // We intentionally do NOT use measuredTextHeight here because CanvasTextMetrics returns
     // CSS font-line-height metrics (e.g. 101px) which can be significantly larger than the
     // actual bitmap-text bounding box height (e.g. 80px), inflating the bg rect unnecessarily.
-    if (hasBg) {
-      const bgLineHeight = measuredTextHeight + bgPadY * 2;
-      lines.forEach((line) => {
-        line.height = Math.max(line.height, bgLineHeight);
-      });
-    }
+    const bgLineHeight = measuredTextHeight + bgPadY * 2;
+    lines.forEach((line) => {
+      line.height = Math.max(line.height, bgLineHeight);
+    });
 
     // 5. Dimension Calculation
     let maxLineWidth = 0;
@@ -1120,10 +1118,8 @@ export class Text extends BaseClip<ITextEvents> {
 
     // Bounding box must include background horizontal padding so the bg rect
     // is fully enclosed within the clip's logical dimensions.
-    if (hasBg) {
-      contentWidth += bgPadX * 2;
-      contentHeight = totalHeight; // already includes bg line height
-    }
+    contentWidth += bgPadX * 2;
+    contentHeight = totalHeight; // already includes bg line height
 
     const isAutoWidth = this.width === 0;
     const isAutoHeight = this.height === 0;
@@ -1169,7 +1165,6 @@ export class Text extends BaseClip<ITextEvents> {
         // When bg is enabled, line.height = measuredTextHeight + bgPadY*2,
         // so text is automatically centered inside the background rect.
 
-        console.log({ bgPadY });
         wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 9);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
