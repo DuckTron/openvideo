@@ -1102,6 +1102,23 @@ export class Text extends BaseClip<ITextEvents> {
       });
     }
 
+    // Background line options (declared early so line-height and bounding-box logic can use them)
+    const bgColorOpt = this.originalOpts.backgroundColor;
+    const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
+    const bgOpacity = this.originalOpts.backgroundOpacity ?? 1;
+    const bgBorderRadius = this.originalOpts.backgroundBorderRadius ?? 4;
+    const bgPadX = this.originalOpts.backgroundPaddingX ?? 8;
+    const bgPadY = this.originalOpts.backgroundPaddingY ?? 4;
+
+    // When background is enabled, line height = ascent + descent + vertical padding
+    // so the background rect fills the entire line and text is vertically centered in it.
+    if (hasBg) {
+      const bgLineHeight = measuredTextHeight + bgPadY * 2;
+      lines.forEach((line) => {
+        line.height = Math.max(line.height, bgLineHeight);
+      });
+    }
+
     // 5. Dimension Calculation
     let maxLineWidth = 0;
     let totalHeight = 0;
@@ -1117,7 +1134,14 @@ export class Text extends BaseClip<ITextEvents> {
     if (style.wordWrap && style.wordWrapWidth > 0) {
       contentWidth = Math.max(contentWidth, style.wordWrapWidth);
     }
-    const contentHeight = textHeight;
+    let contentHeight = textHeight;
+
+    // Bounding box must include background horizontal padding so the bg rect
+    // is fully enclosed within the clip's logical dimensions.
+    if (hasBg) {
+      contentWidth += bgPadX * 2;
+      contentHeight = totalHeight; // already includes bg line height
+    }
 
     const isAutoWidth = this.width === 0;
     const isAutoHeight = this.height === 0;
@@ -1131,19 +1155,12 @@ export class Text extends BaseClip<ITextEvents> {
     let startY = 0;
     const finalVAlign = (this.originalOpts as any).verticalAlign || "top";
     if (finalVAlign === "center") {
-      startY = (containerHeight - textHeight) / 2;
+      startY = (containerHeight - contentHeight) / 2;
     } else if (finalVAlign === "bottom") {
-      startY = containerHeight - textHeight;
+      startY = containerHeight - contentHeight;
     }
 
-    // Background line options
-    const bgColorOpt = this.originalOpts.backgroundColor;
-    const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
-    const bgOpacity = this.originalOpts.backgroundOpacity ?? 1;
-    const bgBorderRadius = this.originalOpts.backgroundBorderRadius ?? 4;
-    const bgPadX = this.originalOpts.backgroundPaddingX ?? 8;
-    const bgPadY = this.originalOpts.backgroundPaddingY ?? 4;
-
+    // Background line options (bg variables declared above)
     let currentY = startY;
     const graphics = new Graphics();
     const bgGraphics = hasBg ? new Graphics() : null;
@@ -1155,16 +1172,19 @@ export class Text extends BaseClip<ITextEvents> {
       if (finalAlign === "center") {
         currentX = (containerWidth - line.width) / 2;
       } else if (finalAlign === "right") {
-        currentX = containerWidth - line.width;
+        currentX = containerWidth - line.width - (hasBg ? bgPadX * 2 : 0);
+      } else if (hasBg) {
+        // Left-aligned with background: offset text so bg rect starts at x=0
+        currentX = bgPadX;
       }
 
       const lineXStart = currentX;
 
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
-        // Vertically center word within the line using the MEASURED visual text height.
-        // getLocalBounds().height can include font metrics padding (ascent/descent space)
-        // that extends beyond visible glyphs, causing the text to appear off-center.
+        // Vertically center word within the line height.
+        // When bg is enabled, line.height = measuredTextHeight + bgPadY*2,
+        // so text is automatically centered inside the background rect.
         wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
@@ -1174,15 +1194,13 @@ export class Text extends BaseClip<ITextEvents> {
       // Draw per-line background rectangle
       if (hasBg && bgGraphics) {
         const parsedBgColor = parseColor(bgColorOpt);
-        // Center the background on the same vertical center as the text.
-        // Use measuredTextHeight (actual visual height) so padding is visually equal
-        // above and below the text, regardless of font metrics padding in getLocalBounds.
-        const bgCenterY = currentY + line.height / 2;
-        const bgTotalH = measuredTextHeight + bgPadY * 2;
+        // Background fills the full line height (which already = measuredTextHeight + bgPadY*2).
+        // This ensures text is vertically centered within the rect.
         const bgX = lineXStart - bgPadX;
-        const bgY = bgCenterY - bgTotalH / 2;
+        const bgY = currentY;
         const bgW = line.width + bgPadX * 2;
-        bgGraphics.roundRect(bgX, bgY, bgW, bgTotalH, bgBorderRadius);
+        const bgH = line.height;
+        bgGraphics.roundRect(bgX, bgY, bgW, bgH, bgBorderRadius);
         bgGraphics.fill({ color: parsedBgColor ?? 0x000000, alpha: bgOpacity });
       }
 
