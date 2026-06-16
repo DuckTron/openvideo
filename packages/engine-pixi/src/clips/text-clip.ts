@@ -1191,7 +1191,7 @@ export class Text extends BaseClip<ITextEvents> {
         // so text is automatically centered inside the background rect.
 
         console.log({ bgPadY });
-        wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 8);
+        wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 9);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
@@ -1199,11 +1199,6 @@ export class Text extends BaseClip<ITextEvents> {
 
       // Collect per-line background rectangle for TikTok-style continuous rounded path
       if (hasBg && bgGraphics) {
-        console.log(
-          `[TextClip] bgRect line=${lines.indexOf(line)}` +
-            ` x=${(lineXStart - bgPadX).toFixed(1)} y=${currentY.toFixed(1)}` +
-            ` w=${(line.width + bgPadX * 2).toFixed(1)} h=${line.height.toFixed(1)}`,
-        );
         lineRects.push({
           x: lineXStart - bgPadX,
           y: currentY,
