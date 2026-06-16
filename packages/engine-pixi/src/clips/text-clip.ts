@@ -937,6 +937,10 @@ export class Text extends BaseClip<ITextEvents> {
     // Use textStyle for words (includes fill color), shadow handled separately via DropShadowFilter
     const styleForWords = this.textStyle;
 
+    // Create a text-only container to hold words (for applying shadow filter only to text)
+    const textOnlyContainer = new Container();
+    textOnlyContainer.label = "TextOnlyContainer";
+
     // Cleanup old word texts
     this.wordTexts.forEach((w) => w.destroy());
     this.wordTexts = words.map((wordStr) => {
@@ -944,7 +948,8 @@ export class Text extends BaseClip<ITextEvents> {
         text: wordStr,
         style: styleForWords,
       });
-      this.pixiTextContainer!.addChild(wordText);
+      // Add to text-only container (not main container) so shadow filter only affects text
+      textOnlyContainer.addChild(wordText);
       return wordText;
     });
 
@@ -974,6 +979,9 @@ export class Text extends BaseClip<ITextEvents> {
       // Create or update OutlineFilter for outline
       if (this.outlineFilter) {
         this.outlineFilter.thickness = strokeWidth;
+        // CRITICAL: Update filter padding when thickness changes to prevent clipping
+        // Padding must be >= thickness * 4 to account for 16-direction sampling in shader
+        this.outlineFilter.padding = strokeWidth * 4;
         const uniforms = this.outlineFilter.resources.outlineUniforms.uniforms;
         uniforms.uBorderColor = new Color(strokeColor);
       } else {
@@ -983,7 +991,7 @@ export class Text extends BaseClip<ITextEvents> {
         });
       }
 
-      // Apply filter to all word texts
+      // Apply filter to all word texts (already in textOnlyContainer)
       this.wordTexts.forEach((wordText) => {
         wordText.filters = [this.outlineFilter!];
       });
@@ -997,7 +1005,8 @@ export class Text extends BaseClip<ITextEvents> {
       }
     }
 
-    // Apply DropShadowFilter to container (not individual words) to avoid conflicts with OutlineFilter
+    // Apply DropShadowFilter to text-only container (not the main container with background)
+    // This ensures shadow only applies to text, not the background
     const shadowOpt = this.originalOpts.shadow;
     if (shadowOpt) {
       const offsetX = shadowOpt.offsetX ?? 0;
@@ -1010,7 +1019,7 @@ export class Text extends BaseClip<ITextEvents> {
       // Without this, high blur values cause the shadow to be clipped at the filter boundary.
       // padding must be >= blur * 2 + the max offset so the blurred shadow is never cut off.
       const shadowFilterPadding = Math.ceil(
-        shadowBlur * 2 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
+        shadowBlur * 2.5 + Math.max(Math.abs(offsetX), Math.abs(offsetY)),
       );
 
       if (shadowColor !== undefined) {
@@ -1032,15 +1041,18 @@ export class Text extends BaseClip<ITextEvents> {
           this.dropShadowFilter.padding = shadowFilterPadding;
         }
 
-        this.pixiTextContainer.filters = [this.dropShadowFilter];
+        textOnlyContainer.filters = [this.dropShadowFilter];
       }
     } else {
       // Remove shadow filter if no shadow
       if (this.dropShadowFilter) {
-        this.pixiTextContainer.filters = [];
+        textOnlyContainer.filters = [];
         this.dropShadowFilter = null;
       }
     }
+
+    // Add text-only container (with shadow) to main container
+    this.pixiTextContainer.addChild(textOnlyContainer);
 
     // 4. Calculate Layout (Lines) - mostly following CaptionClip logic
     const decoration = this.originalOpts.textDecoration || (this.originalOpts as any).verticalAlign;

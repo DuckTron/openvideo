@@ -174,7 +174,7 @@ export class OutlineFilter extends Filter {
     super({
       gpuProgram,
       glProgram,
-      padding: thickness * 2.1,
+      padding: thickness * 4,
       resources: {
         outlineUniforms: new UniformGroup({
           uThickness: { value: thickness, type: "f32" },
