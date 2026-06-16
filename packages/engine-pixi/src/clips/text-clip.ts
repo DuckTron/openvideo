@@ -260,7 +260,12 @@ export class Text extends BaseClip<ITextEvents> {
     (this as any)._width = v;
     this._targetWidth = v;
     this.refreshText().then(() => {
-      this.emit("propsChange", { width: v });
+      // When height is auto (not explicitly set), emit height change after text reflows
+      if (!this._explicitHeight) {
+        this.emit("propsChange", { width: v, height: this.height });
+      } else {
+        this.emit("propsChange", { width: v });
+      }
     });
   }
 
@@ -268,11 +273,48 @@ export class Text extends BaseClip<ITextEvents> {
     return (this as any)._height;
   }
 
+  /**
+   * Flag to track if height was explicitly set by user (vs auto-calculated from content)
+   */
+  private _explicitHeight = false;
+
+  /**
+   * Get whether height was explicitly set by user
+   */
+  get isExplicitHeight(): boolean {
+    return this._explicitHeight;
+  }
+
+  /**
+   * Reset height to auto-fit mode (height will adjust to content)
+   */
+  resetHeightToAuto(): void {
+    this._explicitHeight = false;
+    (this as any)._height = 0;
+    this.refreshText().then(() => {
+      this.emit("propsChange", { height: this.height });
+    });
+  }
+
   override set height(v: number) {
     if (Math.abs(this.height - v) < 0.1) return;
+    // Store the requested value temporarily
+    const requestedHeight = v;
     (this as any)._height = v;
     this.refreshText().then(() => {
-      this.emit("propsChange", { height: v });
+      // After refresh, determine if this should be treated as explicit height
+      // contentHeight = the natural height text wants at current width
+      const contentHeight = this._meta.height;
+      // Only auto-mark as explicit if user is forcing a smaller height than content requires
+      // (diff < -5px). Otherwise preserve existing explicit mode or stay in auto mode.
+      // This prevents transformer resize from accidentally marking height as explicit
+      // when text reflows due to width changes.
+      const diff = requestedHeight - contentHeight;
+      const isForcingSmaller = diff < -5;
+      // Mark as explicit if: value > 0 AND (forcing smaller OR already explicit)
+      this._explicitHeight = requestedHeight > 0 && (isForcingSmaller || this._explicitHeight);
+      // Emit the actual calculated height (may differ from input v if content is taller)
+      this.emit("propsChange", { height: this.height });
     });
   }
 
@@ -1221,7 +1263,8 @@ export class Text extends BaseClip<ITextEvents> {
     // stale value on the _needsRefresh re-run).
     const effectiveWidth = snapshotWidth > 0 ? snapshotWidth : ((this as any)._width as number);
     const isAutoWidth = effectiveWidth === 0;
-    const isAutoHeight = this.height === 0;
+    // Auto-height when: no explicit height set OR height is 0
+    const isAutoHeight = !this._explicitHeight || this.height === 0;
 
     const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, effectiveWidth);
     const containerHeight = isAutoHeight
@@ -1376,6 +1419,7 @@ export class Text extends BaseClip<ITextEvents> {
     this._meta.height = containerHeight;
 
     (this as any)._width = containerWidth;
+    // Use containerHeight which is: contentHeight (auto) or Math.max(contentHeight, explicitHeight)
     (this as any)._height = containerHeight;
 
     if (this.duration === 0 && this._meta.duration !== Infinity) {

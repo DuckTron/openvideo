@@ -490,26 +490,6 @@ export class Transformer extends Container {
       const mouseLocalY = (-localTransform.c * dx + localTransform.a * dy) * invDet;
       const mouseLocal = new Point(mouseLocalX, mouseLocalY);
 
-      console.log("[calculateSnappedScale] globalMouse:", { x: global.x, y: global.y });
-      console.log("[calculateSnappedScale] mouseParent:", { x: mouseParent.x, y: mouseParent.y });
-      console.log("[calculateSnappedScale] localTransform:", {
-        a: localTransform.a,
-        b: localTransform.b,
-        c: localTransform.c,
-        d: localTransform.d,
-        tx: localTransform.tx,
-        ty: localTransform.ty,
-      });
-      console.log("[calculateSnappedScale] det:", det, "invDet:", invDet);
-      console.log("[calculateSnappedScale] dx:", dx, "dy:", dy);
-      console.log("[calculateSnappedScale] mouseLocal:", { x: mouseLocal.x, y: mouseLocal.y });
-      console.log("[calculateSnappedScale] pivotLocal:", { x: pivotLocal.x, y: pivotLocal.y });
-      console.log("[calculateSnappedScale] expectedWidth:", mouseLocal.x - pivotLocal.x);
-      console.log("[calculateSnappedScale] localTransform scale:", {
-        a: localTransform.a,
-        parentScale,
-      });
-
       proposed = this.#proposeScaledRect(handle, mouseLocal, pivotLocal);
     } else {
       proposed = this.#proposeScaledRect(handle, this.toLocal(global), pivotLocal);
@@ -531,10 +511,7 @@ export class Transformer extends Container {
       // Calculate proposed rect position in parent space (artboard space)
       // The transformer's localTransform converts local → parent
       const proposedParent = this.localTransform.apply(new Point(proposed.x, proposed.y));
-      console.log("[calculateSnappedScale] proposedParent:", {
-        x: proposedParent.x,
-        y: proposedParent.y,
-      });
+
       const { corrected, guides } = this.#snappingManager.snapResize(
         proposed,
         proposedParent,

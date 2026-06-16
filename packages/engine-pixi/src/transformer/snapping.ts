@@ -139,16 +139,6 @@ export class SnappingManager {
     const guides: SnapGuide[] = [];
     const threshold = SnappingManager.SNAP_THRESHOLD / this.scale;
 
-    // Debug logging
-    console.log("[snapResize] handle:", handle, "scale:", this.scale, "threshold:", threshold);
-    console.log("[snapResize] proposedLocal:", {
-      x: rect.x,
-      y: rect.y,
-      w: rect.width,
-      h: rect.height,
-    });
-    console.log("[snapResize] proposedWorld:", { x: proposedWorld.x, y: proposedWorld.y });
-
     // Artboard targets (in world coordinates)
     const targetsX = [
       { value: 0, label: "start" },
@@ -177,25 +167,6 @@ export class SnappingManager {
     const worldHeight = rect.height * this.scale;
     const worldRight = worldLeft + worldWidth;
     const worldBottom = worldTop + worldHeight;
-
-    console.log("[snapResize] worldEdges:", {
-      left: worldLeft,
-      right: worldRight,
-      top: worldTop,
-      bottom: worldBottom,
-    });
-    console.log("[snapResize] targets:", {
-      midX: this.artboardWidth / 2,
-      maxX: this.artboardWidth,
-      midY: this.artboardHeight / 2,
-      maxY: this.artboardHeight,
-    });
-    console.log("[snapResize] moving:", {
-      left: movingLeft,
-      right: movingRight,
-      top: movingTop,
-      bottom: movingBottom,
-    });
 
     // Snap horizontal edges (X-axis) - check against world coordinates
     for (const target of targetsX) {
