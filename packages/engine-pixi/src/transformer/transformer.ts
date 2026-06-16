@@ -472,28 +472,84 @@ export class Transformer extends Container {
 
   async #calculateSnappedScale(handle: HandleKind, global: Point) {
     const pivotLocal = this.#scalePivotLocal;
-    const proposed = this.#proposeScaledRect(handle, this.toLocal(global), pivotLocal);
-
     const parentScale = this.parent ? Math.abs(this.parent.worldTransform.a) : 1;
+
+    // Mouse in parent space (artboard space) - this is the visual position we want to match
+    const mouseParent = this.parent ? this.parent.toLocal(global) : global;
+
+    // Convert mouse from parent space to transformer local space
+    // The transformer's localTransform converts local -> parent, so we need to invert it
+    let proposed: Rectangle;
+    const localTransform = this.localTransform;
+    const det = localTransform.a * localTransform.d - localTransform.b * localTransform.c;
+    if (det !== 0) {
+      const invDet = 1 / det;
+      const dx = mouseParent.x - localTransform.tx;
+      const dy = mouseParent.y - localTransform.ty;
+      const mouseLocalX = (localTransform.d * dx - localTransform.b * dy) * invDet;
+      const mouseLocalY = (-localTransform.c * dx + localTransform.a * dy) * invDet;
+      const mouseLocal = new Point(mouseLocalX, mouseLocalY);
+
+      console.log("[calculateSnappedScale] globalMouse:", { x: global.x, y: global.y });
+      console.log("[calculateSnappedScale] mouseParent:", { x: mouseParent.x, y: mouseParent.y });
+      console.log("[calculateSnappedScale] localTransform:", {
+        a: localTransform.a,
+        b: localTransform.b,
+        c: localTransform.c,
+        d: localTransform.d,
+        tx: localTransform.tx,
+        ty: localTransform.ty,
+      });
+      console.log("[calculateSnappedScale] det:", det, "invDet:", invDet);
+      console.log("[calculateSnappedScale] dx:", dx, "dy:", dy);
+      console.log("[calculateSnappedScale] mouseLocal:", { x: mouseLocal.x, y: mouseLocal.y });
+      console.log("[calculateSnappedScale] pivotLocal:", { x: pivotLocal.x, y: pivotLocal.y });
+      console.log("[calculateSnappedScale] expectedWidth:", mouseLocal.x - pivotLocal.x);
+      console.log("[calculateSnappedScale] localTransform scale:", {
+        a: localTransform.a,
+        parentScale,
+      });
+
+      proposed = this.#proposeScaledRect(handle, mouseLocal, pivotLocal);
+    } else {
+      proposed = this.#proposeScaledRect(handle, this.toLocal(global), pivotLocal);
+    }
+
+    // For resize snapping, use object scale (1) for dimensions, not parent zoom
+    // parentScale is only needed for threshold and drawing guides
+    const objectScale = 1;
     this.#snappingManager.updateContext(
       this.opts.artboardWidth ?? 1920,
       this.opts.artboardHeight ?? 1080,
-      parentScale,
+      objectScale,
     );
 
-    // Snap the proposed rectangle
-    const { dx, dy, guides } = this.#snappingManager.snapMove(proposed);
-
-    // Apply snap
-    proposed.x += dx;
-    proposed.y += dy;
-
-    this.#drawGuides(guides, parentScale);
+    // Snap the proposed rectangle using snapResize (only snaps moving edges)
+    // Only resize handles trigger snapping - rotation handles skip this
+    const resizeHandles = ["tl", "tr", "bl", "br", "ml", "mr", "mt", "mb"] as const;
+    if (resizeHandles.includes(handle as any)) {
+      // Calculate proposed rect position in parent space (artboard space)
+      // The transformer's localTransform converts local → parent
+      const proposedParent = this.localTransform.apply(new Point(proposed.x, proposed.y));
+      console.log("[calculateSnappedScale] proposedParent:", {
+        x: proposedParent.x,
+        y: proposedParent.y,
+      });
+      const { corrected, guides } = this.#snappingManager.snapResize(
+        proposed,
+        proposedParent,
+        handle as any,
+      );
+      this.#drawGuides(guides, parentScale);
+      const sx = corrected.width / this.#opBounds.width;
+      const sy = corrected.height / this.#opBounds.height;
+      const pivotWorld = this.toGlobal(pivotLocal);
+      return { proposed: corrected, sx, sy, pivotWorld };
+    }
 
     const sx = proposed.width / this.#opBounds.width;
     const sy = proposed.height / this.#opBounds.height;
     const pivotWorld = this.toGlobal(pivotLocal);
-
     return { proposed, sx, sy, pivotWorld };
   }
 

@@ -121,37 +121,155 @@ export class SnappingManager {
   }
 
   /**
-   * Snap during scaling
-   * For now, simplistic implementation: snap the edges being moved.
+   * Snap during scaling - only snaps the moving edges based on the handle.
+   * This prevents false triggers when stationary edges align with artboard edges.
+   * @param proposed - The proposed rectangle in local coordinates
+   * @param proposedWorld - The world position of the proposed rect's origin (top-left)
+   * @param handle - Which resize handle is being dragged
    */
-  snapResize(proposed: Rectangle): {
+  snapResize(
+    proposed: Rectangle,
+    proposedWorld: Point,
+    handle: "tl" | "tr" | "bl" | "br" | "ml" | "mr" | "mt" | "mb",
+  ): {
     corrected: Rectangle;
     guides: SnapGuide[];
   } {
-    // This is complex because changing one edge might change aspect ratio if constrained.
-    // For now, let's just use snapMove's logic but applied to the edges?
-    // Or simpler: Snap the resulting bounds to the grid?
-
-    // Basic implementation: Snap the PROPOSED bounds' edges to targets.
-    // If aspect ratio is locked, this might be tricky (one snap forces the other).
-    // Let's assume aspect ratio is NOT locked for the main snap calculation,
-    // or apply snapping to the "primary" direction of drag if we knew it.
-
-    // Actually, just checking if edges land near snap targets is a good start.
-
     const rect = proposed.clone();
-    const { dx, dy, guides } = this.snapMove(rect);
+    const guides: SnapGuide[] = [];
+    const threshold = SnappingManager.SNAP_THRESHOLD / this.scale;
 
-    // Apply snap to the rect
-    // WARNING: Just moving the rect (dx, dy) might move the fixed anchor point!
-    // During resize, one side is fixed. We should only snap the moving sides.
+    // Debug logging
+    console.log("[snapResize] handle:", handle, "scale:", this.scale, "threshold:", threshold);
+    console.log("[snapResize] proposedLocal:", {
+      x: rect.x,
+      y: rect.y,
+      w: rect.width,
+      h: rect.height,
+    });
+    console.log("[snapResize] proposedWorld:", { x: proposedWorld.x, y: proposedWorld.y });
 
-    // Better approach for resize:
-    // We need to know which edges are moving.
-    // But for MVP, let's just see if we can snap the *resulting* box's edges to the grid.
+    // Artboard targets (in world coordinates)
+    const targetsX = [
+      { value: 0, label: "start" },
+      { value: this.artboardWidth / 2, label: "center" },
+      { value: this.artboardWidth, label: "end" },
+    ];
+    const targetsY = [
+      { value: 0, label: "start" },
+      { value: this.artboardHeight / 2, label: "center" },
+      { value: this.artboardHeight, label: "end" },
+    ];
 
-    rect.x += dx;
-    rect.y += dy;
+    // Determine which edges are moving based on handle
+    const movingLeft = ["tl", "ml", "bl"].includes(handle);
+    const movingRight = ["tr", "mr", "br"].includes(handle);
+    const movingTop = ["tl", "mt", "tr"].includes(handle);
+    const movingBottom = ["bl", "mb", "br"].includes(handle);
+
+    // Calculate world coordinates of the edges
+    // proposedWorld is now in parent/artboard space (from localTransform.apply)
+    // The localTransform already includes scale, so proposedWorld accounts for position + scale
+    // For dimensions, we need to convert local width/height to parent space by multiplying by scale
+    const worldLeft = proposedWorld.x;
+    const worldTop = proposedWorld.y;
+    const worldWidth = rect.width * this.scale;
+    const worldHeight = rect.height * this.scale;
+    const worldRight = worldLeft + worldWidth;
+    const worldBottom = worldTop + worldHeight;
+
+    console.log("[snapResize] worldEdges:", {
+      left: worldLeft,
+      right: worldRight,
+      top: worldTop,
+      bottom: worldBottom,
+    });
+    console.log("[snapResize] targets:", {
+      midX: this.artboardWidth / 2,
+      maxX: this.artboardWidth,
+      midY: this.artboardHeight / 2,
+      maxY: this.artboardHeight,
+    });
+    console.log("[snapResize] moving:", {
+      left: movingLeft,
+      right: movingRight,
+      top: movingTop,
+      bottom: movingBottom,
+    });
+
+    // Snap horizontal edges (X-axis) - check against world coordinates
+    for (const target of targetsX) {
+      // Check left edge if moving
+      if (movingLeft) {
+        const diffWorld = target.value - worldLeft;
+        if (Math.abs(diffWorld) < threshold) {
+          // Convert world diff to local diff
+          const diffLocal = diffWorld / this.scale;
+          rect.x += diffLocal;
+          rect.width -= diffLocal; // Keep right edge stationary
+          guides.push({
+            type: "vertical",
+            position: target.value,
+            start: Math.min(0, worldTop),
+            end: Math.max(this.artboardHeight, worldBottom),
+          });
+          break;
+        }
+      }
+      // Check right edge if moving
+      if (movingRight) {
+        const diffWorld = target.value - worldRight;
+        if (Math.abs(diffWorld) < threshold) {
+          // Convert world diff to local diff
+          const diffLocal = diffWorld / this.scale;
+          rect.width += diffLocal;
+          guides.push({
+            type: "vertical",
+            position: target.value,
+            start: Math.min(0, worldTop),
+            end: Math.max(this.artboardHeight, worldBottom),
+          });
+          break;
+        }
+      }
+    }
+
+    // Snap vertical edges (Y-axis) - check against world coordinates
+    for (const target of targetsY) {
+      // Check top edge if moving
+      if (movingTop) {
+        const diffWorld = target.value - worldTop;
+        if (Math.abs(diffWorld) < threshold) {
+          // Convert world diff to local diff
+          const diffLocal = diffWorld / this.scale;
+          rect.y += diffLocal;
+          rect.height -= diffLocal; // Keep bottom edge stationary
+          guides.push({
+            type: "horizontal",
+            position: target.value,
+            start: Math.min(0, worldLeft),
+            end: Math.max(this.artboardWidth, worldRight),
+          });
+          break;
+        }
+      }
+      // Check bottom edge if moving
+      if (movingBottom) {
+        const diffWorld = target.value - worldBottom;
+        if (Math.abs(diffWorld) < threshold) {
+          // Convert world diff to local diff
+          const diffLocal = diffWorld / this.scale;
+          rect.height += diffLocal;
+          guides.push({
+            type: "horizontal",
+            position: target.value,
+            start: Math.min(0, worldLeft),
+            end: Math.max(this.artboardWidth, worldRight),
+          });
+          break;
+        }
+      }
+    }
 
     return { corrected: rect, guides };
   }
