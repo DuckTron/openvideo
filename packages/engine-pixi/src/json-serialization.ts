@@ -176,14 +176,16 @@ export interface TextStyleJSON {
   appeared?: string;
   active?: string;
   activeFill?: string;
-  background?: string;
+  captionBackground?: string;
   keyword?: string;
-  // Text clip per-line background
-  backgroundColor?: string;
-  backgroundOpacity?: number;
-  backgroundBorderRadius?: number;
-  backgroundPaddingX?: number;
-  backgroundPaddingY?: number;
+  // Text clip per-line background box
+  background?: {
+    color?: string;
+    opacity?: number;
+    borderRadius?: number;
+    paddingX?: number;
+    paddingY?: number;
+  };
 }
 
 export interface ICaptionWordAnimation {

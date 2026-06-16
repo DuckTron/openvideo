@@ -139,30 +139,22 @@ export interface ITextOpts {
    */
   wordsPerLine?: "single" | "multiple";
   /**
-   * Background color for each text line (hex string, e.g. '#000000')
-   * When set, draws a rounded rectangle behind each line of text.
+   * Per-line background box drawn behind each line of text.
+   * When `color` is set (non-empty / non-transparent), a rounded rectangle
+   * is rendered behind every line.
    */
-  backgroundColor?: string;
-  /**
-   * Background opacity (0-1)
-   * @default 1
-   */
-  backgroundOpacity?: number;
-  /**
-   * Background corner radius in pixels
-   * @default 4
-   */
-  backgroundBorderRadius?: number;
-  /**
-   * Background horizontal padding in pixels (added to each side of the line width)
-   * @default 8
-   */
-  backgroundPaddingX?: number;
-  /**
-   * Background vertical padding in pixels (added to each side of the line height)
-   * @default 4
-   */
-  backgroundPaddingY?: number;
+  background?: {
+    /** Fill color (hex string, e.g. '#ff0000') */
+    color?: string;
+    /** Fill opacity (0-1) @default 1 */
+    opacity?: number;
+    /** Corner radius in pixels @default 4 */
+    borderRadius?: number;
+    /** Horizontal padding in pixels added to each side @default 8 */
+    paddingX?: number;
+    /** Vertical padding in pixels added to each side @default 4 */
+    paddingY?: number;
+  };
 }
 
 export interface ITextEvents extends BaseSpriteEvents {
@@ -348,11 +340,7 @@ export class Text extends BaseClip<ITextEvents> {
       letterSpacing: this.originalOpts.letterSpacing,
       textCase: this.originalOpts.textCase,
       textDecoration: this.originalOpts.textDecoration,
-      backgroundColor: this.originalOpts.backgroundColor,
-      backgroundOpacity: this.originalOpts.backgroundOpacity,
-      backgroundBorderRadius: this.originalOpts.backgroundBorderRadius,
-      backgroundPaddingX: this.originalOpts.backgroundPaddingX,
-      backgroundPaddingY: this.originalOpts.backgroundPaddingY,
+      background: this.originalOpts.background,
     };
   }
 
@@ -753,16 +741,7 @@ export class Text extends BaseClip<ITextEvents> {
     }
 
     // Preserve background options
-    if (originalOpts.backgroundColor !== undefined)
-      opts.backgroundColor = originalOpts.backgroundColor;
-    if (originalOpts.backgroundOpacity !== undefined)
-      opts.backgroundOpacity = originalOpts.backgroundOpacity;
-    if (originalOpts.backgroundBorderRadius !== undefined)
-      opts.backgroundBorderRadius = originalOpts.backgroundBorderRadius;
-    if (originalOpts.backgroundPaddingX !== undefined)
-      opts.backgroundPaddingX = originalOpts.backgroundPaddingX;
-    if (originalOpts.backgroundPaddingY !== undefined)
-      opts.backgroundPaddingY = originalOpts.backgroundPaddingY;
+    if (originalOpts.background !== undefined) opts.background = originalOpts.background;
 
     if (originalOpts.lineHeight !== undefined) {
       opts.lineHeight = originalOpts.lineHeight;
@@ -1103,12 +1082,12 @@ export class Text extends BaseClip<ITextEvents> {
     }
 
     // Background line options (declared early so line-height and bounding-box logic can use them)
-    const bgColorOpt = this.originalOpts.backgroundColor;
+    const bgColorOpt = this.originalOpts.background?.color;
     const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
-    const bgOpacity = this.originalOpts.backgroundOpacity ?? 1;
-    const bgBorderRadius = this.originalOpts.backgroundBorderRadius ?? 4;
-    const bgPadX = this.originalOpts.backgroundPaddingX ?? 8;
-    const bgPadY = this.originalOpts.backgroundPaddingY ?? 4;
+    const bgOpacity = this.originalOpts.background?.opacity ?? 1;
+    const bgBorderRadius = this.originalOpts.background?.borderRadius ?? 4;
+    const bgPadX = this.originalOpts.background?.paddingX ?? 8;
+    const bgPadY = this.originalOpts.background?.paddingY ?? 4;
 
     // When background is enabled, expand each line's height by the vertical padding so the
     // background rect tightly wraps the actual rendered glyphs with `bgPadY` on each side.
@@ -1540,16 +1519,7 @@ export class Text extends BaseClip<ITextEvents> {
       style.letterSpacing = this.originalOpts.letterSpacing;
 
     // Background options
-    if (this.originalOpts.backgroundColor !== undefined)
-      style.backgroundColor = this.originalOpts.backgroundColor;
-    if (this.originalOpts.backgroundOpacity !== undefined)
-      style.backgroundOpacity = this.originalOpts.backgroundOpacity;
-    if (this.originalOpts.backgroundBorderRadius !== undefined)
-      style.backgroundBorderRadius = this.originalOpts.backgroundBorderRadius;
-    if (this.originalOpts.backgroundPaddingX !== undefined)
-      style.backgroundPaddingX = this.originalOpts.backgroundPaddingX;
-    if (this.originalOpts.backgroundPaddingY !== undefined)
-      style.backgroundPaddingY = this.originalOpts.backgroundPaddingY;
+    if (this.originalOpts.background !== undefined) style.background = this.originalOpts.background;
 
     // Handle stroke
     if (this.originalOpts.stroke) {
@@ -1617,15 +1587,7 @@ export class Text extends BaseClip<ITextEvents> {
     if (style.letterSpacing !== undefined) textClipOpts.letterSpacing = style.letterSpacing;
 
     // Background options
-    if (style.backgroundColor !== undefined) textClipOpts.backgroundColor = style.backgroundColor;
-    if (style.backgroundOpacity !== undefined)
-      textClipOpts.backgroundOpacity = style.backgroundOpacity;
-    if (style.backgroundBorderRadius !== undefined)
-      textClipOpts.backgroundBorderRadius = style.backgroundBorderRadius;
-    if (style.backgroundPaddingX !== undefined)
-      textClipOpts.backgroundPaddingX = style.backgroundPaddingX;
-    if (style.backgroundPaddingY !== undefined)
-      textClipOpts.backgroundPaddingY = style.backgroundPaddingY;
+    if (style.background !== undefined) textClipOpts.background = style.background;
 
     // Handle stroke
     if (style.stroke) {

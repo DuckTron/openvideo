@@ -395,18 +395,26 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             onTextCaseChange={(val) => handleStyleUpdate({ textCase: val })}
             fill={(style.fill as string) || "#000000"}
             onFillChange={(val) => handleStyleUpdate({ fill: val })}
-            backgroundColor={(style.backgroundColor as string) || ""}
-            backgroundOpacity={style.backgroundOpacity as number}
-            backgroundBorderRadius={style.backgroundBorderRadius as number}
-            backgroundPaddingX={style.backgroundPaddingX as number}
-            backgroundPaddingY={style.backgroundPaddingY as number}
-            onBackgroundColorChange={(val) => handleStyleUpdate({ backgroundColor: val })}
-            onBackgroundOpacityChange={(val) => handleStyleUpdate({ backgroundOpacity: val })}
-            onBackgroundBorderRadiusChange={(val) =>
-              handleStyleUpdate({ backgroundBorderRadius: val })
+            backgroundColor={(style.background as any)?.color || ""}
+            backgroundOpacity={(style.background as any)?.opacity}
+            backgroundBorderRadius={(style.background as any)?.borderRadius}
+            backgroundPaddingX={(style.background as any)?.paddingX}
+            backgroundPaddingY={(style.background as any)?.paddingY}
+            onBackgroundColorChange={(val) =>
+              handleStyleUpdate({ background: { ...(style.background as any), color: val } })
             }
-            onBackgroundPaddingXChange={(val) => handleStyleUpdate({ backgroundPaddingX: val })}
-            onBackgroundPaddingYChange={(val) => handleStyleUpdate({ backgroundPaddingY: val })}
+            onBackgroundOpacityChange={(val) =>
+              handleStyleUpdate({ background: { ...(style.background as any), opacity: val } })
+            }
+            onBackgroundBorderRadiusChange={(val) =>
+              handleStyleUpdate({ background: { ...(style.background as any), borderRadius: val } })
+            }
+            onBackgroundPaddingXChange={(val) =>
+              handleStyleUpdate({ background: { ...(style.background as any), paddingX: val } })
+            }
+            onBackgroundPaddingYChange={(val) =>
+              handleStyleUpdate({ background: { ...(style.background as any), paddingY: val } })
+            }
           />
         );
       }
