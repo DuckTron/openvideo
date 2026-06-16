@@ -39,6 +39,10 @@ export class Transformer extends Container {
   // Reusable points for selection bounds calculation to avoid GC
   #tmpQuad = [new Point(), new Point(), new Point(), new Point()];
 
+  // Mid-point handle initial state to prevent jump at drag start
+  #midHandleStartDist = 0;
+  #midHandleStartDim = 0;
+
   #minW = 1;
   #minH = 1;
 
@@ -425,7 +429,7 @@ export class Transformer extends Container {
     return { moveDx, moveDy, newPivotWorld };
   }
 
-  #beginHandleDrag(handle: HandleKind, _start: Point) {
+  #beginHandleDrag(handle: HandleKind, start: Point) {
     this.#initBounds(); // Refresh pivot/bounds state
     this.isDragging = true;
     this.activeHandle = handle;
@@ -438,6 +442,25 @@ export class Transformer extends Container {
     this.#opBounds.copyFrom(this.#localBounds);
 
     this.#setScalePivot(handle);
+
+    // For mid-point handles, store initial distance to prevent jump at drag start
+    if (["ml", "mr", "mt", "mb"].includes(handle)) {
+      const pivot = this.#scalePivotLocal;
+      const angle = this.rotation;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      const localStart = this.toLocal(start);
+      const dx = localStart.x - pivot.x;
+      const dy = localStart.y - pivot.y;
+
+      if (handle === "ml" || handle === "mr") {
+        this.#midHandleStartDist = dx * cos + dy * sin;
+        this.#midHandleStartDim = this.#opBounds.width;
+      } else {
+        this.#midHandleStartDist = -dx * sin + dy * cos;
+        this.#midHandleStartDim = this.#opBounds.height;
+      }
+    }
   }
 
   #updateDrag(handle: HandleKind, pos: Point) {
@@ -824,22 +847,60 @@ export class Transformer extends Container {
     }
 
     // Mid-point handles - scale in one dimension only
+    // When rotated, we need to project mouse movement onto the rotated axes
     const s = this.#opBounds;
+    const angle = this.rotation;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
+
+    // Calculate pivot offset as ratio of original dimensions
+    const pivotOffsetX = (pivot.x - s.x) / s.width;
+    const pivotOffsetY = (pivot.y - s.y) / s.height;
+
+    // Mouse position relative to pivot, projected onto rotated axes
+    const dx = p.x - pivot.x;
+    const dy = p.y - pivot.y;
+    // Project onto rotated X axis (for width calculations)
+    const distX = dx * cos + dy * sin;
+    // Project onto rotated Y axis (for height calculations)
+    const distY = -dx * sin + dy * cos;
+
+    // Use delta from initial position for mid-point handles to prevent jump at drag start
     if (handle === "ml") {
-      const left = Math.min(p.x, pivot.x - this.#minW);
-      return new Rectangle(left, s.y, pivot.x - left, s.height);
+      // Left edge moves, pivot is at right edge
+      // Delta from initial: positive delta means dragging away from pivot (increasing width)
+      const delta = this.#midHandleStartDist - distX; // Inverted because left moves opposite to right
+      const newW = Math.max(this.#minW, this.#midHandleStartDim + delta);
+      const newX = pivot.x - newW * pivotOffsetX;
+      const newY = pivot.y - s.height * pivotOffsetY;
+      return new Rectangle(newX, newY, newW, s.height);
     }
     if (handle === "mr") {
-      const right = Math.max(p.x, pivot.x + this.#minW);
-      return new Rectangle(pivot.x, s.y, right - pivot.x, s.height);
+      // Right edge moves, pivot is at left edge
+      // Delta from initial: positive delta means dragging away from pivot (increasing width)
+      const delta = distX - this.#midHandleStartDist;
+      const newW = Math.max(this.#minW, this.#midHandleStartDim + delta);
+      const newX = pivot.x - newW * pivotOffsetX;
+      const newY = pivot.y - s.height * pivotOffsetY;
+      return new Rectangle(newX, newY, newW, s.height);
     }
     if (handle === "mt") {
-      const top = Math.min(p.y, pivot.y - this.#minH);
-      return new Rectangle(s.x, top, s.width, pivot.y - top);
+      // Top edge moves, pivot is at bottom edge
+      // Delta from initial: positive delta means dragging away from pivot (increasing height)
+      const delta = this.#midHandleStartDist - distY; // Inverted because top moves opposite to bottom
+      const newH = Math.max(this.#minH, this.#midHandleStartDim + delta);
+      const newX = pivot.x - s.width * pivotOffsetX;
+      const newY = pivot.y - newH * pivotOffsetY;
+      return new Rectangle(newX, newY, s.width, newH);
     }
     if (handle === "mb") {
-      const bottom = Math.max(p.y, pivot.y + this.#minH);
-      return new Rectangle(s.x, pivot.y, s.width, bottom - pivot.y);
+      // Bottom edge moves, pivot is at top edge
+      // Delta from initial: positive delta means dragging away from pivot (increasing height)
+      const delta = distY - this.#midHandleStartDist;
+      const newH = Math.max(this.#minH, this.#midHandleStartDim + delta);
+      const newX = pivot.x - s.width * pivotOffsetX;
+      const newY = pivot.y - newH * pivotOffsetY;
+      return new Rectangle(newX, newY, s.width, newH);
     }
 
     // Fallback (shouldn't reach here)

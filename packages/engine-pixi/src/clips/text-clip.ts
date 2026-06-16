@@ -477,6 +477,19 @@ export class Text extends BaseClip<ITextEvents> {
   // so the wrap layout is always based on the last explicit resize, not on a
   // previously measured output width.
   private _targetWidth = 0;
+
+  // Cached measurements for fast real-time layout updates (fabric.js-style optimization)
+  private _wordCache: Array<{
+    text: string;
+    width: number;
+    height: number;
+    textObj: SplitBitmapText | null;
+  }> = [];
+  private _spaceWidth = 0;
+  private _measuredTextHeight = 0;
+  private _lineHeightMultiplier = 1;
+  private _fontSize = 40;
+  private _textOnlyContainer: Container | null = null;
   // External renderer (preferred) - provided via constructor or setRenderer()
   // If not provided, Text will create its own minimal renderer as fallback
   private externalRenderer: Application["renderer"] | null = null;
@@ -1426,6 +1439,181 @@ export class Text extends BaseClip<ITextEvents> {
       this.duration = this._meta.duration;
       this.display.to = this.display.from + this.duration;
     }
+
+    // Populate cache for fast layout updates during transform
+    this._populateWordCache(
+      words,
+      textOnlyContainer,
+      spaceWidth,
+      measuredTextHeight,
+      lineHeightMultiplier,
+      fontSize,
+    );
+  }
+
+  /**
+   * Populate the word measurement cache for fast real-time layout updates.
+   * Called at the end of _doRefreshText to store measurements.
+   */
+  private _populateWordCache(
+    words: string[],
+    textOnlyContainer: Container,
+    spaceWidth: number,
+    measuredTextHeight: number,
+    lineHeightMultiplier: number,
+    fontSize: number,
+  ): void {
+    this._wordCache = this.wordTexts.map((textObj, i) => ({
+      text: words[i],
+      width: Math.ceil(textObj.getLocalBounds().width || textObj.width),
+      height: Math.ceil(textObj.getLocalBounds().height || textObj.height),
+      textObj,
+    }));
+    this._spaceWidth = spaceWidth;
+    this._measuredTextHeight = measuredTextHeight;
+    this._lineHeightMultiplier = lineHeightMultiplier;
+    this._fontSize = fontSize;
+    this._textOnlyContainer = textOnlyContainer;
+  }
+
+  /**
+   * Fast layout update for real-time transform operations.
+   * Re-calculates word wrapping and repositions existing text objects without
+   * re-creating them. Much faster than full refreshText() for resize operations.
+   *
+   * @param targetWidth - The new target width for wrapping
+   * @returns Object with new width and height
+   */
+  updateLayoutForWidth(targetWidth: number): { width: number; height: number } {
+    if (!this._wordCache.length || !this._textOnlyContainer || !this.pixiTextContainer) {
+      // Fall back to full refresh if cache not populated
+      this._targetWidth = targetWidth;
+      void this.refreshText();
+      return { width: this.width, height: this.height };
+    }
+
+    const bgPadX = this.originalOpts.background?.paddingX ?? 8;
+    const bgPadY = this.originalOpts.background?.paddingY ?? 4;
+    const lineHeightMultiplier = this._lineHeightMultiplier;
+    const fontSize = this._fontSize;
+    const lineHeight = fontSize * lineHeightMultiplier;
+    const measuredTextHeight = this._measuredTextHeight;
+    const spaceWidth = this._spaceWidth;
+
+    // Calculate wrap width (inner text area)
+    const wrapWidth = Math.max(1, targetWidth - bgPadX * 2);
+
+    // Fast line breaking using cached word widths
+    const lines: Array<{ wordIndices: number[]; width: number; height: number }> = [];
+    let currentLine: number[] = [];
+    let currentLineWidth = 0;
+    let currentLineHeight = 0;
+
+    for (let i = 0; i < this._wordCache.length; i++) {
+      const word = this._wordCache[i];
+      const wordWidth = word.width;
+      const wordHeight = word.height;
+
+      const projectedWidth = currentLineWidth + (currentLineWidth > 0 ? spaceWidth : 0) + wordWidth;
+      if (projectedWidth <= wrapWidth || currentLine.length === 0) {
+        currentLine.push(i);
+        currentLineWidth = projectedWidth;
+        currentLineHeight = Math.max(currentLineHeight, wordHeight);
+      } else {
+        if (currentLine.length > 0) {
+          lines.push({
+            wordIndices: currentLine,
+            width: currentLineWidth,
+            height: Math.max(currentLineHeight, lineHeight),
+          });
+        }
+        currentLine = [i];
+        currentLineWidth = wordWidth;
+        currentLineHeight = wordHeight;
+      }
+    }
+
+    if (currentLine.length > 0) {
+      lines.push({
+        wordIndices: currentLine,
+        width: currentLineWidth,
+        height: Math.max(currentLineHeight, lineHeight),
+      });
+    }
+
+    // Calculate total height
+    const bgLineHeight = measuredTextHeight + bgPadY * 2;
+    lines.forEach((line) => {
+      line.height = Math.max(line.height, bgLineHeight);
+    });
+
+    let maxLineWidth = 0;
+    let totalHeight = 0;
+    lines.forEach((line) => {
+      maxLineWidth = Math.max(maxLineWidth, line.width);
+      totalHeight += line.height;
+    });
+
+    // Container dimensions
+    const contentWidth = maxLineWidth + bgPadX * 2;
+    const contentHeight = totalHeight;
+    const containerWidth = Math.max(contentWidth, targetWidth);
+    const containerHeight = contentHeight; // Always auto-height during transform
+
+    // Position words within container
+    const finalAlign = this.textAlign;
+    const finalVAlign = (this.originalOpts as any).verticalAlign || "top";
+
+    let startY = 0;
+    if (finalVAlign === "center") {
+      startY = (containerHeight - contentHeight) / 2;
+    } else if (finalVAlign === "bottom") {
+      startY = containerHeight - contentHeight;
+    }
+
+    let currentY = startY;
+    lines.forEach((line) => {
+      let currentX = 0;
+      if (finalAlign === "center") {
+        currentX = (containerWidth - line.width) / 2;
+      } else if (finalAlign === "right") {
+        currentX = containerWidth - line.width - bgPadX * 2;
+      } else {
+        currentX = bgPadX;
+      }
+
+      line.wordIndices.forEach((wordIndex, wordIdxInLine) => {
+        const word = this._wordCache[wordIndex];
+        if (word.textObj) {
+          word.textObj.x = Math.round(currentX);
+          word.textObj.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 9);
+        }
+        currentX += word.width + (wordIdxInLine < line.wordIndices.length - 1 ? spaceWidth : 0);
+      });
+
+      currentY += line.height;
+    });
+
+    // Update clip dimensions
+    this._meta.width = containerWidth;
+    this._meta.height = containerHeight;
+    (this as any)._width = containerWidth;
+    (this as any)._height = containerHeight;
+    this._targetWidth = containerWidth;
+
+    // Update render texture if dimensions changed significantly
+    const newPaddedWidth = containerWidth + (this.renderTexturePadding ?? 0) * 2;
+    const newPaddedHeight = containerHeight + (this.renderTexturePadding ?? 0) * 2;
+    if (
+      this.renderTexture &&
+      (Math.abs(this.renderTexture.width - newPaddedWidth) > 10 ||
+        Math.abs(this.renderTexture.height - newPaddedHeight) > 10)
+    ) {
+      // Re-render to update texture dimensions
+      void this.getTexture();
+    }
+
+    return { width: containerWidth, height: containerHeight };
   }
 
   /**

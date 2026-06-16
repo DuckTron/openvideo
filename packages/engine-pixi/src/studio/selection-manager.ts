@@ -565,6 +565,17 @@ export class SelectionManager {
       this.textClipResizeHandle = data.handle;
       this.textClipResizedSx = data.sx;
       this.textClipResizedSy = data.sy;
+
+      // Real-time text reflow during transform for live wrapping feedback
+      const clip = this.selectedClips.size === 1 ? Array.from(this.selectedClips)[0] : null;
+      if (clip instanceof Text && this.textClipResizedWidth !== null) {
+        // Use fast layout update for real-time wrapping
+        const newDims = clip.updateLayoutForWidth(this.textClipResizedWidth);
+        // Update the transformer's proposed height to match auto-calculated height
+        if (data.proposed && newDims.height !== data.proposed.height) {
+          data.proposed.height = newDims.height;
+        }
+      }
     });
 
     this.activeTransformer.on("transformEnd", async () => {
