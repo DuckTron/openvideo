@@ -781,7 +781,7 @@ export abstract class BaseTextClip<
     }
     const parsedBgColor = parseColor(bgColorOpt);
     const bgGraphics = new Graphics();
-    this.drawRoundedTiktokPath(
+    this.drawRoundedMultilinePath(
       bgGraphics,
       lineRects,
       bgBorderRadius,
@@ -952,7 +952,7 @@ export abstract class BaseTextClip<
     return styleOptions;
   }
 
-  protected drawRoundedTiktokPath(
+  protected drawRoundedMultilinePath(
     graphics: Graphics,
     rects: { x: number; y: number; w: number; h: number }[],
     radius: number,
