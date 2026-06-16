@@ -12,24 +12,12 @@ export function normalizeClipStyle(style: any, type: string): any {
 
   if (normalized.shadow) {
     const shadow = { ...normalized.shadow };
-    const hasOffset = shadow.offsetX !== undefined || shadow.offsetY !== undefined;
-    const hasLegacy = shadow.distance !== undefined || shadow.angle !== undefined;
-
-    if (hasLegacy && !hasOffset) {
-      const d = shadow.distance ?? 0;
-      const a = shadow.angle ?? 0;
-      shadow.offsetX = Math.cos(a) * d;
-      shadow.offsetY = Math.sin(a) * d;
-    }
-    delete shadow.distance;
-    delete shadow.angle;
     normalized.shadow = shadow;
   }
 
   if (type === "Text" || type === "Caption") {
-    if (normalized.fill !== undefined) {
-      normalized.color = normalized.fill;
-      delete normalized.fill;
+    if (normalized.color === undefined) {
+      normalized.color = "#ffffff";
     }
   }
 

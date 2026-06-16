@@ -5,7 +5,6 @@ import { IClip } from "@openvideo/engine-pixi";
 import { useStore } from "zustand";
 import { projectStore, core } from "@/lib/project";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
-import { Separator } from "@/components/ui/separator";
 import useLayoutStore from "../store/use-layout-store";
 import { PropertyKey, getPropertiesForType } from "./property-registry";
 import * as Properties from "./properties";
@@ -23,7 +22,6 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
   const { setFloatingControl } = useLayoutStore();
 
   if (clip.type !== "Scene" && !coreClip) return null;
-
   const style = coreClip?.style || {};
   const transform = coreClip?.transform || {};
 
@@ -352,7 +350,7 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
           (s: { postScriptName: string }) => s.postScriptName === fontFamily,
         ) ||
           fontStyles[0] || { postScriptName: fontFamily, fullName: currentFamily };
-
+        console.log({ style });
         return (
           <Properties.TextGroupProperty
             key={key}
@@ -393,8 +391,8 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             onLinethroughChange={(val) => handleStyleUpdate({ linethrough: val })}
             textCase={(style.textCase as "none" | "uppercase" | "lowercase") || "none"}
             onTextCaseChange={(val) => handleStyleUpdate({ textCase: val })}
-            fill={(style.fill as string) || "#000000"}
-            onFillChange={(val) => handleStyleUpdate({ fill: val })}
+            fill={(style.color as string) || "#ffffff"}
+            onFillChange={(val) => handleStyleUpdate({ color: val })}
             backgroundColor={(style.background as any)?.color || ""}
             backgroundOpacity={(style.background as any)?.opacity}
             backgroundBorderRadius={(style.background as any)?.borderRadius}

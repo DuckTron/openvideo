@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   RiArrowUpDownLine,
   RiCheckLine,
@@ -180,6 +180,16 @@ export function TextGroupProperty({
   const [bgColorOpen, setBgColorOpen] = useState(false);
   const bgEnabled =
     !!backgroundColor && backgroundColor !== "" && backgroundColor !== "transparent";
+  const [localTextColor, setLocalTextColor] = useState(fill);
+  const [localBgColor, setLocalBgColor] = useState(backgroundColor || "#000000");
+
+  useEffect(() => {
+    setLocalTextColor(fill);
+  }, [fill]);
+
+  useEffect(() => {
+    setLocalBgColor(backgroundColor || "#000000");
+  }, [backgroundColor]);
 
   return (
     <div className="flex flex-col">
@@ -328,15 +338,16 @@ export function TextGroupProperty({
                   <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                     <div
                       className="h-5 w-5 rounded-sm border border-input shadow-sm"
-                      style={{ backgroundColor: fill || "#000000" }}
+                      style={{ backgroundColor: localTextColor || "#ffffff" }}
                     />
                   </InputGroupButton>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3" align="start">
                   <ColorPicker
-                    value={fill}
+                    value={localTextColor}
                     onChange={(colorValue: any) => {
-                      const hexColor = color.rgb(colorValue as number[]).hex();
+                      const hexColor = color.rgb((colorValue as number[]).slice(0, 3)).hex();
+                      setLocalTextColor(hexColor);
                       onFillChange(hexColor);
                     }}
                     className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
@@ -357,8 +368,11 @@ export function TextGroupProperty({
               </Popover>
             </InputGroupAddon>
             <InputGroupInput
-              value={(fill || "#000000").toUpperCase()}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFillChange(e.target.value)}
+              value={(localTextColor || "#ffffff").toUpperCase()}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                setLocalTextColor(e.target.value);
+                onFillChange(e.target.value);
+              }}
               className="text-xs! p-0"
             />
           </InputGroup>
@@ -403,15 +417,16 @@ export function TextGroupProperty({
                       <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                         <div
                           className="h-5 w-5 rounded-sm border border-input shadow-sm"
-                          style={{ backgroundColor: backgroundColor || "#000000" }}
+                          style={{ backgroundColor: localBgColor }}
                         />
                       </InputGroupButton>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 p-3" align="start">
                       <ColorPicker
-                        value={backgroundColor || "#000000"}
+                        value={localBgColor}
                         onChange={(colorValue: any) => {
-                          const hexColor = color.rgb(colorValue as number[]).hex();
+                          const hexColor = color.rgb((colorValue as number[]).slice(0, 3)).hex();
+                          setLocalBgColor(hexColor);
                           onBackgroundColorChange?.(hexColor);
                         }}
                         className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
@@ -432,10 +447,11 @@ export function TextGroupProperty({
                   </Popover>
                 </InputGroupAddon>
                 <InputGroupInput
-                  value={(backgroundColor || "#000000").toUpperCase()}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    onBackgroundColorChange?.(e.target.value)
-                  }
+                  value={localBgColor.toUpperCase()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                    setLocalBgColor(e.target.value);
+                    onBackgroundColorChange?.(e.target.value);
+                  }}
                   className="text-xs! p-0"
                 />
               </InputGroup>
