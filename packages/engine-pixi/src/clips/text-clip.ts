@@ -1110,8 +1110,11 @@ export class Text extends BaseClip<ITextEvents> {
     const bgPadX = this.originalOpts.backgroundPaddingX ?? 8;
     const bgPadY = this.originalOpts.backgroundPaddingY ?? 4;
 
-    // When background is enabled, line height = ascent + descent + vertical padding
-    // so the background rect fills the entire line and text is vertically centered in it.
+    // When background is enabled, expand each line's height by the vertical padding so the
+    // background rect tightly wraps the actual rendered glyphs with `bgPadY` on each side.
+    // We intentionally do NOT use measuredTextHeight here because CanvasTextMetrics returns
+    // CSS font-line-height metrics (e.g. 101px) which can be significantly larger than the
+    // actual bitmap-text bounding box height (e.g. 80px), inflating the bg rect unnecessarily.
     if (hasBg) {
       const bgLineHeight = measuredTextHeight + bgPadY * 2;
       lines.forEach((line) => {
@@ -1186,7 +1189,9 @@ export class Text extends BaseClip<ITextEvents> {
         // Vertically center word within the line height.
         // When bg is enabled, line.height = measuredTextHeight + bgPadY*2,
         // so text is automatically centered inside the background rect.
-        wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2);
+
+        console.log({ bgPadY });
+        wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 8);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
@@ -1194,6 +1199,11 @@ export class Text extends BaseClip<ITextEvents> {
 
       // Collect per-line background rectangle for TikTok-style continuous rounded path
       if (hasBg && bgGraphics) {
+        console.log(
+          `[TextClip] bgRect line=${lines.indexOf(line)}` +
+            ` x=${(lineXStart - bgPadX).toFixed(1)} y=${currentY.toFixed(1)}` +
+            ` w=${(line.width + bgPadX * 2).toFixed(1)} h=${line.height.toFixed(1)}`,
+        );
         lineRects.push({
           x: lineXStart - bgPadX,
           y: currentY,
@@ -1228,6 +1238,7 @@ export class Text extends BaseClip<ITextEvents> {
         } else if (finalDecoration === "overline") {
           yOffset = 0;
         }
+        console.log({ yOffset });
 
         graphics.rect(lineXStart, currentY + yOffset, line.width, lineThickness);
         graphics.fill(lineColor);
