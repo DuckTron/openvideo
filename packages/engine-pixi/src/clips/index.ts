@@ -7,6 +7,7 @@ export * from "./image-clip";
 export * from "./video-clip";
 export { Video } from "./video-clip";
 export type { IMP4ClipOpts } from "./video-clip";
+export * from "./base-text-clip";
 export * from "./text-clip";
 export * from "./effect-clip";
 export { Effect } from "./effect-clip";
