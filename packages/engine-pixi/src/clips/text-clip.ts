@@ -138,6 +138,31 @@ export interface ITextOpts {
    * @default 'multiple'
    */
   wordsPerLine?: "single" | "multiple";
+  /**
+   * Background color for each text line (hex string, e.g. '#000000')
+   * When set, draws a rounded rectangle behind each line of text.
+   */
+  backgroundColor?: string;
+  /**
+   * Background opacity (0-1)
+   * @default 1
+   */
+  backgroundOpacity?: number;
+  /**
+   * Background corner radius in pixels
+   * @default 4
+   */
+  backgroundBorderRadius?: number;
+  /**
+   * Background horizontal padding in pixels (added to each side of the line width)
+   * @default 8
+   */
+  backgroundPaddingX?: number;
+  /**
+   * Background vertical padding in pixels (added to each side of the line height)
+   * @default 4
+   */
+  backgroundPaddingY?: number;
 }
 
 export interface ITextEvents extends BaseSpriteEvents {
@@ -323,6 +348,11 @@ export class Text extends BaseClip<ITextEvents> {
       letterSpacing: this.originalOpts.letterSpacing,
       textCase: this.originalOpts.textCase,
       textDecoration: this.originalOpts.textDecoration,
+      backgroundColor: this.originalOpts.backgroundColor,
+      backgroundOpacity: this.originalOpts.backgroundOpacity,
+      backgroundBorderRadius: this.originalOpts.backgroundBorderRadius,
+      backgroundPaddingX: this.originalOpts.backgroundPaddingX,
+      backgroundPaddingY: this.originalOpts.backgroundPaddingY,
     };
   }
 
@@ -721,6 +751,19 @@ export class Text extends BaseClip<ITextEvents> {
       opts.wordWrap = style.wordWrap;
       opts.wordWrapWidth = style.wordWrapWidth;
     }
+
+    // Preserve background options
+    if (originalOpts.backgroundColor !== undefined)
+      opts.backgroundColor = originalOpts.backgroundColor;
+    if (originalOpts.backgroundOpacity !== undefined)
+      opts.backgroundOpacity = originalOpts.backgroundOpacity;
+    if (originalOpts.backgroundBorderRadius !== undefined)
+      opts.backgroundBorderRadius = originalOpts.backgroundBorderRadius;
+    if (originalOpts.backgroundPaddingX !== undefined)
+      opts.backgroundPaddingX = originalOpts.backgroundPaddingX;
+    if (originalOpts.backgroundPaddingY !== undefined)
+      opts.backgroundPaddingY = originalOpts.backgroundPaddingY;
+
     if (originalOpts.lineHeight !== undefined) {
       opts.lineHeight = originalOpts.lineHeight;
     } else if (style.lineHeight !== undefined) {
@@ -992,6 +1035,24 @@ export class Text extends BaseClip<ITextEvents> {
     });
     const metrics = CanvasTextMetrics.measureText(" ", _spaceMeasureStyle);
 
+    // Measure the ACTUAL visual text height using canvas text metrics.
+    // getLocalBounds().height for SplitBitmapText often includes font metrics padding
+    // (ascent/descent space beyond visible glyphs), which causes inaccurate vertical centering.
+    // CanvasTextMetrics.fontProperties gives the font-specific ascent + descent which is
+    // closer to the actual visual text height than the bitmap font bounding box.
+    const _textMeasureStyle = new TextStyle({
+      fontFamily: _spaceFamily,
+      fontSize: _spaceFs,
+      fontWeight: _spaceWeight as TextStyle["fontWeight"],
+      fontStyle: _spaceStyle as TextStyle["fontStyle"],
+    });
+    const textMeasureMetrics = CanvasTextMetrics.measureText("Hg", _textMeasureStyle);
+    const fontProps = textMeasureMetrics.fontProperties;
+    const measuredTextHeight =
+      fontProps && fontProps.ascent > 0
+        ? Math.ceil(fontProps.ascent + fontProps.descent)
+        : fontSize;
+
     const tempSpace = new SplitBitmapText({
       text: " ",
       style: this.textStyleBase,
@@ -1075,8 +1136,17 @@ export class Text extends BaseClip<ITextEvents> {
       startY = containerHeight - textHeight;
     }
 
+    // Background line options
+    const bgColorOpt = this.originalOpts.backgroundColor;
+    const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
+    const bgOpacity = this.originalOpts.backgroundOpacity ?? 1;
+    const bgBorderRadius = this.originalOpts.backgroundBorderRadius ?? 4;
+    const bgPadX = this.originalOpts.backgroundPaddingX ?? 8;
+    const bgPadY = this.originalOpts.backgroundPaddingY ?? 4;
+
     let currentY = startY;
     const graphics = new Graphics();
+    const bgGraphics = hasBg ? new Graphics() : null;
     let hasDecoration = false;
 
     lines.forEach((line) => {
@@ -1092,11 +1162,29 @@ export class Text extends BaseClip<ITextEvents> {
 
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
-        wordText.y = Math.round(currentY);
+        // Vertically center word within the line using the MEASURED visual text height.
+        // getLocalBounds().height can include font metrics padding (ascent/descent space)
+        // that extends beyond visible glyphs, causing the text to appear off-center.
+        wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? spaceWidth : 0);
       });
+
+      // Draw per-line background rectangle
+      if (hasBg && bgGraphics) {
+        const parsedBgColor = parseColor(bgColorOpt);
+        // Center the background on the same vertical center as the text.
+        // Use measuredTextHeight (actual visual height) so padding is visually equal
+        // above and below the text, regardless of font metrics padding in getLocalBounds.
+        const bgCenterY = currentY + line.height / 2;
+        const bgTotalH = measuredTextHeight + bgPadY * 2;
+        const bgX = lineXStart - bgPadX;
+        const bgY = bgCenterY - bgTotalH / 2;
+        const bgW = line.width + bgPadX * 2;
+        bgGraphics.roundRect(bgX, bgY, bgW, bgTotalH, bgBorderRadius);
+        bgGraphics.fill({ color: parsedBgColor ?? 0x000000, alpha: bgOpacity });
+      }
 
       // Handle Text Decoration
       if (
@@ -1134,6 +1222,11 @@ export class Text extends BaseClip<ITextEvents> {
 
     if (hasDecoration) {
       this.pixiTextContainer.addChild(graphics);
+    }
+
+    // Add background graphics behind text (per-line rounded rects)
+    if (bgGraphics) {
+      this.pixiTextContainer.addChildAt(bgGraphics, 0);
     }
 
     // Add transparent padding around the texture so animation transforms (slide, zoom)
@@ -1316,6 +1409,18 @@ export class Text extends BaseClip<ITextEvents> {
     if (this.originalOpts.letterSpacing !== undefined)
       style.letterSpacing = this.originalOpts.letterSpacing;
 
+    // Background options
+    if (this.originalOpts.backgroundColor !== undefined)
+      style.backgroundColor = this.originalOpts.backgroundColor;
+    if (this.originalOpts.backgroundOpacity !== undefined)
+      style.backgroundOpacity = this.originalOpts.backgroundOpacity;
+    if (this.originalOpts.backgroundBorderRadius !== undefined)
+      style.backgroundBorderRadius = this.originalOpts.backgroundBorderRadius;
+    if (this.originalOpts.backgroundPaddingX !== undefined)
+      style.backgroundPaddingX = this.originalOpts.backgroundPaddingX;
+    if (this.originalOpts.backgroundPaddingY !== undefined)
+      style.backgroundPaddingY = this.originalOpts.backgroundPaddingY;
+
     // Handle stroke
     if (this.originalOpts.stroke) {
       if (typeof this.originalOpts.stroke === "object") {
@@ -1380,6 +1485,17 @@ export class Text extends BaseClip<ITextEvents> {
     if (style.wordWrapWidth !== undefined) textClipOpts.wordWrapWidth = style.wordWrapWidth;
     if (style.lineHeight !== undefined) textClipOpts.lineHeight = style.lineHeight;
     if (style.letterSpacing !== undefined) textClipOpts.letterSpacing = style.letterSpacing;
+
+    // Background options
+    if (style.backgroundColor !== undefined) textClipOpts.backgroundColor = style.backgroundColor;
+    if (style.backgroundOpacity !== undefined)
+      textClipOpts.backgroundOpacity = style.backgroundOpacity;
+    if (style.backgroundBorderRadius !== undefined)
+      textClipOpts.backgroundBorderRadius = style.backgroundBorderRadius;
+    if (style.backgroundPaddingX !== undefined)
+      textClipOpts.backgroundPaddingX = style.backgroundPaddingX;
+    if (style.backgroundPaddingY !== undefined)
+      textClipOpts.backgroundPaddingY = style.backgroundPaddingY;
 
     // Handle stroke
     if (style.stroke) {

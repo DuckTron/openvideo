@@ -395,6 +395,18 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             onTextCaseChange={(val) => handleStyleUpdate({ textCase: val })}
             fill={(style.fill as string) || "#000000"}
             onFillChange={(val) => handleStyleUpdate({ fill: val })}
+            backgroundColor={(style.backgroundColor as string) || ""}
+            backgroundOpacity={style.backgroundOpacity as number}
+            backgroundBorderRadius={style.backgroundBorderRadius as number}
+            backgroundPaddingX={style.backgroundPaddingX as number}
+            backgroundPaddingY={style.backgroundPaddingY as number}
+            onBackgroundColorChange={(val) => handleStyleUpdate({ backgroundColor: val })}
+            onBackgroundOpacityChange={(val) => handleStyleUpdate({ backgroundOpacity: val })}
+            onBackgroundBorderRadiusChange={(val) =>
+              handleStyleUpdate({ backgroundBorderRadius: val })
+            }
+            onBackgroundPaddingXChange={(val) => handleStyleUpdate({ backgroundPaddingX: val })}
+            onBackgroundPaddingYChange={(val) => handleStyleUpdate({ backgroundPaddingY: val })}
           />
         );
       }

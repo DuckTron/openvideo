@@ -37,6 +37,7 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 import color from "color";
 import { Input } from "@/components/ui/input";
@@ -128,6 +129,18 @@ interface TextGroupPropertyProps {
   onTextCaseChange: (val: "none" | "uppercase" | "lowercase") => void;
   fill: string;
   onFillChange: (val: string) => void;
+
+  // Background
+  backgroundColor?: string;
+  backgroundOpacity?: number;
+  backgroundBorderRadius?: number;
+  backgroundPaddingX?: number;
+  backgroundPaddingY?: number;
+  onBackgroundColorChange?: (val: string) => void;
+  onBackgroundOpacityChange?: (val: number) => void;
+  onBackgroundBorderRadiusChange?: (val: number) => void;
+  onBackgroundPaddingXChange?: (val: number) => void;
+  onBackgroundPaddingYChange?: (val: number) => void;
 }
 
 export function TextGroupProperty({
@@ -152,8 +165,21 @@ export function TextGroupProperty({
   onTextCaseChange,
   fill,
   onFillChange,
+  backgroundColor,
+  backgroundOpacity,
+  backgroundBorderRadius,
+  backgroundPaddingX,
+  backgroundPaddingY,
+  onBackgroundColorChange,
+  onBackgroundOpacityChange,
+  onBackgroundBorderRadiusChange,
+  onBackgroundPaddingXChange,
+  onBackgroundPaddingYChange,
 }: TextGroupPropertyProps) {
   const [colorOpen, setColorOpen] = useState(false);
+  const [bgColorOpen, setBgColorOpen] = useState(false);
+  const bgEnabled =
+    !!backgroundColor && backgroundColor !== "" && backgroundColor !== "transparent";
 
   return (
     <div className="flex flex-col">
@@ -337,6 +363,151 @@ export function TextGroupProperty({
             />
           </InputGroup>
         </div>
+      </div>
+
+      {/* Line Background Section */}
+      <div className="border-t border-border/40 mt-2 pt-2">
+        <div className="flex items-center justify-between py-2">
+          <span className="text-xs font-semibold text-foreground">Line Background</span>
+          <button
+            onClick={() => {
+              if (bgEnabled) {
+                onBackgroundColorChange?.("");
+              } else {
+                onBackgroundColorChange?.(backgroundColor || "#000000");
+              }
+            }}
+            className={cn(
+              "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
+              bgEnabled ? "bg-primary" : "bg-secondary",
+            )}
+          >
+            <span
+              className={cn(
+                "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
+                bgEnabled ? "translate-x-3.5" : "translate-x-0.5",
+              )}
+            />
+          </button>
+        </div>
+
+        {bgEnabled && (
+          <div className="py-1 flex flex-col gap-1">
+            {/* Bg Color */}
+            <div className="flex items-center justify-between py-1 gap-4">
+              <span className="text-xs text-muted-foreground">Color</span>
+              <InputGroup className="w-[160px] h-7">
+                <InputGroupAddon align="inline-start" className="relative p-0">
+                  <Popover modal={true} open={bgColorOpen} onOpenChange={setBgColorOpen}>
+                    <PopoverTrigger asChild>
+                      <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
+                        <div
+                          className="h-5 w-5 rounded-sm border border-input shadow-sm"
+                          style={{ backgroundColor: backgroundColor || "#000000" }}
+                        />
+                      </InputGroupButton>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64 p-3" align="start">
+                      <ColorPicker
+                        value={backgroundColor || "#000000"}
+                        onChange={(colorValue: any) => {
+                          const hexColor = color.rgb(colorValue as number[]).hex();
+                          onBackgroundColorChange?.(hexColor);
+                        }}
+                        className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                      >
+                        <ColorPickerSelection />
+                        <div className="flex items-center gap-4">
+                          <ColorPickerEyeDropper />
+                          <div className="grid w-full gap-1">
+                            <ColorPickerHue />
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <ColorPickerOutput />
+                          <ColorPickerFormat />
+                        </div>
+                      </ColorPicker>
+                    </PopoverContent>
+                  </Popover>
+                </InputGroupAddon>
+                <InputGroupInput
+                  value={(backgroundColor || "#000000").toUpperCase()}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    onBackgroundColorChange?.(e.target.value)
+                  }
+                  className="text-xs! p-0"
+                />
+              </InputGroup>
+            </div>
+
+            {/* Bg Opacity */}
+            <div className="flex items-center justify-between py-1 gap-4">
+              <span className="text-xs text-muted-foreground">Opacity</span>
+              <div className="flex items-center gap-2 w-[160px]">
+                <Slider
+                  value={[backgroundOpacity ?? 1]}
+                  onValueChange={([v]) => onBackgroundOpacityChange?.(v)}
+                  min={0}
+                  max={1}
+                  step={0.05}
+                  className="flex-1"
+                />
+                <span className="text-xs text-muted-foreground w-7 text-right tabular-nums">
+                  {Math.round((backgroundOpacity ?? 1) * 100)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Bg Border Radius */}
+            <div className="flex items-center justify-between py-1 gap-4">
+              <span className="text-xs text-muted-foreground">Radius</span>
+              <InputGroup className="w-[160px]">
+                <NumberInput
+                  value={backgroundBorderRadius ?? 4}
+                  onChange={(v) => onBackgroundBorderRadiusChange?.(v)}
+                  min={0}
+                  className="pl-2 bg-transparent text-xs!"
+                />
+                <InputGroupAddon align="inline-end">
+                  <span className="text-xs text-muted-foreground">px</span>
+                </InputGroupAddon>
+              </InputGroup>
+            </div>
+
+            {/* Bg Horizontal Padding */}
+            <div className="flex items-center justify-between py-1 gap-4">
+              <span className="text-xs text-muted-foreground">Pad X</span>
+              <InputGroup className="w-[160px]">
+                <NumberInput
+                  value={backgroundPaddingX ?? 8}
+                  onChange={(v) => onBackgroundPaddingXChange?.(v)}
+                  min={0}
+                  className="pl-2 bg-transparent text-xs!"
+                />
+                <InputGroupAddon align="inline-end">
+                  <span className="text-xs text-muted-foreground">px</span>
+                </InputGroupAddon>
+              </InputGroup>
+            </div>
+
+            {/* Bg Vertical Padding */}
+            <div className="flex items-center justify-between py-1 gap-4">
+              <span className="text-xs text-muted-foreground">Pad Y</span>
+              <InputGroup className="w-[160px]">
+                <NumberInput
+                  value={backgroundPaddingY ?? 4}
+                  onChange={(v) => onBackgroundPaddingYChange?.(v)}
+                  min={0}
+                  className="pl-2 bg-transparent text-xs!"
+                />
+                <InputGroupAddon align="inline-end">
+                  <span className="text-xs text-muted-foreground">px</span>
+                </InputGroupAddon>
+              </InputGroup>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
