@@ -258,6 +258,7 @@ export class Text extends BaseClip<ITextEvents> {
   override set width(v: number) {
     if (Math.abs(this.width - v) < 0.1) return;
     (this as any)._width = v;
+    this._targetWidth = v;
     this.refreshText().then(() => {
       this.emit("propsChange", { width: v });
     });
@@ -423,6 +424,17 @@ export class Text extends BaseClip<ITextEvents> {
   private renderTexture: RenderTexture | null = null;
   private outlineFilter: OutlineFilter | null = null;
   private dropShadowFilter: DropShadowFilter | null = null;
+  // Concurrency guard — prevents concurrent refreshText() calls from racing.
+  // If a refresh is already in progress and another is requested, we set
+  // _needsRefresh = true and re-run once the current refresh finishes.
+  private _refreshing = false;
+  private _needsRefresh = false;
+  // The resize target set by the width setter. Kept separate from _width (which
+  // _doRefreshText overwrites with the measured containerWidth at the end of each run).
+  // Every _doRefreshText run — including the _needsRefresh re-run — reads this value
+  // so the wrap layout is always based on the last explicit resize, not on a
+  // previously measured output width.
+  private _targetWidth = 0;
   // External renderer (preferred) - provided via constructor or setRenderer()
   // If not provided, Text will create its own minimal renderer as fallback
   private externalRenderer: Application["renderer"] | null = null;
@@ -843,6 +855,60 @@ export class Text extends BaseClip<ITextEvents> {
    * Calculates dimensions based on text bounds and wrapping options
    */
   private async refreshText(): Promise<void> {
+    // Concurrency guard: if a refresh is already running, defer until it finishes.
+    if (this._refreshing) {
+      this._needsRefresh = true;
+      return;
+    }
+    this._refreshing = true;
+    this._needsRefresh = false;
+
+    try {
+      await this._doRefreshText();
+    } finally {
+      this._refreshing = false;
+      // If a resize (or other change) happened while we were refreshing, re-run once.
+      if (this._needsRefresh) {
+        this._needsRefresh = false;
+        await this.refreshText();
+      }
+    }
+  }
+
+  private async _doRefreshText(): Promise<void> {
+    // Snapshot layout-relevant state BEFORE any await so concurrent mutations
+    // (e.g. updateStyle() called from the store while fonts.ready is pending)
+    // cannot change the values we use for word-wrap layout.
+    // Use _targetWidth (set exclusively by the width setter) rather than _width
+    // (which _doRefreshText itself overwrites with the measured containerWidth at
+    // the end of each run — so it would give a stale value on the _needsRefresh re-run).
+    const snapshotWidth = this._targetWidth;
+    const snapshotWordWrap = this.originalOpts.wordWrap;
+    const snapshotWordWrapWidth = this.originalOpts.wordWrapWidth;
+    const snapshotBackground = this.originalOpts.background;
+
+    if (typeof document !== "undefined") {
+      await document.fonts.ready;
+    }
+
+    // Re-build textStyle here (after font load) so the BitmapFont atlas is built
+    // with real glyph metrics — not fallback-font metrics from before the URL loaded.
+    // This is critical for correct word-width measurement via SplitBitmapText.
+    const styleOptions = this.createStyleFromOpts(this.originalOpts);
+    const {
+      wordWrap: _ww,
+      wordWrapWidth: _www,
+      lineHeight: _lh,
+      letterSpacing: _ls,
+      fill: _f,
+      ...rest
+    } = styleOptions;
+    // Invalidate cached BitmapFonts so they are rebuilt with the now-loaded font.
+    const fontName = getOrInstallFont(styleOptions);
+    this.textStyle = new TextStyle({ ...styleOptions, fontFamily: fontName });
+    const baseFontName = getOrInstallFont(rest);
+    this.textStyleBase = new TextStyle({ ...rest, fontFamily: baseFontName });
+
     const style = this.textStyle;
 
     let textToRender = this.text;
@@ -857,10 +923,6 @@ export class Text extends BaseClip<ITextEvents> {
         /\w\S*/g,
         (txt) => txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase(),
       );
-    }
-
-    if (typeof document !== "undefined") {
-      await document.fonts.ready;
     }
 
     if (!this.pixiTextContainer) {
@@ -1041,8 +1103,21 @@ export class Text extends BaseClip<ITextEvents> {
     );
     tempSpace.destroy();
 
-    const wrapWidth = style.wordWrap && style.wordWrapWidth > 0 ? style.wordWrapWidth : 1e5;
-
+    // Derive wrapWidth from the snapshotted _width captured before any await.
+    // This prevents concurrent updateStyle() or width-setter calls from corrupting
+    // the layout value after we resumed from document.fonts.ready.
+    // Always apply padding for consistent text positioning.
+    let wrapWidth: number;
+    if (snapshotWordWrap) {
+      if (snapshotWidth > 0) {
+        const liveBgPadX = snapshotBackground?.paddingX ?? 8;
+        wrapWidth = Math.max(1, snapshotWidth - liveBgPadX * 2);
+      } else {
+        wrapWidth = snapshotWordWrapWidth ?? 100;
+      }
+    } else {
+      wrapWidth = 1e5;
+    }
     const lines: { words: SplitBitmapText[]; width: number; height: number }[] = [];
     let currentLine: SplitBitmapText[] = [];
     let currentLineWidth = 0;
@@ -1054,7 +1129,6 @@ export class Text extends BaseClip<ITextEvents> {
       const wordHeight = Math.ceil(bounds.height || wordText.height);
 
       const projectedWidth = currentLineWidth + (currentLineWidth > 0 ? spaceWidth : 0) + wordWidth;
-
       if (projectedWidth <= wrapWidth || currentLine.length === 0) {
         currentLine.push(wordText);
         currentLineWidth = projectedWidth;
@@ -1086,6 +1160,7 @@ export class Text extends BaseClip<ITextEvents> {
     const hasBg = !!bgColorOpt && bgColorOpt !== "transparent" && bgColorOpt !== "";
     const bgOpacity = this.originalOpts.background?.opacity ?? 1;
     const bgBorderRadius = this.originalOpts.background?.borderRadius ?? 4;
+    // Always apply padding for consistent text positioning, regardless of background visibility
     const bgPadX = this.originalOpts.background?.paddingX ?? 8;
     const bgPadY = this.originalOpts.background?.paddingY ?? 4;
 
@@ -1111,8 +1186,16 @@ export class Text extends BaseClip<ITextEvents> {
     const textHeight = totalHeight;
 
     let contentWidth = textWidth;
-    if (style.wordWrap && style.wordWrapWidth > 0) {
-      contentWidth = Math.max(contentWidth, style.wordWrapWidth);
+    if (snapshotWordWrap && snapshotWidth > 0) {
+      // Expand to the inner text area (target minus bg padding on both sides) so that
+      // after contentWidth += bgPadX * 2 below, containerWidth == snapshotWidth exactly.
+      // Without this, the bounding box grows by bgPadX*2 every time a resize completes.
+      // Always apply padding for consistent wrap calculation
+      const snapshotBgPadX = snapshotBackground?.paddingX ?? 8;
+      const innerTargetWidth = snapshotWidth - snapshotBgPadX * 2;
+      contentWidth = Math.max(contentWidth, innerTargetWidth);
+    } else if (snapshotWordWrap && snapshotWordWrapWidth != null && snapshotWordWrapWidth > 0) {
+      contentWidth = Math.max(contentWidth, snapshotWordWrapWidth);
     }
     let contentHeight = textHeight;
 
@@ -1121,10 +1204,14 @@ export class Text extends BaseClip<ITextEvents> {
     contentWidth += bgPadX * 2;
     contentHeight = totalHeight; // already includes bg line height
 
-    const isAutoWidth = this.width === 0;
+    // Use _targetWidth (the resize target) rather than _width (which this function
+    // itself overwrites with the measured output at the end, so it would give a
+    // stale value on the _needsRefresh re-run).
+    const effectiveWidth = snapshotWidth > 0 ? snapshotWidth : ((this as any)._width as number);
+    const isAutoWidth = effectiveWidth === 0;
     const isAutoHeight = this.height === 0;
 
-    const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, this.width || 0);
+    const containerWidth = isAutoWidth ? contentWidth : Math.max(contentWidth, effectiveWidth);
     const containerHeight = isAutoHeight
       ? contentHeight
       : Math.max(contentHeight, this.height || 0);
@@ -1151,9 +1238,9 @@ export class Text extends BaseClip<ITextEvents> {
       if (finalAlign === "center") {
         currentX = (containerWidth - line.width) / 2;
       } else if (finalAlign === "right") {
-        currentX = containerWidth - line.width - (hasBg ? bgPadX * 2 : 0);
-      } else if (hasBg) {
-        // Left-aligned with background: offset text so bg rect starts at x=0
+        currentX = containerWidth - line.width - bgPadX * 2;
+      } else {
+        // Left-aligned: offset text by padding so content is inset consistently
         currentX = bgPadX;
       }
 
@@ -1207,7 +1294,6 @@ export class Text extends BaseClip<ITextEvents> {
         } else if (finalDecoration === "overline") {
           yOffset = 0;
         }
-        console.log({ yOffset });
 
         graphics.rect(lineXStart, currentY + yOffset, line.width, lineThickness);
         graphics.fill(lineColor);

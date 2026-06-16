@@ -2216,7 +2216,7 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       style.appeared !== undefined ||
       style.active !== undefined ||
       style.activeFill !== undefined ||
-      style.background !== undefined ||
+      style.captionBackground !== undefined ||
       style.keyword !== undefined
     ) {
       if (!captionOpts.caption) captionOpts.caption = {};
@@ -2224,7 +2224,8 @@ export class Caption extends BaseClip<ICaptionEvents> implements IClip {
       if (style.appeared !== undefined) captionOpts.caption.colors.appeared = style.appeared;
       if (style.active !== undefined) captionOpts.caption.colors.active = style.active;
       if (style.activeFill !== undefined) captionOpts.caption.colors.activeFill = style.activeFill;
-      if (style.background !== undefined) captionOpts.caption.colors.background = style.background;
+      if (style.captionBackground !== undefined)
+        captionOpts.caption.colors.background = style.captionBackground;
       if (style.keyword !== undefined) captionOpts.caption.colors.keyword = style.keyword;
     }
 
