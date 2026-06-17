@@ -30,12 +30,12 @@ export class SnappingManager {
   }
 
   /**
-   * Snap a rectangle (bounds of the object) to artboard edges and center.
+   * Snap a rectangle (bounds of the object) to artboard edges and center, as well as other objects.
    * returns delta (adjustment) needed for x and y
    */
   snapMove(
     current: Rectangle,
-    // Optional: future support for snapping to other objects could pass them here
+    otherBounds?: Rectangle[],
   ): { dx: number; dy: number; guides: SnapGuide[] } {
     const guides: SnapGuide[] = [];
     let dx = 0;
@@ -46,11 +46,21 @@ export class SnappingManager {
     // X Axis Snapping
 
     // Targets: Center (W/2), Left (0), Right (W) - Center prioritized
-    const targetsX = [
-      { value: this.artboardWidth / 2, label: "center" },
-      { value: 0, label: "start" },
-      { value: this.artboardWidth, label: "end" },
+    const targetsX: { value: number; label: string; boundsY?: [number, number] }[] = [
+      { value: this.artboardWidth / 2, label: "center", boundsY: [0, this.artboardHeight] },
+      { value: 0, label: "start", boundsY: [0, this.artboardHeight] },
+      { value: this.artboardWidth, label: "end", boundsY: [0, this.artboardHeight] },
     ];
+
+    if (otherBounds) {
+      for (const ob of otherBounds) {
+        targetsX.push(
+          { value: ob.x, label: "other-start", boundsY: [ob.y, ob.y + ob.height] },
+          { value: ob.x + ob.width / 2, label: "other-center", boundsY: [ob.y, ob.y + ob.height] },
+          { value: ob.x + ob.width, label: "other-end", boundsY: [ob.y, ob.y + ob.height] },
+        );
+      }
+    }
 
     // Points on object: Left, Center, Right
     const objectPointsX = [
@@ -70,13 +80,14 @@ export class SnappingManager {
           dx = diff;
           snappedX = true;
 
+          const minTargetY = target.boundsY ? target.boundsY[0] : 0;
+          const maxTargetY = target.boundsY ? target.boundsY[1] : this.artboardHeight;
+
           guides.push({
             type: "vertical",
             position: target.value,
-            // Guide length: encompass both object and artboard height usually,
-            // or just min/max of the two
-            start: Math.min(0, current.y),
-            end: Math.max(this.artboardHeight, current.y + current.height),
+            start: Math.min(minTargetY, current.y),
+            end: Math.max(maxTargetY, current.y + current.height),
           });
           break;
         }
@@ -84,11 +95,21 @@ export class SnappingManager {
     }
 
     // Y Axis Snapping
-    const targetsY = [
-      { value: this.artboardHeight / 2, label: "center" },
-      { value: 0, label: "start" },
-      { value: this.artboardHeight, label: "end" },
+    const targetsY: { value: number; label: string; boundsX?: [number, number] }[] = [
+      { value: this.artboardHeight / 2, label: "center", boundsX: [0, this.artboardWidth] },
+      { value: 0, label: "start", boundsX: [0, this.artboardWidth] },
+      { value: this.artboardHeight, label: "end", boundsX: [0, this.artboardWidth] },
     ];
+
+    if (otherBounds) {
+      for (const ob of otherBounds) {
+        targetsY.push(
+          { value: ob.y, label: "other-start", boundsX: [ob.x, ob.x + ob.width] },
+          { value: ob.y + ob.height / 2, label: "other-center", boundsX: [ob.x, ob.x + ob.width] },
+          { value: ob.y + ob.height, label: "other-end", boundsX: [ob.x, ob.x + ob.width] },
+        );
+      }
+    }
 
     const objectPointsY = [
       { value: current.y, type: "start" },
@@ -106,11 +127,14 @@ export class SnappingManager {
           dy = diff;
           snappedY = true;
 
+          const minTargetX = target.boundsX ? target.boundsX[0] : 0;
+          const maxTargetX = target.boundsX ? target.boundsX[1] : this.artboardWidth;
+
           guides.push({
             type: "horizontal",
             position: target.value,
-            start: Math.min(0, current.x),
-            end: Math.max(this.artboardWidth, current.x + current.width),
+            start: Math.min(minTargetX, current.x),
+            end: Math.max(maxTargetX, current.x + current.width),
           });
           break;
         }
@@ -126,11 +150,13 @@ export class SnappingManager {
    * @param proposed - The proposed rectangle in local coordinates
    * @param proposedWorld - The world position of the proposed rect's origin (top-left)
    * @param handle - Which resize handle is being dragged
+   * @param otherBounds - Optional other clip bounds in parent space to snap to
    */
   snapResize(
     proposed: Rectangle,
     proposedWorld: Point,
     handle: "tl" | "tr" | "bl" | "br" | "ml" | "mr" | "mt" | "mb",
+    otherBounds?: Rectangle[],
   ): {
     corrected: Rectangle;
     guides: SnapGuide[];
@@ -140,16 +166,31 @@ export class SnappingManager {
     const threshold = SnappingManager.SNAP_THRESHOLD / this.scale;
 
     // Artboard targets (in world coordinates)
-    const targetsX = [
-      { value: 0, label: "start" },
-      { value: this.artboardWidth / 2, label: "center" },
-      { value: this.artboardWidth, label: "end" },
+    const targetsX: { value: number; label: string; boundsY?: [number, number] }[] = [
+      { value: 0, label: "start", boundsY: [0, this.artboardHeight] },
+      { value: this.artboardWidth / 2, label: "center", boundsY: [0, this.artboardHeight] },
+      { value: this.artboardWidth, label: "end", boundsY: [0, this.artboardHeight] },
     ];
-    const targetsY = [
-      { value: 0, label: "start" },
-      { value: this.artboardHeight / 2, label: "center" },
-      { value: this.artboardHeight, label: "end" },
+    const targetsY: { value: number; label: string; boundsX?: [number, number] }[] = [
+      { value: 0, label: "start", boundsX: [0, this.artboardWidth] },
+      { value: this.artboardHeight / 2, label: "center", boundsX: [0, this.artboardWidth] },
+      { value: this.artboardHeight, label: "end", boundsX: [0, this.artboardWidth] },
     ];
+
+    if (otherBounds) {
+      for (const ob of otherBounds) {
+        targetsX.push(
+          { value: ob.x, label: "other-start", boundsY: [ob.y, ob.y + ob.height] },
+          { value: ob.x + ob.width / 2, label: "other-center", boundsY: [ob.y, ob.y + ob.height] },
+          { value: ob.x + ob.width, label: "other-end", boundsY: [ob.y, ob.y + ob.height] },
+        );
+        targetsY.push(
+          { value: ob.y, label: "other-start", boundsX: [ob.x, ob.x + ob.width] },
+          { value: ob.y + ob.height / 2, label: "other-center", boundsX: [ob.x, ob.x + ob.width] },
+          { value: ob.y + ob.height, label: "other-end", boundsX: [ob.x, ob.x + ob.width] },
+        );
+      }
+    }
 
     // Determine which edges are moving based on handle
     const movingLeft = ["tl", "ml", "bl"].includes(handle);
@@ -178,11 +219,15 @@ export class SnappingManager {
           const diffLocal = diffWorld / this.scale;
           rect.x += diffLocal;
           rect.width -= diffLocal; // Keep right edge stationary
+
+          const minTargetY = target.boundsY ? target.boundsY[0] : 0;
+          const maxTargetY = target.boundsY ? target.boundsY[1] : this.artboardHeight;
+
           guides.push({
             type: "vertical",
             position: target.value,
-            start: Math.min(0, worldTop),
-            end: Math.max(this.artboardHeight, worldBottom),
+            start: Math.min(minTargetY, worldTop),
+            end: Math.max(maxTargetY, worldBottom),
           });
           break;
         }
@@ -194,11 +239,15 @@ export class SnappingManager {
           // Convert world diff to local diff
           const diffLocal = diffWorld / this.scale;
           rect.width += diffLocal;
+
+          const minTargetY = target.boundsY ? target.boundsY[0] : 0;
+          const maxTargetY = target.boundsY ? target.boundsY[1] : this.artboardHeight;
+
           guides.push({
             type: "vertical",
             position: target.value,
-            start: Math.min(0, worldTop),
-            end: Math.max(this.artboardHeight, worldBottom),
+            start: Math.min(minTargetY, worldTop),
+            end: Math.max(maxTargetY, worldBottom),
           });
           break;
         }
@@ -215,11 +264,15 @@ export class SnappingManager {
           const diffLocal = diffWorld / this.scale;
           rect.y += diffLocal;
           rect.height -= diffLocal; // Keep bottom edge stationary
+
+          const minTargetX = target.boundsX ? target.boundsX[0] : 0;
+          const maxTargetX = target.boundsX ? target.boundsX[1] : this.artboardWidth;
+
           guides.push({
             type: "horizontal",
             position: target.value,
-            start: Math.min(0, worldLeft),
-            end: Math.max(this.artboardWidth, worldRight),
+            start: Math.min(minTargetX, worldLeft),
+            end: Math.max(maxTargetX, worldRight),
           });
           break;
         }
@@ -231,11 +284,15 @@ export class SnappingManager {
           // Convert world diff to local diff
           const diffLocal = diffWorld / this.scale;
           rect.height += diffLocal;
+
+          const minTargetX = target.boundsX ? target.boundsX[0] : 0;
+          const maxTargetX = target.boundsX ? target.boundsX[1] : this.artboardWidth;
+
           guides.push({
             type: "horizontal",
             position: target.value,
-            start: Math.min(0, worldLeft),
-            end: Math.max(this.artboardWidth, worldRight),
+            start: Math.min(minTargetX, worldLeft),
+            end: Math.max(maxTargetX, worldRight),
           });
           break;
         }
