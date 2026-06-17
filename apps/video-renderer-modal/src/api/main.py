@@ -57,7 +57,7 @@ image = (
     # Install the specific engine-pixi version into /app inside the container
     .run_commands(
         "mkdir -p /app",
-        "cd /app && npm install @openvideo/engine-pixi@1.1.5"
+        "cd /app && npm install @openvideo/engine-pixi@1.2.0"
     )
     # Mount renderer.html dynamically from the host workspace
     .add_local_file(RENDERER_HTML_MOUNT_PATH, "/app/renderer.html")

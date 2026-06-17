@@ -53,7 +53,7 @@ RUN playwright install --with-deps chromium
 # ---------------------------------------------------------------------------
 # 4. Install @openvideo/engine-pixi (browser bundle served to Playwright)
 # ---------------------------------------------------------------------------
-RUN mkdir -p /app && cd /app && npm install @openvideo/engine-pixi@1.1.5
+RUN mkdir -p /app && cd /app && npm install @openvideo/engine-pixi@1.2.0
 
 # ---------------------------------------------------------------------------
 # 5. Copy application code

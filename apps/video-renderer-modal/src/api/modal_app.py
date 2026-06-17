@@ -35,7 +35,7 @@ image = (
     .run_commands("playwright install --with-deps chromium")
     .run_commands(
         "mkdir -p /app",
-        "cd /app && npm install @openvideo/engine-pixi@1.1.5",
+        "cd /app && npm install @openvideo/engine-pixi@1.2.0",
     )
     .add_local_file(RENDERER_HTML_MOUNT_PATH, "/app/renderer.html")
     .add_local_file(

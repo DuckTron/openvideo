@@ -168,11 +168,11 @@ def http_server_context(temp_dir: str):
 
 
 # ---------------------------------------------------------------------------
-# Video Pre-transcoding (AAC audio compatibility for WebCodecs)
+# Video Pre-transcoding (Opus audio for WebCodecs compatibility)
 # ---------------------------------------------------------------------------
 
 def pretranscode_videos(project: dict, temp_dir: str, port: int) -> dict:
-    """Pre-transcodes external video clips to MP4 with AAC audio for WebCodecs."""
+    """Pre-transcodes external video clips to MP4 with Opus audio for WebCodecs."""
     clips = project.get("clips", {})
     if not clips:
         return project
@@ -206,9 +206,9 @@ def pretranscode_videos(project: dict, temp_dir: str, port: int) -> dict:
                         with open(temp_input, "wb") as out_file:
                             out_file.write(response.read())
 
-                    print(f"[pretranscode] Transcoding clip {clip_id} to MP4/AAC...")
+                    print(f"[pretranscode] Transcoding clip {clip_id} to MP4/Opus...")
                     subprocess.run(
-                        ["ffmpeg", "-i", temp_input, "-c:v", "copy", "-c:a", "aac", "-b:a", "128k", temp_output, "-y"],
+                        ["ffmpeg", "-i", temp_input, "-c:v", "copy", "-c:a", "libopus", "-b:a", "128k", temp_output, "-y"],
                         check=True,
                         capture_output=True,
                         timeout=300,
