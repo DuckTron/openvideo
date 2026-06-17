@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { RiAddLine, RiDeleteBinLine } from "@remixicon/react";
 import color from "color";
 
-interface FillPropertyProps {
+interface TextColorPropertyProps {
   color: string;
   onColorChange: (color: string) => void;
 }
@@ -29,13 +29,13 @@ function CircularSwatch({ color: swatchColor }: { color: string }) {
   );
 }
 
-export function FillProperty({ color: fillColor, onColorChange }: FillPropertyProps) {
+export function TextColorProperty({ color: textColor, onColorChange }: TextColorPropertyProps) {
   const [colorOpen, setColorOpen] = useState(false);
 
-  const hasFill = fillColor && fillColor !== "" && fillColor !== "transparent";
+  const hasColor = textColor && textColor !== "" && textColor !== "transparent";
 
   const handleAdd = () => {
-    onColorChange("#3b82f6");
+    onColorChange("#ffffff");
   };
 
   const handleRemove = () => {
@@ -49,20 +49,20 @@ export function FillProperty({ color: fillColor, onColorChange }: FillPropertyPr
         <span className="text-xs font-semibold text-foreground">Fill</span>
 
         <div className="flex items-center gap-2">
-          {hasFill ? (
+          {hasColor ? (
             <>
               {/* Color swatch button - opens picker */}
               <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="secondary" size="icon" className="size-7 rounded-sm">
-                    <CircularSwatch color={fillColor} />
+                  <Button variant="ghost" size="icon" className="size-7 rounded-sm">
+                    <CircularSwatch color={textColor} />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-64 p-3" align="end">
                   <ColorPicker
-                    value={fillColor}
-                    onChange={(colorValue) => {
-                      const hexColor = color.rgb(colorValue as number[]).hex();
+                    value={textColor}
+                    onChange={(colorValue: any) => {
+                      const hexColor = color.rgb((colorValue as number[]).slice(0, 3)).hex();
                       onColorChange(hexColor);
                     }}
                     className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
@@ -88,21 +88,21 @@ export function FillProperty({ color: fillColor, onColorChange }: FillPropertyPr
                 size="icon"
                 className="size-7 rounded-sm text-muted-foreground hover:text-destructive"
                 onClick={handleRemove}
-                title="Remove fill"
+                title="Remove color"
               >
                 <RiDeleteBinLine className="size-4" />
               </Button>
             </>
           ) : (
-            /* Add button - when no fill */
+            /* Add button - when no color */
             <Button
               variant="ghost"
               size="icon"
               className="size-7 rounded-sm text-muted-foreground hover:text-foreground"
               onClick={handleAdd}
-              title="Add fill"
+              title="Add color"
             >
-              <RiAddLine className="size-4" />
+              <RiAddLine className="size-5" />
             </Button>
           )}
         </div>

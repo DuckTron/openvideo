@@ -359,10 +359,10 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
           </Popover>
 
           {/* Color preview swatches */}
-          <Button variant="secondary" size="icon" className="size-7 rounded-sm">
+          <Button variant="ghost" size="icon" className="size-7 rounded-sm">
             <CircularSwatch color={activeColor} />
           </Button>
-          <Button variant="secondary" size="icon" className="size-7 rounded-sm">
+          <Button variant="ghost" size="icon" className="size-7 rounded-sm">
             <CircularSwatch color={active.background || "#000000"} />
           </Button>
         </div>

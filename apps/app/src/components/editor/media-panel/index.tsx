@@ -8,9 +8,10 @@ import PanelTransition from "./panel/transition";
 import PanelText from "./panel/text";
 import PanelCaptions from "./panel/captions";
 import PanelElements from "./panel/elements";
-import { RiCloseLine } from "@remixicon/react";
 import { useStudioStore } from "@/stores/studio-store";
 import { PropertiesPanel } from "../properties-panel";
+import { RiArrowLeftLine, RiArrowLeftSLine } from "@remixicon/react";
+import { Button } from "@/components/ui/button";
 
 const viewMap: Record<Tab, React.ReactNode> = {
   assets: <PanelAssets showHeader={false} />,
@@ -52,7 +53,18 @@ export function MediaPanel() {
       {showPanelContent && (
         <div className="w-[360px] border-r  h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
           <div className="h-full flex flex-col">
-            <div className="h-12 items-center flex justify-between px-6 shrink-0">
+            <div className="h-12 items-center flex gap-2 px-6 shrink-0">
+              {hasSelection && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 -ml-2"
+                  onClick={handleClose}
+                  title="Back"
+                >
+                  <RiArrowLeftLine className="size-4" />
+                </Button>
+              )}
               <span className="text-sm font-medium">{getPanelTitle()}</span>
             </div>
             <div className="flex-1 overflow-auto">

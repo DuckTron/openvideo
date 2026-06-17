@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   RiArrowUpDownLine,
   RiCheckLine,
@@ -13,14 +13,6 @@ import {
 } from "@remixicon/react";
 import { TextOverline } from "@/components/shared/icons";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  ColorPicker,
-  ColorPickerSelection,
-  ColorPickerHue,
-  ColorPickerEyeDropper,
-  ColorPickerFormat,
-  ColorPickerOutput,
-} from "@/components/ui/color-picker";
 import {
   InputGroup,
   InputGroupAddon,
@@ -38,7 +30,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import color from "color";
 import { Input } from "@/components/ui/input";
 import { getGroupedFonts, getFontByPostScriptName } from "@/utils/font-utils";
 
@@ -123,11 +114,9 @@ interface TextGroupPropertyProps {
   onOverlineChange: (val: boolean) => void;
   onLinethroughChange: (val: boolean) => void;
 
-  // Case & Color
+  // Case
   textCase: "none" | "uppercase" | "lowercase";
   onTextCaseChange: (val: "none" | "uppercase" | "lowercase") => void;
-  fill: string;
-  onFillChange: (val: string) => void;
 }
 
 export function TextGroupProperty({
@@ -150,16 +139,7 @@ export function TextGroupProperty({
   onLinethroughChange,
   textCase,
   onTextCaseChange,
-  fill,
-  onFillChange,
 }: TextGroupPropertyProps) {
-  const [colorOpen, setColorOpen] = useState(false);
-  const [localTextColor, setLocalTextColor] = useState(fill);
-
-  useEffect(() => {
-    setLocalTextColor(fill);
-  }, [fill]);
-
   return (
     <div className="flex flex-col">
       {/* Section Header */}
@@ -295,56 +275,6 @@ export function TextGroupProperty({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Color */}
-        <div className="flex items-center justify-between py-1 gap-4">
-          <span className="text-xs text-muted-foreground">Color</span>
-          <InputGroup className="w-[160px] h-7">
-            <InputGroupAddon align="inline-start" className="relative p-0">
-              <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
-                <PopoverTrigger asChild>
-                  <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
-                    <div
-                      className="h-5 w-5 rounded-sm border border-input shadow-sm"
-                      style={{ backgroundColor: localTextColor || "#ffffff" }}
-                    />
-                  </InputGroupButton>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3" align="start">
-                  <ColorPicker
-                    value={localTextColor}
-                    onChange={(colorValue: any) => {
-                      const hexColor = color.rgb((colorValue as number[]).slice(0, 3)).hex();
-                      setLocalTextColor(hexColor);
-                      onFillChange(hexColor);
-                    }}
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                  >
-                    <ColorPickerSelection />
-                    <div className="flex items-center gap-4">
-                      <ColorPickerEyeDropper />
-                      <div className="grid w-full gap-1">
-                        <ColorPickerHue />
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <ColorPickerOutput />
-                      <ColorPickerFormat />
-                    </div>
-                  </ColorPicker>
-                </PopoverContent>
-              </Popover>
-            </InputGroupAddon>
-            <InputGroupInput
-              value={(localTextColor || "#ffffff").toUpperCase()}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                setLocalTextColor(e.target.value);
-                onFillChange(e.target.value);
-              }}
-              className="text-xs! p-0"
-            />
-          </InputGroup>
         </div>
       </div>
     </div>

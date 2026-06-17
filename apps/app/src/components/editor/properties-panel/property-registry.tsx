@@ -45,6 +45,7 @@ export type PropertyKey =
   | "visualGroup" // visual properties grouped together
   | "audioGroup" // audio properties grouped together
   | "textGroup" // text properties grouped together
+  | "textColor" // text color property
   | "textBackground" // text background property
   | "captionGroup" // caption properties grouped together
   // Scene/Project properties
@@ -86,7 +87,16 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   ],
 
   // Text clip properties - grouped for unified UI
-  Text: ["transform", "textGroup", "textBackground", "opacity", "stroke", "shadow", "animations"],
+  Text: [
+    "transform",
+    "textGroup",
+    "textColor",
+    "textBackground",
+    "opacity",
+    "stroke",
+    "shadow",
+    "animations",
+  ],
 
   // Caption clip properties - grouped for unified UI
   Caption: [
@@ -95,6 +105,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "captionPosition",
     "captionWordsPerLine",
     "textGroup",
+    "textColor",
     "textBackground",
     "opacity",
     "stroke",
@@ -146,6 +157,7 @@ export const PROPERTY_LABELS: Record<PropertyKey, string> = {
   visualGroup: "Visual",
   audioGroup: "Audio",
   textGroup: "Text",
+  textColor: "Color",
   textBackground: "Text Background",
   captionGroup: "Caption",
   projectMenu: "Project Name",

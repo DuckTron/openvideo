@@ -26,6 +26,7 @@ export { TransitionDurationProperty } from "./transition-duration";
 export { TransitionSelectorProperty } from "./transition-selector";
 export { TextGroupProperty } from "./text-group";
 export { TextBackgroundProperty } from "./text-background";
+export { TextColorProperty } from "./text-color";
 export { TextContentProperty } from "./text-content";
 export { FillProperty } from "./fill";
 export { CanvasGroupProperty } from "./canvas-group";

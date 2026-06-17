@@ -391,8 +391,16 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             onLinethroughChange={(val) => handleStyleUpdate({ linethrough: val })}
             textCase={(style.textCase as "none" | "uppercase" | "lowercase") || "none"}
             onTextCaseChange={(val) => handleStyleUpdate({ textCase: val })}
-            fill={(style.color as string) || "#ffffff"}
-            onFillChange={(val) => handleStyleUpdate({ color: val })}
+          />
+        );
+      }
+
+      case "textColor": {
+        return (
+          <Properties.TextColorProperty
+            key={key}
+            color={(style.color as string) || "#ffffff"}
+            onColorChange={(val) => handleStyleUpdate({ color: val })}
           />
         );
       }
