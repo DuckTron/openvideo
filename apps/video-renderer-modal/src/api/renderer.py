@@ -120,7 +120,8 @@ def xvfb_display_context():
     """Run headed Chromium inside Xvfb on headless Linux environments.
     
     WebCodecs requires full Chromium (not headless shell), so in containers
-    we MUST use Xvfb to provide a virtual display for headed mode.
+    we use Xvfb to provide a virtual display for headed mode.
+    Headed + Xvfb is faster than headless + SwiftShader.
     """
     xvfb_process = None
     if IS_CONTAINER and sys.platform.startswith("linux"):
@@ -132,7 +133,6 @@ def xvfb_display_context():
         )
         os.environ["DISPLAY"] = ":99"
         time.sleep(1)
-        # Verify Xvfb started
         if xvfb_process.poll() is not None:
             raise RuntimeError("Xvfb failed to start. Install xvfb: apt-get install -y xvfb")
         print("[renderer] Xvfb running on :99")

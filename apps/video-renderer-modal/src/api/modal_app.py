@@ -26,7 +26,7 @@ RENDERER_HTML_MOUNT_PATH = os.path.abspath(
 # Container image with all rendering dependencies
 image = (
     modal.Image.debian_slim()
-    .apt_install("curl", "ffmpeg")
+    .apt_install("curl", "ffmpeg", "xvfb")
     .run_commands(
         "curl -fsSL https://deb.nodesource.com/setup_22.x | bash -",
         "apt-get install -y nodejs",
