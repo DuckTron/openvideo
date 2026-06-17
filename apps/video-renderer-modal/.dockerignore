@@ -1,0 +1,8 @@
+.env
+.git
+__pycache__
+*.pyc
+node_modules
+outputs
+output*.mp4
+.DS_Store
