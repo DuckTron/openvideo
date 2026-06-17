@@ -1,5 +1,11 @@
 # @openvideo/core
 
+## 1.2.0
+
+### Patch Changes
+
+- fix(engine-pixi): AAC audio decoding — set `AudioDecoderConfig.description` (AudioSpecificConfig) for mp4a tracks so WebCodecs `AudioDecoder` produces frames correctly (fixes #135)
+
 ## 1.1.4
 
 ### Patch Changes

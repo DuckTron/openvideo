@@ -1,5 +1,13 @@
 # @openvideo/engine-pixi
 
+## 1.2.0
+
+### Patch Changes
+
+- fix: AAC audio tracks (mp4a.40.2) now decode correctly — `extractFileConfig` passes the `AudioSpecificConfig` bytes as `description` on `AudioDecoderConfig`, mirroring the video path. Previously `AudioDecoder` accepted chunks but emitted 0 frames and errored (fixes #135)
+- Updated dependencies
+  - @openvideo/core@1.2.0
+
 ## 1.1.4
 
 ### Patch Changes
