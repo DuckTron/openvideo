@@ -1,169 +1,191 @@
-# OpenVideo Video Renderer (Modal.com)
+# OpenVideo Video Renderer
 
-A serverless, GPU/CPU-accelerated video rendering service built on Modal.com. It spins up a headless container running Playwright Chromium with WebCodecs, loads `@openvideo/engine-pixi` and `renderer.html` dynamically over a local Python-threaded HTTP server, processes the input project timeline JSON, and compiles the final MP4 video binary.
+Video rendering service powered by Playwright Chromium + WebCodecs and `@openvideo/engine-pixi`. Accepts a project timeline JSON and outputs a compiled MP4 video with audio.
 
-It also supports direct integration with Cloudflare R2 to upload the output video and return a public URL CDN endpoint.
+Supports three execution modes: **local** (bare metal), **Docker**, and **Modal.com** (serverless).
 
 ---
 
 ## Architecture
 
-1. **Pre-transcoding**: Any remote video clips with audio tracks are downloaded and transcoded to a browser-compatible MP4 format with Opus audio using FFmpeg in Python. This guarantees WebCodecs decoding compatibility inside headless Chromium.
-2. **Local HTTP Server**: At runtime, the function spins up a standard Python `http.server` in a background daemon thread on a random free port to serve `renderer.html` and the container's `@openvideo/engine-pixi/dist` bundle dynamically.
-3. **Playwright Compositor**: Headless Chromium is initialized with hardware acceleration, audio encoding, and WebCodecs flags enabled. It loads the PixiJS compositor timeline and exports individual frames.
-4. **Data Transfer**: The resulting video binary Blob is read via `FileReader` and transferred as base64 bytes to the Python environment.
-5. **R2 Upload (Optional)**: If `r2_key` is supplied, the video bytes are uploaded directly to the Cloudflare R2 storage bucket using `boto3`, returning the public URL.
+1. **Pre-transcoding** — Remote video clips are downloaded and transcoded to MP4 with Opus audio via FFmpeg, ensuring WebCodecs decoding compatibility.
+2. **HTTP Server** — A Python `http.server` daemon serves `renderer.html` and the `@openvideo/engine-pixi/dist` bundle on a random local port.
+3. **Playwright Compositor** — Full Chromium launches with WebCodecs flags, loads the compositor, and renders the timeline frame-by-frame.
+4. **Data Transfer** — The resulting video Blob is extracted as base64 bytes from the browser.
+5. **R2 Upload (Optional)** — If `r2_key` is provided, the video is uploaded to Cloudflare R2 and a public URL is returned.
+
+### File Structure
+
+```
+src/api/
+├── renderer.py      # Shared rendering core (no Modal dependency)
+├── render_local.py  # Local / Docker CLI entrypoint
+├── modal_app.py     # Modal.com deployment wrapper
+└── main.py          # Legacy Modal entrypoint (uses Modal SDK directly)
+```
 
 ---
 
 ## Configuration
 
-To run or deploy the service, create a `.env` file in the root of the workspace:
+Create a `.env` file in this directory:
 
 ```bash
-# apps/video-renderer-modal/.env
-
-# Cloudflare R2 Credentials
-R2_PUBLIC_DOMAIN="https://cdn.scenify.io"
-R2_BUCKET_NAME="scenify-dev"
+# Cloudflare R2 (optional — omit to write files locally)
+R2_ACCOUNT_ID="your_account_id"
 R2_ACCESS_KEY_ID="your_access_key"
 R2_SECRET_ACCESS_KEY="your_secret_key"
-R2_ACCOUNT_ID="your_account_id"
+R2_BUCKET_NAME="scenify-dev"
+R2_PUBLIC_DOMAIN="https://cdn.scenify.io"
 
-# Modal configurations (if not using global credentials)
+# Modal.com (only needed for Modal deployment)
 MODAL_TOKEN="your_modal_token"
 MODAL_WORKSPACE="your_modal_workspace"
 ```
 
 ---
 
-## Setup & Local Testing
+## 1. Running Locally (Without Docker)
+
+Runs directly on your machine using your local Chromium and FFmpeg.
 
 ### Prerequisites
 
-1. Install Modal CLI and authenticate:
-   ```bash
-   pip install modal
-   python3 -m modal setup
-   ```
-2. Install local Python dependencies:
-   ```bash
-   pip install -r requirements.txt
-   python3 -m playwright install chromium
-   ```
+```bash
+pip install -r requirements.txt
+python3 -m playwright install chromium
+```
 
-### Running Locally (Offline Mode)
+Also ensure `ffmpeg` is installed (`brew install ffmpeg` on macOS).
 
-To test the compositor rendering and pre-transcoding pipelines locally on your machine without building/deploying a cloud image:
+### Run
 
 ```bash
-# From the apps/video-renderer-modal directory:
-python3 src/api/main.py src/api/data-with-params.json test-output.mp4
+# Render to a local file
+python3 src/api/render_local.py src/api/data-with-params.json output.mp4
+
+# Render and upload to R2 (if R2_ACCOUNT_ID is set in .env)
+python3 src/api/render_local.py src/api/data-with-params.json
 ```
 
-- If `R2_ACCOUNT_ID` is defined in your `.env` file, the script will automatically test R2 uploading and output the public URL (e.g. `https://cdn.scenify.io/tests/local-test-render.mp4`).
-- If no credentials are found in the environment, it will fallback to writing the video binary locally to `test-output.mp4`.
+- Uses the monorepo's `packages/engine-pixi/dist` if available, otherwise falls back to a local `node_modules` install.
+- If R2 credentials are present, the video is uploaded and the URL is printed. Otherwise it writes to the specified output path.
 
 ---
 
-## Deployment to Modal.com
+## 2. Running with Docker
 
-To deploy the service to your Modal cloud environment:
+Self-contained image with all dependencies (Python, Node.js, FFmpeg, Chromium, Xvfb, engine-pixi@1.2.0).
+
+### Build
 
 ```bash
-# From apps/video-renderer-modal:
-python3 -m modal deploy src/api/main.py
+docker build -t openvideo-renderer .
 ```
 
-Upon successful deployment, the container image containing Node 22, Playwright Chromium, FFmpeg, and `@openvideo/engine-pixi` is built and registered on the Modal cloud registry, making it instantly callable.
+### Run (save to local file)
+
+```bash
+docker run --rm --shm-size=2g \
+  -v $(pwd)/src/api/data-with-params.json:/data/project.json \
+  -v $(pwd)/outputs:/outputs \
+  openvideo-renderer /data/project.json /outputs/video.mp4
+```
+
+### Run (upload to R2)
+
+```bash
+docker run --rm --shm-size=2g \
+  -e R2_ACCOUNT_ID=your_account_id \
+  -e R2_ACCESS_KEY_ID=your_access_key \
+  -e R2_SECRET_ACCESS_KEY=your_secret_key \
+  -e R2_BUCKET_NAME=scenify-dev \
+  -e R2_PUBLIC_DOMAIN=https://cdn.scenify.io \
+  -v $(pwd)/src/api/data-with-params.json:/data/project.json \
+  openvideo-renderer /data/project.json
+```
+
+> **Note:** `--shm-size=2g` is required — Chromium needs shared memory for rendering.
 
 ---
 
-## Invoking from Other Applications
+## 3. Deploying to Modal.com
 
-### 1. From Node.js / TypeScript (Next.js & NestJS Services)
+Serverless cloud execution with auto-scaling. The Modal wrapper (`modal_app.py`) imports the shared `renderer.py` core.
 
-To call this service from Node.js, use the `@openvideo` shared `modal` package.
+### Prerequisites
 
-#### Returning the Public R2 URL (Recommended)
-By passing `r2_key` in the options object, the serverless function performs the upload directly in the cloud container, returning a URL dictionary. This avoids transferring megabytes of binary video data back to your Node backend:
-
-```typescript
-import { ModalClient } from "modal";
-
-async function renderVideoToR2(projectJson: any, assetId: string) {
-  const modal = new ModalClient();
-  const renderVideo = await modal.functions.fromName(
-    "openvideo-video-renderer",
-    "render_video"
-  );
-
-  // Invoke the remote Modal function
-  const result = await renderVideo.remote([projectJson, {
-    r2_key: `assets/${assetId}/rendered.mp4`,
-    prioritizeSpeed: true,
-  }]);
-
-  console.log("Uploaded Video URL:", result.url); // e.g. https://cdn.scenify.io/assets/asset_id/rendered.mp4
-  console.log("Video Size (Bytes):", result.size);
-  
-  return result.url;
-}
+```bash
+pip install modal
+python3 -m modal setup
 ```
 
-#### Returning Raw Binary Buffer (Transfer Mode)
-If you do not specify an `r2_key`, the remote function returns the raw video bytes. Node.js receives this as a binary `Buffer`:
+### Deploy
 
-```typescript
-import { ModalClient } from "modal";
-import * as fs from "fs/promises";
-
-async function renderVideoToLocalFile(projectJson: any) {
-  const modal = new ModalClient();
-  const renderVideo = await modal.functions.fromName(
-    "openvideo-video-renderer",
-    "render_video"
-  );
-
-  // Returns binary video bytes buffer
-  const videoBuffer = await renderVideo.remote([projectJson, {
-    prioritizeSpeed: false,
-    width: 1920,
-    height: 1080
-  }]);
-
-  await fs.writeFile("local-render-output.mp4", videoBuffer);
-  console.log("Rendered file written locally!");
-}
+```bash
+python3 -m modal deploy src/api/modal_app.py
 ```
 
----
+This builds and registers a container image on Modal's cloud with Node 22, Playwright Chromium, FFmpeg, and `@openvideo/engine-pixi@1.2.0`.
 
-### 2. From Python Clients (AI or background processors)
-
-If calling from another python microservice on Modal or standard python scripts, use the `modal.Function` API:
+### Invoke from Python
 
 ```python
 import modal
 import json
 
-def trigger_render():
-    # Retrieve the deployed function reference
-    render_video = modal.Function.lookup("openvideo-video-renderer", "render_video")
-    
-    with open("project.json") as f:
-        project_data = json.load(f)
-        
-    # Trigger remote rendering with R2 upload destination
-    result = render_video.remote(project_data, {
-        "r2_key": "renders/clip-abc.mp4",
-        "width": 1080,
-        "height": 1920,
-        "prioritizeSpeed": True
-    })
-    
-    print(f"Serverless render URL: {result['url']}")
+render_fn = modal.Function.lookup("openvideo-video-renderer", "render_video_modal")
 
-if __name__ == "__main__":
-    trigger_render()
+with open("project.json") as f:
+    project_data = json.load(f)
+
+result = render_fn.remote(project_data, {
+    "r2_key": "renders/my-video.mp4",
+    "width": 1080,
+    "height": 1920,
+    "prioritizeSpeed": True,
+})
+
+print(f"URL: {result['url']}")
 ```
+
+### Invoke from Node.js / TypeScript
+
+```typescript
+import { ModalClient } from "modal";
+
+const modal = new ModalClient();
+const renderVideo = await modal.functions.fromName(
+  "openvideo-video-renderer",
+  "render_video_modal"
+);
+
+// With R2 upload (recommended — avoids transferring large binaries)
+const result = await renderVideo.remote([projectJson, {
+  r2_key: `renders/${Date.now()}.mp4`,
+  prioritizeSpeed: true,
+}]);
+console.log("URL:", result.url);
+
+// Without R2 — returns raw MP4 bytes
+const videoBuffer = await renderVideo.remote([projectJson, {}]);
+await fs.writeFile("output.mp4", videoBuffer);
+```
+
+---
+
+## Render Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `width` | number | from project settings | Output video width |
+| `height` | number | from project settings | Output video height |
+| `fps` | number | from project settings | Frames per second |
+| `bitrate` | number | `12000000` | Video bitrate in bps |
+| `videoCodec` | string | `"avc1.640033"` | H.264 codec profile |
+| `audio` | boolean | `true` | Include audio track |
+| `audioCodec` | string | `"opus"` | Audio codec (opus recommended) |
+| `audioSampleRate` | number | `48000` | Audio sample rate |
+| `prioritizeSpeed` | boolean | `false` | Reduce bitrate by 30% for faster rendering |
+| `r2_key` | string | — | R2 object key; if set, uploads and returns `{url, size}` |
+| `timeout` | number | `600000` | Render timeout in ms |
