@@ -38,6 +38,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { SectionHeader } from "./section-header";
 import { cn } from "@/lib/utils";
 import color from "color";
 import { Input } from "@/components/ui/input";
@@ -379,33 +381,15 @@ export function TextGroupProperty({
         </div>
       </div>
 
-      {/* Line Background Section */}
-      <div className="border-t border-border/40 mt-2 pt-2">
-        <div className="flex items-center justify-between py-2">
-          <span className="text-xs font-semibold text-foreground">Line Background</span>
-          <button
-            onClick={() => {
-              if (bgEnabled) {
-                onBackgroundColorChange?.("");
-              } else {
-                onBackgroundColorChange?.(backgroundColor || "#000000");
-              }
-            }}
-            className={cn(
-              "relative inline-flex h-4 w-7 items-center rounded-full transition-colors",
-              bgEnabled ? "bg-primary" : "bg-secondary",
-            )}
-          >
-            <span
-              className={cn(
-                "inline-block h-3 w-3 transform rounded-full bg-white transition-transform",
-                bgEnabled ? "translate-x-3.5" : "translate-x-0.5",
-              )}
-            />
-          </button>
-        </div>
-
-        {bgEnabled && (
+      {/* Text Background Section */}
+      <Collapsible open={bgEnabled}>
+        <SectionHeader
+          title="Text Background"
+          hasContent={bgEnabled}
+          onAdd={() => onBackgroundColorChange?.(backgroundColor || "#000000")}
+          onRemove={() => onBackgroundColorChange?.("")}
+        />
+        <CollapsibleContent>
           <div className="py-1 flex flex-col gap-1">
             {/* Bg Color */}
             <div className="flex items-center justify-between py-1 gap-4">
@@ -523,8 +507,8 @@ export function TextGroupProperty({
               </InputGroup>
             </div>
           </div>
-        )}
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 }

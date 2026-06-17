@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { RiSubtractLine, RiArrowUpDownLine, RiPaintBrushLine } from "@remixicon/react";
+import { RiSubtractLine, RiArrowUpDownLine, RiEqualizer3Line } from "@remixicon/react";
 import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import { SectionHeader } from "./section-header";
 import {
   ColorPicker,
   ColorPickerEyeDropper,
@@ -39,19 +41,17 @@ interface CaptionColorsPropertyProps {
   setColors: (colors: CaptionColorsValue) => void;
 }
 
-/** Brand-consistent color row: swatch button + hex input + optional clear */
+/** Simplified color row: swatch + hex input */
 function ColorRow({
   label,
   value,
   fallback,
   onChange,
-  onClear,
 }: {
   label: string;
   value?: string;
   fallback: string;
   onChange: (hex: string) => void;
-  onClear?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const display = value || fallback;
@@ -59,57 +59,44 @@ function ColorRow({
   return (
     <div className="flex items-center justify-between py-1 gap-4">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <div className="flex items-center gap-1.5">
-        {onClear && value && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-5 text-muted-foreground/40 hover:text-destructive"
-            onClick={onClear}
-            title="Remove"
-          >
-            <RiSubtractLine className="size-3.5" />
-          </Button>
-        )}
-        <InputGroup className="w-[160px] h-7">
-          <InputGroupAddon align="inline-start" className="relative p-0">
-            <Popover modal open={open} onOpenChange={setOpen}>
-              <PopoverTrigger asChild>
-                <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
-                  <div
-                    className="h-4 w-4 rounded-sm border border-input shadow-sm"
-                    style={{ backgroundColor: display }}
-                  />
-                </InputGroupButton>
-              </PopoverTrigger>
-              <PopoverContent className="w-64 p-3" align="start">
-                <ColorPicker
-                  value={value}
-                  onChange={(cv) => onChange(color.rgb(cv as number[]).hex())}
-                  className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                >
-                  <ColorPickerSelection />
-                  <div className="flex items-center gap-4">
-                    <ColorPickerEyeDropper />
-                    <div className="grid w-full gap-1">
-                      <ColorPickerHue />
-                    </div>
+      <InputGroup className="w-[160px] h-7">
+        <InputGroupAddon align="inline-start" className="relative p-0">
+          <Popover modal open={open} onOpenChange={setOpen}>
+            <PopoverTrigger asChild>
+              <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
+                <div
+                  className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                  style={{ backgroundColor: display }}
+                />
+              </InputGroupButton>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 p-3" align="start">
+              <ColorPicker
+                value={value}
+                onChange={(cv) => onChange(color.rgb(cv as number[]).hex())}
+                className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+              >
+                <ColorPickerSelection />
+                <div className="flex items-center gap-4">
+                  <ColorPickerEyeDropper />
+                  <div className="grid w-full gap-1">
+                    <ColorPickerHue />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <ColorPickerOutput />
-                    <ColorPickerFormat />
-                  </div>
-                </ColorPicker>
-              </PopoverContent>
-            </Popover>
-          </InputGroupAddon>
-          <InputGroupInput
-            value={display.toUpperCase()}
-            onChange={(e) => onChange(e.target.value)}
-            className="text-xs p-0 font-mono"
-          />
-        </InputGroup>
-      </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <ColorPickerOutput />
+                  <ColorPickerFormat />
+                </div>
+              </ColorPicker>
+            </PopoverContent>
+          </Popover>
+        </InputGroupAddon>
+        <InputGroupInput
+          value={display.toUpperCase()}
+          onChange={(e) => onChange(e.target.value)}
+          className="text-xs p-0 font-mono"
+        />
+      </InputGroup>
     </div>
   );
 }
@@ -146,65 +133,52 @@ function BorderRow({
 
       <div className="flex items-center justify-between py-1 gap-4">
         <span className="text-xs text-muted-foreground">Border color</span>
-        <div className="flex items-center gap-1.5">
-          {border?.color && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-5 text-muted-foreground/40 hover:text-destructive"
-              onClick={() => onChange({ ...border, color: undefined })}
-              title="Remove"
-            >
-              <RiSubtractLine className="size-3.5" />
-            </Button>
-          )}
-          <InputGroup className="w-[160px] h-7">
-            <InputGroupAddon align="inline-start" className="relative p-0">
-              <Popover modal open={open} onOpenChange={setOpen}>
-                <PopoverTrigger asChild>
-                  <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
-                    <div
-                      className="h-4 w-4 rounded-sm border border-input shadow-sm"
-                      style={{ backgroundColor: borderColor }}
-                    />
-                  </InputGroupButton>
-                </PopoverTrigger>
-                <PopoverContent className="w-64 p-3" align="start">
-                  <ColorPicker
-                    value={border?.color}
-                    onChange={(cv) =>
-                      onChange({ ...border, color: color.rgb(cv as number[]).hex() })
-                    }
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
-                  >
-                    <ColorPickerSelection />
-                    <div className="flex items-center gap-4">
-                      <ColorPickerEyeDropper />
-                      <div className="grid w-full gap-1">
-                        <ColorPickerHue />
-                      </div>
+        <InputGroup className="w-[160px] h-7">
+          <InputGroupAddon align="inline-start" className="relative p-0">
+            <Popover modal open={open} onOpenChange={setOpen}>
+              <PopoverTrigger asChild>
+                <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
+                  <div
+                    className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                    style={{ backgroundColor: borderColor }}
+                  />
+                </InputGroupButton>
+              </PopoverTrigger>
+              <PopoverContent className="w-64 p-3" align="start">
+                <ColorPicker
+                  value={border?.color}
+                  onChange={(cv) => onChange({ ...border, color: color.rgb(cv as number[]).hex() })}
+                  className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                >
+                  <ColorPickerSelection />
+                  <div className="flex items-center gap-4">
+                    <ColorPickerEyeDropper />
+                    <div className="grid w-full gap-1">
+                      <ColorPickerHue />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <ColorPickerOutput />
-                      <ColorPickerFormat />
-                    </div>
-                  </ColorPicker>
-                </PopoverContent>
-              </Popover>
-            </InputGroupAddon>
-            <InputGroupInput
-              value={borderColor.toUpperCase()}
-              onChange={(e) => onChange({ ...border, color: e.target.value })}
-              className="text-xs p-0 font-mono"
-            />
-          </InputGroup>
-        </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ColorPickerOutput />
+                    <ColorPickerFormat />
+                  </div>
+                </ColorPicker>
+              </PopoverContent>
+            </Popover>
+          </InputGroupAddon>
+          <InputGroupInput
+            value={borderColor.toUpperCase()}
+            onChange={(e) =>
+              onChange({ ...border, color: e.target.value === "" ? undefined : e.target.value })
+            }
+            className="text-xs p-0 font-mono"
+          />
+        </InputGroup>
       </div>
     </>
   );
 }
 
-/** Keyword section with enable toggle, color picker, and preserveAfterSpoken option */
+/** Keyword section with plus/minus header (consistent with other sections) */
 function KeywordSection({
   keyword,
   onChange,
@@ -215,33 +189,29 @@ function KeywordSection({
   const isEnabled = keyword !== undefined;
   const preserveAfterSpoken = keyword?.preserveAfterSpoken ?? false;
 
-  const handleToggle = (enabled: boolean) => {
-    if (enabled) {
-      onChange({ color: "#FFFFFF", preserveAfterSpoken: false });
-    } else {
-      onChange(undefined);
-    }
+  const handleAdd = () => {
+    onChange({ color: "#FFFFFF", preserveAfterSpoken: false });
+  };
+
+  const handleRemove = () => {
+    onChange(undefined);
   };
 
   return (
-    <div className="flex flex-col py-2">
-      <div className="flex items-center justify-between py-2">
-        <span className="text-xs font-semibold text-foreground">Keyword</span>
-        <Switch
-          checked={isEnabled}
-          onCheckedChange={handleToggle}
-          className="scale-75 origin-right"
-        />
-      </div>
-
-      {isEnabled && (
-        <div className="flex flex-col gap-3">
+    <Collapsible open={isEnabled}>
+      <SectionHeader
+        title="Keyword"
+        hasContent={isEnabled}
+        onAdd={handleAdd}
+        onRemove={handleRemove}
+      />
+      <CollapsibleContent>
+        <div className="flex flex-col gap-3 py-1">
           <ColorRow
             label="Fill"
             value={keyword?.color}
             fallback="#FFFFFF"
-            onChange={(hex) => onChange({ ...keyword, color: hex })}
-            onClear={() => onChange({ ...keyword, color: undefined })}
+            onChange={(hex) => onChange({ ...keyword, color: hex === "" ? undefined : hex })}
           />
 
           <div className="flex items-center justify-between py-1">
@@ -253,8 +223,8 @@ function KeywordSection({
             />
           </div>
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
@@ -295,8 +265,7 @@ function WordStyleSection({
           label="Fill"
           value={style.color}
           fallback="#FFFFFF"
-          onChange={(hex) => onChange({ color: hex })}
-          onClear={() => onChange({ color: undefined })}
+          onChange={(hex) => onChange({ color: hex === "" ? undefined : hex })}
         />
 
         {showBackground && (
@@ -304,8 +273,7 @@ function WordStyleSection({
             label="Background"
             value={style.background}
             fallback="transparent"
-            onChange={(hex) => onChange({ background: hex })}
-            onClear={() => onChange({ background: undefined })}
+            onChange={(hex) => onChange({ background: hex === "" ? undefined : hex })}
           />
         )}
 
@@ -331,7 +299,7 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
               className="size-6 rounded-sm text-muted-foreground hover:text-foreground"
               title="Customize"
             >
-              <RiPaintBrushLine className="size-4" />
+              <RiEqualizer3Line className="size-4" />
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80 p-0" align="end" side="left" sideOffset={8}>
@@ -366,28 +334,6 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
             </div>
           </PopoverContent>
         </Popover>
-      </div>
-
-      {/* Quick-access swatches row */}
-      <div className="flex items-center justify-between py-1 gap-4">
-        <span className="text-xs text-muted-foreground">Active fill</span>
-        <ColorRow
-          label=""
-          value={active.color}
-          fallback="#FFFFFF"
-          onChange={(hex) => setColors({ ...captionColors, active: { ...active, color: hex } })}
-          onClear={() => setColors({ ...captionColors, active: { ...active, color: undefined } })}
-        />
-      </div>
-      <div className="flex items-center justify-between py-1 gap-4">
-        <span className="text-xs text-muted-foreground">Future fill</span>
-        <ColorRow
-          label=""
-          value={future.color}
-          fallback="#FFFFFF"
-          onChange={(hex) => setColors({ ...captionColors, future: { ...future, color: hex } })}
-          onClear={() => setColors({ ...captionColors, future: { ...future, color: undefined } })}
-        />
       </div>
     </div>
   );
