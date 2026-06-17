@@ -159,9 +159,14 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     if (v.colors) {
       if (v.colors.active !== undefined) this.originalOpts.activeStyle = v.colors.active;
       if (v.colors.future !== undefined) this.originalOpts.futureStyle = v.colors.future;
-      if (v.colors.keyword !== undefined) {
-        this.originalOpts.keywordColor = v.colors.keyword.color;
-        this.originalOpts.keywordPreserveAfterSpoken = v.colors.keyword.preserveAfterSpoken;
+      if ("keyword" in v.colors) {
+        if (v.colors.keyword !== undefined) {
+          this.originalOpts.keywordColor = v.colors.keyword.color;
+          this.originalOpts.keywordPreserveAfterSpoken = v.colors.keyword.preserveAfterSpoken;
+        } else {
+          this.originalOpts.keywordColor = undefined;
+          this.originalOpts.keywordPreserveAfterSpoken = undefined;
+        }
       }
     }
     if (v.wordAnimation !== undefined) this.originalOpts.wordAnimation = v.wordAnimation;
@@ -306,6 +311,12 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     })();
   }
 
+  protected override createStyleFromOpts(opts: any): any {
+    const style = super.createStyleFromOpts(opts);
+    style.fill = 0xffffff;
+    return style;
+  }
+
   private _syncOpts(): void {
     const o = this.originalOpts ?? {};
     this._activeStyle = o.activeStyle ?? {};
@@ -388,7 +399,6 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
   }
 
   override async tick(time: number): Promise<{ video: ImageBitmap; state: "success" }> {
-    this._lastTickTime = time;
     this.updateState(time);
     return super.tick(time);
   }
@@ -396,6 +406,7 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
   // ─── updateState ─────────────────────────────────────────────────────────
 
   updateState(currentTimeUs: number): void {
+    this._lastTickTime = currentTimeUs;
     const currentTimeMs = currentTimeUs / 1000;
 
     (this.wordTexts as unknown as CaptionSplitBitmapText[]).forEach((wordText) => {
@@ -454,26 +465,18 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
         if (c && !isTransparent(c)) {
           ({ color: textColor, alpha: textAlpha } = resolveColor(c, 0xffffff));
         } else {
-          // fallback to style.color (appeared color)
-          const colorOpt = this.originalOpts?.color;
-          const fill =
-            typeof colorOpt === "object" && colorOpt !== null && "type" in colorOpt
-              ? 0xffffff
-              : (colorOpt as string | number);
-          ({ color: textColor, alpha: textAlpha } = resolveColor(fill as any));
+          // no active color set → default to white (style.color is for appeared words)
+          textColor = 0xffffff;
+          textAlpha = 1;
         }
       } else if (isFuture) {
         const c = this._futureStyle.color;
         if (c && !isTransparent(c)) {
           ({ color: textColor, alpha: textAlpha } = resolveColor(c, 0xffffff));
         } else {
-          // no future color set → use style.color
-          const colorOpt = this.originalOpts?.color;
-          const fill =
-            typeof colorOpt === "object" && colorOpt !== null && "type" in colorOpt
-              ? 0xffffff
-              : (colorOpt as string | number);
-          ({ color: textColor, alpha: textAlpha } = resolveColor(fill as any));
+          // no future color set → default to white (style.color is for appeared words)
+          textColor = 0xffffff;
+          textAlpha = 1;
         }
       } else {
         // appeared — use style.color
@@ -493,9 +496,11 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
         textAlpha *= opacityFactor;
       }
 
-      // Apply colour to glyph children
-      wordText.tint = 0xffffff;
-      const applyColor = (obj: any) => {
+      // Apply colour directly to the word container (same mechanism as initial tint setup).
+      // This ensures caption-specific colours (active/future/keyword) always win over
+      // the base style.color that _buildWordObjects bakes into wt.tint at construction.
+      wordText.tint = textColor;
+      const applyAlpha = (obj: any) => {
         if (
           obj.label === "bgRect" ||
           obj.label === "tiktokBackground" ||
@@ -503,11 +508,10 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
           (typeof obj.label === "string" && obj.label.startsWith("bgRect_"))
         )
           return;
-        if ("tint" in obj) obj.tint = textColor;
         if ("alpha" in obj) obj.alpha = textAlpha;
-        if (obj.children) obj.children.forEach(applyColor);
+        if (obj.children) obj.children.forEach(applyAlpha);
       };
-      wordText.children.forEach(applyColor);
+      wordText.children.forEach(applyAlpha);
 
       // ── Background pill (active word) ─────────────────────────────────────
       const parentContainer = wordText.parent as Container | null;

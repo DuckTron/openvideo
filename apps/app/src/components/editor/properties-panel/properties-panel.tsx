@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { IClip } from "@openvideo/engine-pixi";
+import { fontManager, IClip } from "@openvideo/engine-pixi";
 import { useStore } from "zustand";
 import { projectStore, core } from "@/lib/project";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
@@ -371,9 +371,16 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
                 });
               }
             }}
-            onFontStyleChange={(postScriptName) => {
+            onFontStyleChange={async (postScriptName) => {
               const newFont = getFontByPostScriptName(postScriptName);
+
               if (newFont) {
+                await fontManager.loadFonts([
+                  {
+                    name: newFont.postScriptName,
+                    url: newFont.url,
+                  },
+                ]);
                 handleStyleUpdate({
                   fontFamily: newFont.postScriptName,
                   fontUrl: newFont.url,
