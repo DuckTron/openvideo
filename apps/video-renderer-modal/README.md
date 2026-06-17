@@ -86,7 +86,6 @@ Upon successful deployment, the container image containing Node 22, Playwright C
 To call this service from Node.js, use the `@openvideo` shared `modal` package.
 
 #### Returning the Public R2 URL (Recommended)
-
 By passing `r2_key` in the options object, the serverless function performs the upload directly in the cloud container, returning a URL dictionary. This avoids transferring megabytes of binary video data back to your Node backend:
 
 ```typescript
@@ -94,26 +93,25 @@ import { ModalClient } from "modal";
 
 async function renderVideoToR2(projectJson: any, assetId: string) {
   const modal = new ModalClient();
-  const renderVideo = await modal.functions.fromName("openvideo-video-renderer", "render_video");
+  const renderVideo = await modal.functions.fromName(
+    "openvideo-video-renderer",
+    "render_video"
+  );
 
   // Invoke the remote Modal function
-  const result = await renderVideo.remote([
-    projectJson,
-    {
-      r2_key: `assets/${assetId}/rendered.mp4`,
-      prioritizeSpeed: true,
-    },
-  ]);
+  const result = await renderVideo.remote([projectJson, {
+    r2_key: `assets/${assetId}/rendered.mp4`,
+    prioritizeSpeed: true,
+  }]);
 
   console.log("Uploaded Video URL:", result.url); // e.g. https://cdn.scenify.io/assets/asset_id/rendered.mp4
   console.log("Video Size (Bytes):", result.size);
-
+  
   return result.url;
 }
 ```
 
 #### Returning Raw Binary Buffer (Transfer Mode)
-
 If you do not specify an `r2_key`, the remote function returns the raw video bytes. Node.js receives this as a binary `Buffer`:
 
 ```typescript
@@ -122,17 +120,17 @@ import * as fs from "fs/promises";
 
 async function renderVideoToLocalFile(projectJson: any) {
   const modal = new ModalClient();
-  const renderVideo = await modal.functions.fromName("openvideo-video-renderer", "render_video");
+  const renderVideo = await modal.functions.fromName(
+    "openvideo-video-renderer",
+    "render_video"
+  );
 
   // Returns binary video bytes buffer
-  const videoBuffer = await renderVideo.remote([
-    projectJson,
-    {
-      prioritizeSpeed: false,
-      width: 1920,
-      height: 1080,
-    },
-  ]);
+  const videoBuffer = await renderVideo.remote([projectJson, {
+    prioritizeSpeed: false,
+    width: 1920,
+    height: 1080
+  }]);
 
   await fs.writeFile("local-render-output.mp4", videoBuffer);
   console.log("Rendered file written locally!");
@@ -152,10 +150,10 @@ import json
 def trigger_render():
     # Retrieve the deployed function reference
     render_video = modal.Function.lookup("openvideo-video-renderer", "render_video")
-
+    
     with open("project.json") as f:
         project_data = json.load(f)
-
+        
     # Trigger remote rendering with R2 upload destination
     result = render_video.remote(project_data, {
         "r2_key": "renders/clip-abc.mp4",
@@ -163,7 +161,7 @@ def trigger_render():
         "height": 1920,
         "prioritizeSpeed": True
     })
-
+    
     print(f"Serverless render URL: {result['url']}")
 
 if __name__ == "__main__":

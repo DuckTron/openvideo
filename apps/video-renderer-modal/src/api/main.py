@@ -1,6 +1,8 @@
 """Modal service for headless video rendering using Playwright and @openvideo/engine-pixi."""
 
 import os
+import sys
+import time
 import json
 import base64
 import http.server
@@ -9,10 +11,24 @@ import threading
 import tempfile
 import urllib.request
 import subprocess
+import shutil
+import ssl
+import hashlib
+import concurrent.futures
+from contextlib import contextmanager
 from typing import Dict, Any, Optional, Union
+
 import modal
 from playwright.async_api import async_playwright
 from dotenv import load_dotenv
+
+# Optional R2 Upload Dependencies
+try:
+    import boto3
+    from botocore.config import Config
+    HAS_BOTO3 = True
+except ImportError:
+    HAS_BOTO3 = False
 
 # Load local environment variables from .env file
 load_dotenv()
@@ -56,8 +72,6 @@ r2_secret = modal.Secret.from_dict({
     "R2_PUBLIC_DOMAIN": os.getenv("R2_PUBLIC_DOMAIN", "https://cdn.scenify.io")
 })
 
-# renderer.html is already mounted directly via image.add_local_file
-
 # ---------------------------------------------------------------------------
 # Path configuration (handles both Modal container and local environments)
 # ---------------------------------------------------------------------------
@@ -66,8 +80,10 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 RENDERER_HTML_PATH = "/app/renderer.html"
 ENGINE_DIST_PATH = "/app/node_modules/@openvideo/engine-pixi/dist"
 
+IS_LOCAL = not os.path.exists(RENDERER_HTML_PATH)
+
 # Local testing path overrides
-if not os.path.exists(RENDERER_HTML_PATH):
+if IS_LOCAL:
     local_html = os.path.abspath(os.path.join(CURRENT_DIR, "..", "..", "renderer.html"))
     if os.path.exists(local_html):
         RENDERER_HTML_PATH = local_html
@@ -100,13 +116,20 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             rel_path = path[len("/engine-pixi/"):]
             rel_path = os.path.normpath(rel_path).lstrip("/")
             return os.path.join(ENGINE_DIST_PATH, rel_path)
+        # Route requests starting with /temp-clips/ to the server's temp directory
+        elif path.startswith("/temp-clips/"):
+            rel_path = path[len("/temp-clips/"):]
+            rel_path = os.path.normpath(rel_path).lstrip("/")
+            temp_dir = getattr(self.server, "temp_dir", None)
+            if temp_dir:
+                return os.path.join(temp_dir, rel_path)
         # Route root requests to renderer.html
         elif path == "/" or path == "/index.html":
             return RENDERER_HTML_PATH
         return super().translate_path(path)
 
     def log_message(self, format, *args):
-        # Silence HTTP server logs to keep console clean unless debugging
+        # Silence HTTP server logs to keep console clean
         pass
 
 
@@ -116,11 +139,80 @@ class ThreadedHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
 
 
 # ---------------------------------------------------------------------------
+# Resource Management Context Managers
+# ---------------------------------------------------------------------------
+
+@contextmanager
+def temporary_dir_context():
+    """Context manager to create and automatically clean up a temporary directory."""
+    temp_dir = tempfile.mkdtemp()
+    try:
+        yield temp_dir
+    finally:
+        if temp_dir and os.path.exists(temp_dir):
+            try:
+                shutil.rmtree(temp_dir)
+                print("[modal-renderer] Temporary directory cleaned up.")
+            except Exception as e:
+                print(f"[modal-renderer] Warning: Failed to clean up temporary directory {temp_dir}: {e}")
+
+
+@contextmanager
+def xvfb_display_context():
+    """Context manager to run headed Chromium inside Xvfb on headless Linux environments."""
+    xvfb_process = None
+    if not IS_LOCAL and sys.platform.startswith("linux"):
+        try:
+            print("[modal-renderer] Starting virtual display (Xvfb) for headed rendering on server...")
+            xvfb_process = subprocess.Popen(
+                ["Xvfb", ":99", "-ac", "-screen", "0", "1280x1024x24", "-nolisten", "tcp"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            os.environ["DISPLAY"] = ":99"
+            time.sleep(1)
+        except Exception as xvfb_err:
+            print(f"[modal-renderer] Warning: Failed to start Xvfb: {xvfb_err}. Falling back to headless.")
+            xvfb_process = None
+
+    try:
+        yield xvfb_process
+    finally:
+        if xvfb_process:
+            print("[modal-renderer] Stopping virtual display (Xvfb)...")
+            xvfb_process.terminate()
+            xvfb_process.wait()
+            print("[modal-renderer] Virtual display (Xvfb) stopped.")
+
+
+@contextmanager
+def local_http_server_context(temp_dir: str):
+    """Context manager to run a threaded HTTP server on a random free port serving the renderer files."""
+    print("[modal-renderer] Initializing Threaded HTTP Server...")
+    server = ThreadedHTTPServer(("127.0.0.1", 0), CustomHTTPRequestHandler)
+    server.temp_dir = temp_dir
+    ip, port = server.server_address
+
+    server_thread = threading.Thread(target=server.serve_forever)
+    server_thread.daemon = True
+    server_thread.start()
+    print(f"[modal-renderer] HTTP Server running on http://127.0.0.1:{port}")
+
+    try:
+        yield port
+    finally:
+        print("[modal-renderer] Stopping Threaded HTTP Server...")
+        server.shutdown()
+        server.server_close()
+        print("[modal-renderer] Threaded HTTP Server stopped.")
+
+
+# ---------------------------------------------------------------------------
 # Video Pre-transcoding (Opus audio compatibility step)
 # ---------------------------------------------------------------------------
 
-def pretranscode_videos(project: dict) -> dict:
-    """Pre-transcodes any external video clips to container format with Opus audio.
+def pretranscode_videos(project: dict, temp_dir: str, port: int) -> dict:
+    """Pre-transcodes any external video clips to container format with AAC audio.
     
     This is required to make audio streams compatible with WebCodecs inside Chromium.
     """
@@ -128,8 +220,11 @@ def pretranscode_videos(project: dict) -> dict:
     if not clips:
         return project
 
+    ssl_context = ssl._create_unverified_context()
     transcoded_clips = {}
-    for clip_id, clip in clips.items():
+    cache_dir = os.path.join(tempfile.gettempdir(), "openvideo_transcode_cache")
+
+    def process_clip(clip_id, clip):
         if (
             isinstance(clip, dict)
             and clip.get("type") == "Video"
@@ -137,25 +232,31 @@ def pretranscode_videos(project: dict) -> dict:
             and clip.get("audio") != False
         ):
             try:
-                with tempfile.TemporaryDirectory() as temp_dir:
+                src_url = clip["src"]
+                url_hash = hashlib.sha256(src_url.encode("utf-8")).hexdigest()
+                cached_file = os.path.join(cache_dir, f"transcoded-{url_hash}.mp4")
+                
+                temp_output = os.path.join(temp_dir, f"clip-{clip_id}.mp4")
+                
+                if os.path.exists(cached_file):
+                    print(f"[pretranscode] Using cached transcoded clip for {clip_id}...")
+                    shutil.copy(cached_file, temp_output)
+                else:
                     temp_input = os.path.join(temp_dir, f"input-{clip_id}.mp4")
-                    temp_output = os.path.join(temp_dir, f"output-{clip_id}.mp4")
-
-                    print(f"[pretranscode] Downloading clip {clip_id} from {clip['src']}...")
-                    # Download media file with a user agent
-                    req = urllib.request.Request(clip["src"], headers={"User-Agent": "OpenVideo/1.0"})
-                    with urllib.request.urlopen(req) as response:
+                    print(f"[pretranscode] Downloading clip {clip_id} from {src_url}...")
+                    
+                    req = urllib.request.Request(src_url, headers={"User-Agent": "OpenVideo/1.0"})
+                    with urllib.request.urlopen(req, context=ssl_context) as response:
                         with open(temp_input, "wb") as out_file:
                             out_file.write(response.read())
 
-                    print(f"[pretranscode] Transcoding clip {clip_id} to MP4/Opus audio...")
-                    # Copy video track, transcode audio track to opus
+                    print(f"[pretranscode] Transcoding clip {clip_id} to MP4/AAC audio...")
                     subprocess.run(
                         [
                             "ffmpeg",
                             "-i", temp_input,
                             "-c:v", "copy",
-                            "-c:a", "libopus",
+                            "-c:a", "aac",
                             "-b:a", "128k",
                             temp_output,
                             "-y"
@@ -165,22 +266,36 @@ def pretranscode_videos(project: dict) -> dict:
                         timeout=300
                     )
 
-                    # Encode transcoded output as Base64 data URL
-                    with open(temp_output, "rb") as f:
-                        file_bytes = f.read()
+                    if os.path.exists(temp_input):
+                        os.remove(temp_input)
 
-                    base64_str = base64.b64encode(file_bytes).decode("utf-8")
-                    data_url = f"data:video/mp4;base64,{base64_str}"
+                    try:
+                        os.makedirs(cache_dir, exist_ok=True)
+                        shutil.copy(temp_output, cached_file)
+                        print(f"[pretranscode] Saved transcoded clip {clip_id} to cache.")
+                    except Exception as cache_err:
+                        print(f"[pretranscode] Warning: Failed to save to cache: {cache_err}")
 
-                    new_clip = dict(clip)
-                    new_clip["src"] = data_url
-                    transcoded_clips[clip_id] = new_clip
-                    print(f"[pretranscode] Successfully transcoded clip {clip_id} ({len(file_bytes) / 1024 / 1024:.2f} MB)")
+                new_clip = dict(clip)
+                new_clip["src"] = f"http://127.0.0.1:{port}/temp-clips/clip-{clip_id}.mp4"
+                print(f"[pretranscode] Successfully processed clip {clip_id} and served locally.")
+                return clip_id, new_clip
             except Exception as e:
                 print(f"[pretranscode] Warning: Failed to transcode clip {clip_id}: {e}. Keeping original source.")
-                transcoded_clips[clip_id] = clip
+                return clip_id, clip
         else:
-            transcoded_clips[clip_id] = clip
+            return clip_id, clip
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = {executor.submit(process_clip, cid, clip): cid for cid, clip in clips.items()}
+        for future in concurrent.futures.as_completed(futures):
+            cid = futures[future]
+            try:
+                clip_id, processed_clip = future.result()
+                transcoded_clips[clip_id] = processed_clip
+            except Exception as e:
+                print(f"[pretranscode] Error in thread for clip {cid}: {e}")
+                transcoded_clips[cid] = clips[cid]
 
     new_project = dict(project)
     new_project["clips"] = transcoded_clips
@@ -202,9 +317,9 @@ def upload_to_r2(file_data: bytes, key: str) -> str:
     if not all([account_id, access_key_id, secret_access_key]):
         raise ValueError("R2 credentials not fully configured in environment variables.")
 
-    endpoint = f"https://{account_id}.r2.cloudflarestorage.com"
-    
-    # Auto-detect Content-Type from suffix
+    if not HAS_BOTO3:
+        raise ImportError("boto3 package is not installed.")
+
     content_type = "video/mp4"
     if key.lower().endswith(".mp3"):
         content_type = "audio/mpeg"
@@ -216,12 +331,9 @@ def upload_to_r2(file_data: bytes, key: str) -> str:
     print(f"[modal-renderer] Uploading {len(file_data)} bytes to R2 bucket '{bucket_name}' under key '{key}'...")
     
     try:
-        import boto3
-        from botocore.config import Config
-
         s3 = boto3.client(
             "s3",
-            endpoint_url=endpoint,
+            endpoint_url=f"https://{account_id}.r2.cloudflarestorage.com",
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
             config=Config(signature_version="s3v4")
@@ -243,96 +355,50 @@ def upload_to_r2(file_data: bytes, key: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Core Modal Video Rendering Function
+# Playwright Browser Execution Helper
 # ---------------------------------------------------------------------------
 
-@app.function(
-    image=image,
-    timeout=600,  # 10 minutes maximum rendering budget
-    memory=2048,  # 2GB RAM
-    cpu=4.0,      # 4 CPU cores
-    secrets=[r2_secret]
-)
-async def render_video(project: dict, options: Optional[dict] = None) -> Union[bytes, dict]:
-    """Render an OpenVideo project JSON to a compiled MP4 video binary using Playwright and engine-pixi.
-    
-    Parameters:
-    - project (dict): The timeline project settings and clips JSON definition.
-    - options (dict): Options like output resolution, fps, bitrate, audio settings, etc.
-    
-    Returns:
-    - bytes: Raw MP4 video file binary content.
-    """
-    if options is None:
-        options = {}
+async def _execute_playwright_render(
+    port: int,
+    project: dict,
+    compositor_options: dict,
+    run_headless: bool,
+    timeout_ms: int
+) -> bytes:
+    """Launch Playwright Chromium, execute the canvas render, and return the video bytes."""
+    print(f"[modal-renderer] Launching Playwright Chromium (headless={run_headless})...")
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(
+            headless=run_headless,
+            args=[
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-setuid-sandbox",
+                "--disable-background-timer-throttling",
+                "--disable-renderer-backgrounding",
+                "--disable-backgrounding-occluded-windows",
+                "--enable-features=WebCodecs,MediaRecorder,AudioEncoder,VideoEncoder",
+                "--enable-blink-features=WebCodecs",
+                "--enable-accelerated-video-encode",
+                "--enable-accelerated-video-decode",
+                "--enable-accelerated-video",
+                "--enable-media-stream",
+                "--autoplay-policy=no-user-gesture-required",
+            ] + ([
+                "--use-angle=swiftshader",
+                "--enable-unsafe-swiftshader",
+            ] if run_headless else [
+                "--ignore-gpu-blocklist",
+                "--enable-gpu",
+            ])
+        )
 
-    print("[modal-renderer] Initializing Threaded HTTP Server...")
-    server = ThreadedHTTPServer(("127.0.0.1", 0), CustomHTTPRequestHandler)
-    ip, port = server.server_address
-
-    server_thread = threading.Thread(target=server.serve_forever)
-    server_thread.daemon = True
-    server_thread.start()
-    print(f"[modal-renderer] HTTP Server running on http://127.0.0.1:{port}")
-
-    try:
-        format_opt = options.get("format", "mp4")
-        video_codec = options.get("videoCodec", "avc1.640033")
-        bitrate = options.get("bitrate", 12_000_000)
-        audio = options.get("audio", True)
-        audio_codec = options.get("audioCodec", "opus")
-        audio_sample_rate = options.get("audioSampleRate", 48_000)
-        prioritize_speed = options.get("prioritizeSpeed", False)
-        timeout_ms = options.get("timeout", 600_000)
-
-        # 1. Run Pre-transcoder to optimize browser audio rendering if enabled
-        if audio:
-            print("[modal-renderer] Running pre-transcoding pipeline...")
-            project = pretranscode_videos(project)
-
-        # 2. Configure PixiJS Compositor options
-        settings = project.get("settings", {})
-        compositor_options = {
-            "width": options.get("width") or settings.get("width") or 1920,
-            "height": options.get("height") or settings.get("height") or 1080,
-            "fps": options.get("fps") or settings.get("fps") or 30,
-            "backgroundColor": options.get("backgroundColor") or settings.get("backgroundColor") or "#000000",
-            "format": format_opt,
-            "videoCodec": video_codec,
-            "bitrate": int(bitrate * 0.7) if prioritize_speed else bitrate,
-            "audio": audio,
-            "audioCodec": audio_codec,
-            "audioSampleRate": audio_sample_rate,
-            "prioritizeSpeed": prioritize_speed
-        }
-
-        print("[modal-renderer] Launching headless Playwright Chromium...")
-        async with async_playwright() as p:
-            browser = await p.chromium.launch(
-                headless=True,
-                args=[
-                    "--no-sandbox",
-                    "--disable-dev-shm-usage",
-                    "--disable-setuid-sandbox",
-                    "--disable-background-timer-throttling",
-                    "--disable-renderer-backgrounding",
-                    "--disable-backgrounding-occluded-windows",
-                    "--enable-features=WebCodecs,MediaRecorder,AudioEncoder,VideoEncoder",
-                    "--enable-blink-features=WebCodecs",
-                    "--enable-accelerated-video-encode",
-                    "--enable-accelerated-video-decode",
-                    "--enable-accelerated-video",
-                    "--enable-media-stream",
-                    "--autoplay-policy=no-user-gesture-required",
-                ]
-            )
-
+        try:
             page = await browser.new_page()
             page.set_default_timeout(0)
             page.set_default_navigation_timeout(60_000)
 
             print("[modal-renderer] Injecting project payload and compositor configuration...")
-            # Inject data into page global window scope before page scripts run
             project_json_str = json.dumps(project)
             options_json_str = json.dumps(compositor_options)
             init_script = f"""
@@ -341,7 +407,6 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
             """
             await page.add_init_script(init_script)
 
-            # Expose progress updates from browser to python stdout
             async def on_progress(v: float):
                 print(f"[modal-renderer] Compositor export progress: {v*100:.1f}%")
 
@@ -367,7 +432,6 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
                 raise Exception(f"Compositor rendering failed in browser: {render_error}")
 
             print("[modal-renderer] Extracting video blob as Base64...")
-            # Extract video blob via FileReader to avoid memory limits and stack overflows
             base64_data = await page.evaluate("""async () => {
                 const blob = window.__VIDEO_BLOB__;
                 if (!blob) throw new Error("__VIDEO_BLOB__ was not populated after render complete");
@@ -385,24 +449,89 @@ async def render_video(project: dict, options: Optional[dict] = None) -> Union[b
             print("[modal-renderer] Decoding video file payload...")
             video_bytes = base64.b64decode(base64_data)
             print(f"[modal-renderer] Rendering complete! Saved {len(video_bytes) / 1024 / 1024:.2f} MB video file.")
-
+            return video_bytes
+        finally:
             await browser.close()
 
-            # If R2 upload destination key is provided, perform upload and return public URL dict
-            r2_key = options.get("r2_key")
-            if r2_key:
-                print(f"[modal-renderer] R2 Key provided: '{r2_key}'. Starting R2 upload integration...")
-                public_url = upload_to_r2(video_bytes, r2_key)
-                print(f"[modal-renderer] Debug: Upload URL: {public_url}")
-                return {"url": public_url, "size": len(video_bytes)}
 
-            return video_bytes
+# ---------------------------------------------------------------------------
+# Core Modal Video Rendering Function
+# ---------------------------------------------------------------------------
 
-    finally:
-        print("[modal-renderer] Stopping Threaded HTTP Server...")
-        server.shutdown()
-        server.server_close()
-        print("[modal-renderer] Threaded HTTP Server stopped.")
+@app.function(
+    image=image,
+    timeout=600,  # 10 minutes maximum rendering budget
+    memory=2048,  # 2GB RAM
+    cpu=8.0,      # 8 CPU cores
+    secrets=[r2_secret]
+)
+async def render_video(project: dict, options: Optional[dict] = None) -> Union[bytes, dict]:
+    """Render an OpenVideo project JSON to a compiled MP4 video binary using Playwright and engine-pixi.
+    
+    Parameters:
+    - project (dict): The timeline project settings and clips JSON definition.
+    - options (dict): Options like output resolution, fps, bitrate, audio settings, etc.
+    
+    Returns:
+    - bytes or dict: Raw MP4 video file binary content, or R2 metadata dictionary.
+    """
+    if options is None:
+        options = {}
+
+    format_opt = options.get("format", "mp4")
+    video_codec = options.get("videoCodec", "avc1.640033")
+    bitrate = options.get("bitrate", 12_000_000)
+    audio = options.get("audio", True)
+    audio_codec = options.get("audioCodec", "opus")
+    audio_sample_rate = options.get("audioSampleRate", 48_000)
+    prioritize_speed = options.get("prioritizeSpeed", False)
+    timeout_ms = options.get("timeout", 600_000)
+
+    # Configure PixiJS Compositor options
+    settings = project.get("settings", {})
+    compositor_options = {
+        "width": options.get("width") or settings.get("width") or 1920,
+        "height": options.get("height") or settings.get("height") or 1080,
+        "fps": options.get("fps") or settings.get("fps") or 30,
+        "backgroundColor": options.get("backgroundColor") or settings.get("backgroundColor") or "#000000",
+        "format": format_opt,
+        "videoCodec": video_codec,
+        "bitrate": int(bitrate * 0.7) if prioritize_speed else bitrate,
+        "audio": audio,
+        "audioCodec": audio_codec,
+        "audioSampleRate": audio_sample_rate,
+        "prioritizeSpeed": prioritize_speed
+    }
+
+    # Run nested contexts to manage external display, temp workspace, and local server lifecycles
+    with xvfb_display_context() as xvfb_process:
+        run_headless = not IS_LOCAL and xvfb_process is None
+        
+        with temporary_dir_context() as temp_dir:
+            with local_http_server_context(temp_dir) as port:
+                # 1. Run Pre-transcoder to optimize browser audio rendering if enabled
+                if audio:
+                    print("[modal-renderer] Running pre-transcoding pipeline...")
+                    project = pretranscode_videos(project, temp_dir, port)
+
+                # 2. Execute browser-based timeline export
+                video_bytes = await _execute_playwright_render(
+                    port=port,
+                    project=project,
+                    compositor_options=compositor_options,
+                    run_headless=run_headless,
+                    timeout_ms=timeout_ms
+                )
+
+                # 3. Handle optional R2 upload destination key
+                r2_key = options.get("r2_key")
+                if r2_key:
+                    print(f"[modal-renderer] R2 Key provided: '{r2_key}'. Starting R2 upload integration...")
+                    public_url = upload_to_r2(video_bytes, r2_key)
+                    print(f"[modal-renderer] Debug: Upload URL: {public_url}")
+                    return {"url": public_url, "size": len(video_bytes)}
+
+                return video_bytes
 
 
 # ---------------------------------------------------------------------------
@@ -426,10 +555,9 @@ if __name__ == "__main__":
             project_data = json.load(f)
 
         print("Executing render_video locally (using .local)...")
-        # Run function locally (Modal redirects decorated execution)
         test_options = {"prioritizeSpeed": True}
         if os.getenv("R2_ACCOUNT_ID"):
-            test_options["r2_key"] = "tests/local-test-render.mp4"
+            test_options["r2_key"] = "tests/local-test-render1.mp4"
 
         result = await render_video.local(project_data, test_options)
 
