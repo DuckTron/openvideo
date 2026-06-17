@@ -152,13 +152,10 @@ export async function generateCaptionClips(options: CaptionClipOptions): Promise
       caption: {
         words: chunk.words,
         colors: {
-          appeared: "#ffffff",
-          active: "#ffffff",
-          activeFill: "#FF5700",
-          background: "",
-          keyword: "#ffffff",
+          active: { color: "#ffffff", background: "#FF5700" },
+          future: { color: "#ffffff" },
+          keyword: { color: "#ffffff", preserveAfterSpoken: true },
         },
-        preserveKeywordColor: true,
         positioning: {
           videoWidth: videoWidth,
           videoHeight: videoHeight,

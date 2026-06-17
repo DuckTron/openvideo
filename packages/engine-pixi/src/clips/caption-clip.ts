@@ -6,40 +6,50 @@ import type {
   TextStyleJSON,
   CaptionDataJSON,
   CaptionPositioningJSON,
-  ICaptionWordAnimation,
 } from "../json-serialization";
 import { isTransparent, parseColor, resolveColor } from "../utils/color";
 import { BaseClip } from "./base-clip";
 import { BaseTextClip, type IBaseTextOpts } from "./base-text-clip";
 import type { BaseSpriteEvents } from "../sprite/base-sprite";
+import type { ICaptionWordAnimation } from "../json-serialization";
 
 export type { ICaptionWord, ICaptionWordAnimation };
 
-export interface ICaptionColors {
-  appeared?: string;
-  active?: string;
-  activeFill?: string;
+/** Style applied to a single word state (active / future / keyword) */
+export interface ICaptionWordStyle {
+  color?: string;
+  border?: { color?: string; width?: number };
   background?: string;
-  keyword?: string;
 }
 
+/** Caption color configuration */
+export interface ICaptionColors {
+  active?: ICaptionWordStyle;
+  future?: ICaptionWordStyle;
+  keyword?: { color?: string; preserveAfterSpoken?: boolean };
+}
+
+/**
+ * Options for constructing a Caption clip.
+ *
+ * Color model:
+ *  - `style.color`            → appeared (already-spoken) words
+ *  - `caption.colors.active`  → currently spoken word (color + background + border)
+ *  - `caption.colors.future`  → upcoming words (color + border)
+ *  - `caption.colors.keyword` → isKeyWord=true override
+ */
 export interface ICaptionOpts extends IBaseTextOpts {
   words?: ICaptionWord[];
-  active?: string;
-  appeared?: string;
-  activeFill?: string;
-  keyword?: string;
-  preserveKeywordColor?: boolean;
   wordAnimation?: ICaptionWordAnimation;
   wordsPerLine?: "single" | "multiple";
   mediaId?: string;
   videoWidth?: number;
   videoHeight?: number;
   bottomOffset?: number;
+  /** Nested caption data (flattened into opts on construction) */
   caption?: {
     words?: ICaptionWord[];
     colors?: ICaptionColors;
-    preserveKeywordColor?: boolean;
     wordAnimation?: ICaptionWordAnimation;
     positioning?: {
       videoWidth?: number;
@@ -47,7 +57,13 @@ export interface ICaptionOpts extends IBaseTextOpts {
       bottomOffset?: number;
     };
   };
+  /** Internal: skip initial auto-positioning when restoring from JSON */
   initialLayoutApplied?: boolean;
+  /** Resolved color objects (flat access after construction) */
+  activeStyle?: ICaptionWordStyle;
+  futureStyle?: ICaptionWordStyle;
+  keywordColor?: string;
+  keywordPreserveAfterSpoken?: boolean;
 }
 
 export interface ICaptionEvents extends BaseSpriteEvents {
@@ -79,19 +95,18 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
 
   declare public originalOpts: ICaptionOpts;
 
-  // resolved opts shorthand (populated in _syncOpts)
-  private _active = "";
-  private _appeared = "";
-  private _activeFill = "";
-  private _keyword = "";
-  private _preserveKeywordColor = false;
+  // ── Resolved color state (refreshed by _syncOpts) ──────────────────────────
+  private _activeStyle: ICaptionWordStyle = {};
+  private _futureStyle: ICaptionWordStyle = {};
+  private _keywordColor = "";
+  private _keywordPreserveAfterSpoken = false;
   private _wordAnimation: ICaptionWordAnimation = { type: "scale", application: "none", value: 1 };
   private _wordsPerLine: "single" | "multiple" = "multiple";
   protected _videoWidth = 1280;
   protected _videoHeight = 720;
   protected _bottomOffset = 100;
 
-  // ─── text / textAlign (required by BaseTextClip) ─────────────────────────
+  // ─── text / textAlign ─────────────────────────────────────────────────────
 
   get text(): string {
     return this._text;
@@ -113,7 +128,52 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     return this.originalOpts?.align ?? "left";
   }
 
-  // ─── Caption-specific properties ─────────────────────────────────────────
+  // ─── caption getter/setter (bridge integration) ───────────────────────────
+
+  get caption(): ICaptionOpts["caption"] {
+    const opts = this.originalOpts ?? {};
+    return {
+      words: this._words,
+      colors: {
+        active: opts.activeStyle,
+        future: opts.futureStyle,
+        keyword: opts.keywordColor
+          ? { color: opts.keywordColor, preserveAfterSpoken: opts.keywordPreserveAfterSpoken }
+          : undefined,
+      },
+      wordAnimation: opts.wordAnimation,
+      positioning: {
+        videoWidth: this._videoWidth,
+        videoHeight: this._videoHeight,
+        bottomOffset: this._bottomOffset,
+      },
+    };
+  }
+
+  set caption(v: ICaptionOpts["caption"]) {
+    if (!v) return;
+    if (v.words) {
+      this._words = v.words;
+      if (this.originalOpts) this.originalOpts.words = v.words;
+    }
+    if (v.colors) {
+      if (v.colors.active !== undefined) this.originalOpts.activeStyle = v.colors.active;
+      if (v.colors.future !== undefined) this.originalOpts.futureStyle = v.colors.future;
+      if (v.colors.keyword !== undefined) {
+        this.originalOpts.keywordColor = v.colors.keyword.color;
+        this.originalOpts.keywordPreserveAfterSpoken = v.colors.keyword.preserveAfterSpoken;
+      }
+    }
+    if (v.wordAnimation !== undefined) this.originalOpts.wordAnimation = v.wordAnimation;
+    if (v.positioning) {
+      if (v.positioning.videoWidth !== undefined) this._videoWidth = v.positioning.videoWidth;
+      if (v.positioning.videoHeight !== undefined) this._videoHeight = v.positioning.videoHeight;
+      if (v.positioning.bottomOffset !== undefined) this._bottomOffset = v.positioning.bottomOffset;
+    }
+    this._syncOpts();
+  }
+
+  // ─── Words ────────────────────────────────────────────────────────────────
 
   get words(): ICaptionWord[] {
     return this._words;
@@ -216,16 +276,16 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     this._text = text;
     if (renderer) this.setRenderer(renderer);
 
-    // Flatten nested caption structure if provided
+    // Flatten nested caption structure
     if (opts.caption) {
       if (opts.caption.words) this._words = opts.caption.words;
       const c = opts.caption;
-      if (c.colors?.appeared !== undefined) this.originalOpts.appeared = c.colors.appeared;
-      if (c.colors?.active !== undefined) this.originalOpts.active = c.colors.active;
-      if (c.colors?.activeFill !== undefined) this.originalOpts.activeFill = c.colors.activeFill;
-      if (c.colors?.keyword !== undefined) this.originalOpts.keyword = c.colors.keyword;
-      if (c.preserveKeywordColor !== undefined)
-        this.originalOpts.preserveKeywordColor = c.preserveKeywordColor;
+      if (c.colors?.active !== undefined) this.originalOpts.activeStyle = c.colors.active;
+      if (c.colors?.future !== undefined) this.originalOpts.futureStyle = c.colors.future;
+      if (c.colors?.keyword !== undefined) {
+        this.originalOpts.keywordColor = c.colors.keyword.color;
+        this.originalOpts.keywordPreserveAfterSpoken = c.colors.keyword.preserveAfterSpoken;
+      }
       if (c.wordAnimation !== undefined) this.originalOpts.wordAnimation = c.wordAnimation;
       if (c.positioning?.videoWidth !== undefined)
         this.originalOpts.videoWidth = c.positioning.videoWidth;
@@ -235,7 +295,7 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
         this.originalOpts.bottomOffset = c.positioning.bottomOffset;
     }
     if (opts.words) this._words = opts.words;
-    void opts.initialLayoutApplied; // preserved in originalOpts for serialization consumers
+    void opts.initialLayoutApplied;
 
     this._syncOpts();
     this._buildTextStyles();
@@ -248,11 +308,10 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
 
   private _syncOpts(): void {
     const o = this.originalOpts ?? {};
-    this._active = o.active ?? "";
-    this._appeared = o.appeared ?? "";
-    this._activeFill = o.activeFill ?? "";
-    this._keyword = o.keyword ?? "";
-    this._preserveKeywordColor = o.preserveKeywordColor ?? false;
+    this._activeStyle = o.activeStyle ?? {};
+    this._futureStyle = o.futureStyle ?? {};
+    this._keywordColor = o.keywordColor ?? "";
+    this._keywordPreserveAfterSpoken = o.keywordPreserveAfterSpoken ?? false;
     this._wordAnimation = o.wordAnimation ?? { type: "scale", application: "none", value: 1 };
     this._wordsPerLine = o.wordsPerLine ?? "multiple";
     this._videoWidth = o.videoWidth ?? 1280;
@@ -334,7 +393,7 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     return super.tick(time);
   }
 
-  // ─── updateState: core caption coloring logic ─────────────────────────────
+  // ─── updateState ─────────────────────────────────────────────────────────
 
   updateState(currentTimeUs: number): void {
     const currentTimeMs = currentTimeUs / 1000;
@@ -347,6 +406,7 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
 
       const isActive = currentTimeMs >= word.from && currentTimeMs < word.to;
       const hasBeenActive = currentTimeMs >= word.to;
+      const isFuture = !isActive && !hasBeenActive;
 
       // ── Word animation ────────────────────────────────────────────────────
       const wa = this._wordAnimation;
@@ -381,19 +441,42 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
       }
 
       // ── Colour resolution ─────────────────────────────────────────────────
-      const isKeywordWithColor = word.isKeyWord && !isTransparent(this._keyword);
+      // Priority: keyword (if active/preserve) > active/future > appeared (style.color)
       let textColor = 0xffffff;
       let textAlpha = 1;
 
-      if (word.isKeyWord && isActive && isKeywordWithColor) {
-        ({ color: textColor, alpha: textAlpha } = resolveColor(this._keyword, 0xffff00));
+      const isKeywordWithColor = word.isKeyWord && !isTransparent(this._keywordColor);
+
+      if (isKeywordWithColor && (isActive || (hasBeenActive && this._keywordPreserveAfterSpoken))) {
+        ({ color: textColor, alpha: textAlpha } = resolveColor(this._keywordColor, 0xffff00));
       } else if (isActive) {
-        ({ color: textColor, alpha: textAlpha } = resolveColor(this._active, 0xffffff));
-      } else if (hasBeenActive && this._preserveKeywordColor && isKeywordWithColor) {
-        ({ color: textColor, alpha: textAlpha } = resolveColor(this._keyword));
-      } else if (hasBeenActive) {
-        ({ color: textColor, alpha: textAlpha } = resolveColor(this._appeared));
+        const c = this._activeStyle.color;
+        if (c && !isTransparent(c)) {
+          ({ color: textColor, alpha: textAlpha } = resolveColor(c, 0xffffff));
+        } else {
+          // fallback to style.color (appeared color)
+          const colorOpt = this.originalOpts?.color;
+          const fill =
+            typeof colorOpt === "object" && colorOpt !== null && "type" in colorOpt
+              ? 0xffffff
+              : (colorOpt as string | number);
+          ({ color: textColor, alpha: textAlpha } = resolveColor(fill as any));
+        }
+      } else if (isFuture) {
+        const c = this._futureStyle.color;
+        if (c && !isTransparent(c)) {
+          ({ color: textColor, alpha: textAlpha } = resolveColor(c, 0xffffff));
+        } else {
+          // no future color set → use style.color
+          const colorOpt = this.originalOpts?.color;
+          const fill =
+            typeof colorOpt === "object" && colorOpt !== null && "type" in colorOpt
+              ? 0xffffff
+              : (colorOpt as string | number);
+          ({ color: textColor, alpha: textAlpha } = resolveColor(fill as any));
+        }
       } else {
+        // appeared — use style.color
         const colorOpt = this.originalOpts?.color;
         const fill =
           typeof colorOpt === "object" && colorOpt !== null && "type" in colorOpt
@@ -426,33 +509,26 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
       };
       wordText.children.forEach(applyColor);
 
-      // ── Active-word background pill ───────────────────────────────────────
+      // ── Background pill (active word) ─────────────────────────────────────
       const parentContainer = wordText.parent as Container | null;
       const bgLabel = `bgRect_${wordText.segmentIndex}`;
       const existingBg = parentContainer
         ? (parentContainer.getChildByLabel(bgLabel) as Graphics | null)
         : null;
 
+      const activeBgColor = isActive ? (this._activeStyle.background ?? "") : "";
       const hasActiveBg =
-        isActive &&
-        !!this._activeFill &&
-        !isTransparent(this._activeFill) &&
-        this._activeFill !== "none";
+        isActive && !!activeBgColor && !isTransparent(activeBgColor) && activeBgColor !== "none";
 
       if (hasActiveBg && parentContainer) {
-        const { color: bgColor, alpha: bgAlpha } = resolveColor(this._activeFill, 0xffa500);
+        const { color: bgColor, alpha: bgAlpha } = resolveColor(activeBgColor, 0xffa500);
         const padding = 15;
         const paddingX = 40;
 
-        // Use word position directly as anchor.
-        // localBounds.y is negative (glyph ascent sits above the origin baseline),
-        // so we use the font size as the visual height and center the pill around
-        // wordText.y (which _positionWords sets to the visual midline).
         const sx = wordText.scale.x;
         const visualW = (wordText.getLocalBounds().width || wordText.width) * sx;
         const visualH = (this.originalOpts?.fontSize ?? 40) * sx;
         const pillarX = wordText.x;
-        // _positionWords applies a -9 baseline nudge; add it back so pill aligns to visual glyph top
         const pillarY = wordText.y + 9;
 
         const bg = existingBg ?? new Graphics();
@@ -530,15 +606,17 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     const caption: CaptionDataJSON = {};
     if (this._words.length > 0) caption.words = this._words;
 
-    const colors: Record<string, string> = {};
-    if (opts.appeared) colors.appeared = opts.appeared;
-    if (opts.active) colors.active = opts.active;
-    if (opts.activeFill) colors.activeFill = opts.activeFill;
-    if (opts.keyword) colors.keyword = opts.keyword;
-    if (Object.keys(colors).length > 0) caption.colors = colors as any;
+    const colors: CaptionDataJSON["colors"] = {};
+    if (opts.activeStyle) colors.active = opts.activeStyle;
+    if (opts.futureStyle) colors.future = opts.futureStyle;
+    if (opts.keywordColor) {
+      colors.keyword = {
+        color: opts.keywordColor,
+        preserveAfterSpoken: opts.keywordPreserveAfterSpoken,
+      };
+    }
+    if (Object.keys(colors).length > 0) caption.colors = colors;
 
-    if (opts.preserveKeywordColor !== undefined)
-      caption.preserveKeywordColor = opts.preserveKeywordColor;
     if (opts.wordAnimation !== undefined) caption.wordAnimation = opts.wordAnimation;
 
     const positioning: CaptionPositioningJSON = {};
@@ -602,7 +680,7 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     }
 
     if (json.caption) {
-      captionOpts.caption = json.caption;
+      captionOpts.caption = json.caption as ICaptionOpts["caption"];
       if (json.caption.wordAnimation) captionOpts.wordAnimation = json.caption.wordAnimation;
     }
 

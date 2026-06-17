@@ -211,13 +211,27 @@ export interface TextJSON extends BaseClipJSON {
   style?: TextStyleJSON;
 }
 
-// Caption colors interface (new nested structure)
-export interface CaptionColorsJSON {
-  appeared?: string;
-  active?: string;
-  activeFill?: string;
+// Caption word style (used for active and future)
+export interface CaptionWordStyleJSON {
+  color?: string;
+  border?: {
+    color?: string;
+    width?: number;
+  };
   background?: string;
-  keyword?: string;
+}
+
+// Caption colors interface
+export interface CaptionColorsJSON {
+  /** Currently spoken word */
+  active?: CaptionWordStyleJSON;
+  /** Upcoming / future words */
+  future?: CaptionWordStyleJSON;
+  /** Keyword words */
+  keyword?: {
+    color?: string;
+    preserveAfterSpoken?: boolean;
+  };
 }
 
 // Caption positioning interface (new nested structure)
@@ -237,7 +251,6 @@ export interface CaptionDataJSON {
     paragraphIndex?: number;
   }>;
   colors?: CaptionColorsJSON;
-  preserveKeywordColor?: boolean;
   positioning?: CaptionPositioningJSON;
   wordAnimation?: ICaptionWordAnimation;
   textBoxStyle?: TextBoxStyleJSON;

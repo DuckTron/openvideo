@@ -466,13 +466,10 @@ export const convertSchemaToExported = async (schemaJson: any): Promise<any> => 
                 caption: {
                   words: chunk.words,
                   colors: {
-                    appeared: "#ffffff",
-                    active: "#ffffff",
-                    activeFill: "#FF5700",
-                    background: "",
-                    keyword: "#ffffff",
+                    active: { color: "#ffffff", background: "#FF5700" },
+                    future: { color: "#ffffff" },
+                    keyword: { color: "#ffffff", preserveAfterSpoken: true },
                   },
-                  preserveKeywordColor: true,
                   positioning: {
                     videoWidth: width,
                     videoHeight: height,

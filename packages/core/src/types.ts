@@ -106,12 +106,25 @@ export interface ICaptionWord {
   paragraphIndex?: number;
 }
 
-export interface ICaptionColors {
-  appeared?: string;
-  active?: string;
-  activeFill?: string;
+export interface ICaptionWordStyle {
+  color?: string;
+  border?: {
+    color?: string;
+    width?: number;
+  };
   background?: string;
-  keyword?: string;
+}
+
+export interface ICaptionColors {
+  /** Currently spoken word */
+  active?: ICaptionWordStyle;
+  /** Upcoming / future words */
+  future?: ICaptionWordStyle;
+  /** Keyword words (isKeyWord=true) */
+  keyword?: {
+    color?: string;
+    preserveAfterSpoken?: boolean;
+  };
 }
 
 export interface IClipStroke {
@@ -161,22 +174,24 @@ export interface ICaptionClip extends IBaseClip {
   wordsPerLine: "single" | "multiple";
   caption: {
     words: ICaptionWord[];
-    colors: ICaptionColors;
-    preserveKeywordColor: boolean;
-    positioning: {
-      videoWidth: number;
-      videoHeight: number;
+    colors?: ICaptionColors;
+    /** @deprecated use colors.keyword.preserveAfterSpoken */
+    preserveKeywordColor?: boolean;
+    positioning?: {
+      videoWidth?: number;
+      videoHeight?: number;
+      bottomOffset?: number;
     };
-    textBoxStyle?: {
-      style?: "tiktok" | "none";
-      textAlign?: "left" | "center" | "right" | "";
-      maxLines?: number;
-      borderRadius?: number;
-      horizontalPadding?: number;
-      verticalPadding?: number;
-    };
+    wordAnimation?: ICaptionWordAnimation;
   };
   style: ICaptionStyle;
+}
+
+export interface ICaptionWordAnimation {
+  type: "scale" | "opacity";
+  application: "none" | "active" | "keyword";
+  value: number;
+  mode?: "static" | "dynamic";
 }
 
 export interface ITransitionClip extends IBaseClip {

@@ -445,9 +445,7 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
           <Properties.CaptionColorsProperty
             key={key}
             captionColors={caption.colors || {}}
-            setColors={(colors) =>
-              handleUpdate({ caption: { ...caption, colors: { ...caption.colors, ...colors } } })
-            }
+            setColors={(colors) => handleUpdate({ caption: { ...caption, colors } })}
           />
         );
       }

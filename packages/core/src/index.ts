@@ -17,6 +17,8 @@ export type {
   IShapeStyle,
   ICaptionStyle,
   ICaptionColors,
+  ICaptionWordStyle,
+  ICaptionWordAnimation,
   ICaptionWord,
   IDisplay,
   ITrim,

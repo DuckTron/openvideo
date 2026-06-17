@@ -80,13 +80,13 @@ const CaptionPresetPicker = () => {
       align: preset.textAlign as any,
       caption: {
         colors: {
-          appeared: preset.appearedColor,
-          active: preset.activeColor,
-          activeFill: preset.activeFillColor,
-          background: preset.backgroundColor,
-          keyword: preset.isKeywordColor ?? "transparent",
+          active: { color: preset.activeColor, background: preset.activeFillColor },
+          future: { color: preset.appearedColor },
+          keyword: {
+            color: preset.isKeywordColor ?? "transparent",
+            preserveAfterSpoken: preset.preservedColorKeyWord ?? false,
+          },
         },
-        preserveKeywordColor: preset.preservedColorKeyWord ?? false,
       },
       animation: preset.animation || "undefined",
       textCase: preset.textTransform || "normal",

@@ -97,7 +97,8 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "captionPosition",
     "captionWordsPerLine",
     "textGroup",
-
+    "stroke",
+    "shadow",
     "opacity",
     "animations",
   ],

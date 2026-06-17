@@ -154,7 +154,7 @@ export class StudioBridge {
       // Pre-load any font referenced by this clip before constructing the Pixi clip.
       // This ensures document.fonts is ready when refreshText() runs.
       await this.ensureFontForClip(coreClip);
-      const clip = await jsonToClip(coreClip);
+      const clip = await jsonToClip(coreClip as any);
       const trackId = this.findTrackIdForClip(coreClip.id);
       await this.studio.addClip(clip, { trackId });
     }
@@ -477,8 +477,8 @@ export class StudioBridge {
         if (Math.abs(currentValue - newValue) < 0.01) return;
       }
 
-      // Handle style and values (JSON check)
-      if (prop === "style" || prop === "values") {
+      // Handle style, values, and caption (JSON check)
+      if (prop === "style" || prop === "values" || prop === "caption") {
         if (JSON.stringify(currentValue) === JSON.stringify(newValue)) return;
       }
 
