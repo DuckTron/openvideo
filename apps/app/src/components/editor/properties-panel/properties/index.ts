@@ -1,7 +1,6 @@
 // Property components export barrel
 export { SectionHeader } from "./section-header";
 export { TransformProperty } from "./transform";
-export { RotationProperty } from "./rotation";
 export { FlipProperty, type FlipValues } from "./flip";
 export { OpacityProperty } from "./opacity";
 export { StrokeProperty } from "./stroke";
@@ -26,6 +25,7 @@ export { EffectProperties } from "./effect-properties";
 export { TransitionDurationProperty } from "./transition-duration";
 export { TransitionSelectorProperty } from "./transition-selector";
 export { TextGroupProperty } from "./text-group";
+export { TextBackgroundProperty } from "./text-background";
 export { TextContentProperty } from "./text-content";
 export { FillProperty } from "./fill";
 export { CanvasGroupProperty } from "./canvas-group";

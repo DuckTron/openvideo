@@ -5,9 +5,9 @@ import { Toaster as Sonner, type ToasterProps } from "sonner";
 import {
   RiCheckboxCircleLine,
   RiInformationLine,
-  RiAlertLine,
+  RiErrorWarningLine,
   RiCloseCircleLine,
-  RiLoader2Line,
+  RiLoaderLine,
 } from "@remixicon/react";
 
 const Toaster = ({ ...props }: ToasterProps) => {
@@ -20,9 +20,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       icons={{
         success: <RiCheckboxCircleLine className="size-4" />,
         info: <RiInformationLine className="size-4" />,
-        warning: <RiAlertLine className="size-4" />,
+        warning: <RiErrorWarningLine className="size-4" />,
         error: <RiCloseCircleLine className="size-4" />,
-        loading: <RiLoader2Line className="size-4 animate-spin" />,
+        loading: <RiLoaderLine className="size-4 animate-spin" />,
       }}
       style={
         {

@@ -2,10 +2,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TRPCProvider } from "@/components/providers/trpc-provider";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Figtree, Albert_Sans } from "next/font/google";
+import { Geist, Geist_Mono, Figtree, Albert_Sans, Inter } from "next/font/google";
 import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
+
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const figtreeHeading = Figtree({ subsets: ["latin"], variable: "--font-heading" });
 
@@ -102,8 +104,9 @@ export default function RootLayout({
         figtree.variable,
         geist.variable,
         albert.variable,
-        "font-sans",
         figtreeHeading.variable,
+        "font-sans",
+        inter.variable,
       )}
     >
       <head />

@@ -11,7 +11,6 @@
 export type PropertyKey =
   // Common visual properties
   | "transform"
-  | "rotation"
   | "flip"
   | "opacity"
   | "fill"
@@ -46,6 +45,7 @@ export type PropertyKey =
   | "visualGroup" // visual properties grouped together
   | "audioGroup" // audio properties grouped together
   | "textGroup" // text properties grouped together
+  | "textBackground" // text background property
   | "captionGroup" // caption properties grouped together
   // Scene/Project properties
   | "projectMenu"
@@ -61,7 +61,6 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   // Image clip properties
   Image: [
     "transform",
-    "rotation",
     "flip",
     "opacity",
     "stroke",
@@ -74,7 +73,6 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   // Video clip properties (includes audio)
   Video: [
     "transform",
-    "rotation",
     "flip",
     "opacity",
     "stroke",
@@ -88,7 +86,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   ],
 
   // Text clip properties - grouped for unified UI
-  Text: ["transform", "textGroup", "rotation", "opacity", "stroke", "shadow", "animations"],
+  Text: ["transform", "textGroup", "textBackground", "opacity", "stroke", "shadow", "animations"],
 
   // Caption clip properties - grouped for unified UI
   Caption: [
@@ -97,6 +95,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "captionPosition",
     "captionWordsPerLine",
     "textGroup",
+    "textBackground",
     "opacity",
     "stroke",
     "shadow",
@@ -113,22 +112,12 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   Transition: ["transitionDuration"],
 
   // Shape clip properties
-  Shape: [
-    "transform",
-    "rotation",
-    "opacity",
-    "fill",
-    "stroke",
-    "shadow",
-    "cornerRadius",
-    "animations",
-  ],
+  Shape: ["transform", "opacity", "fill", "stroke", "shadow", "cornerRadius", "animations"],
 };
 
 // Property labels for UI display
 export const PROPERTY_LABELS: Record<PropertyKey, string> = {
   transform: "Transform",
-  rotation: "Rotation",
   flip: "Flip",
   opacity: "Opacity",
   fill: "Fill",
@@ -157,6 +146,7 @@ export const PROPERTY_LABELS: Record<PropertyKey, string> = {
   visualGroup: "Visual",
   audioGroup: "Audio",
   textGroup: "Text",
+  textBackground: "Text Background",
   captionGroup: "Caption",
   projectMenu: "Project Name",
   exportProperties: "Export Settings",

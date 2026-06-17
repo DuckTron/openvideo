@@ -74,19 +74,12 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             y={getY()}
             width={getWidth()}
             height={getHeight()}
+            rotation={getAngle()}
             onXChange={(val) => handleTransformUpdate({ x: val })}
             onYChange={(val) => handleTransformUpdate({ y: val })}
             onWidthChange={(val) => handleTransformUpdate({ width: val })}
             onHeightChange={(val) => handleTransformUpdate({ height: val })}
-          />
-        );
-
-      case "rotation":
-        return (
-          <Properties.RotationProperty
-            key={key}
-            value={getAngle()}
-            onChange={(val) => handleTransformUpdate({ angle: val })}
+            onRotationChange={(val) => handleTransformUpdate({ angle: val })}
           />
         );
 
@@ -400,6 +393,14 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
             onTextCaseChange={(val) => handleStyleUpdate({ textCase: val })}
             fill={(style.color as string) || "#ffffff"}
             onFillChange={(val) => handleStyleUpdate({ color: val })}
+          />
+        );
+      }
+
+      case "textBackground": {
+        return (
+          <Properties.TextBackgroundProperty
+            key={key}
             backgroundColor={(style.background as any)?.color || ""}
             backgroundOpacity={(style.background as any)?.opacity}
             backgroundBorderRadius={(style.background as any)?.borderRadius}
