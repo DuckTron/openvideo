@@ -1,16 +1,16 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import { MediaPanel } from "@/components/editor/media-panel";
 import { CanvasPanel } from "@/components/editor/canvas-panel";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import Timeline from "@/components/editor/timeline";
 import { usePanelStore } from "@/stores/panel-store";
 import { Loading } from "@/components/editor/loading";
 import FloatingControl from "@/components/editor/floating-controls/floating-control";
 import { Compositor } from "@openvideo/engine-pixi";
 import { WebCodecsUnsupportedModal } from "@/components/editor/webcodecs-unsupported-modal";
-import Assistant from "./assistant/assistant";
+import Agent from "./agent/agent";
+import { PropertiesPanel } from "@/components/editor/properties-panel";
 import { core } from "@/lib/project";
 import { IProject } from "@openvideo/core";
 import { trpc } from "@/lib/trpc";
@@ -32,22 +32,11 @@ export default function Editor({
   const setProjectName = useProjectStore((state) => state.setProjectName);
   const resetProject = useProjectStore((state) => state.resetProject);
 
-  const {
-    toolsPanel,
-    copilotPanel,
-    mainContent,
-    timeline,
-    setToolsPanel,
-    setCopilotPanel,
-    setMainContent,
-    setTimeline,
-    editorMode,
-    isCopilotVisible,
-    toggleCopilot,
-  } = usePanelStore();
+  const { editorMode, isCopilotVisible, toggleCopilot } = usePanelStore();
 
   const [isReady, setIsReady] = useState(false);
   const [isWebCodecsSupported, setIsWebCodecsSupported] = useState(true);
+  const [rightTab, setRightTab] = useState<"agent" | "style">("agent");
 
   useEffect(() => {
     setTimeout(() => {
@@ -103,66 +92,61 @@ export default function Editor({
           <Loading />
         </div>
       )}
-      <div className="flex-1 min-h-0 min-w-0">
-        <ResizablePanelGroup direction="horizontal" className="h-full w-full gap-0">
-          {/* Left Area (Canvas, MediaPanel, Timeline) */}
-          <ResizablePanel
-            defaultSize={100 - (isCopilotVisible ? copilotPanel : 0)}
-            minSize={60}
-            className="min-h-0 min-w-0"
-          >
-            <ResizablePanelGroup direction="vertical" className="h-full w-full gap-0">
-              <Header />
-              {/* Top Panel: Media Panel + Canvas */}
-              <ResizablePanel
-                defaultSize={100 - timeline}
-                minSize={30}
-                className="min-h-0 overflow-visible!"
+
+      {/* Header — full width */}
+      <Header />
+
+      {/* Main content row: left sidebar + center + right sidebar */}
+      <div className="flex-1 min-h-0 flex flex-row overflow-hidden">
+        {/* Left Sidebar: Media Panel */}
+        <div className="w-[280px] shrink-0 h-full overflow-hidden">
+          <MediaPanel />
+        </div>
+
+        {/* Center: Canvas (top) + Timeline (bottom) */}
+        <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
+          <div className="flex-1 min-h-0 overflow-visible">
+            <CanvasPanel onReady={() => setIsReady(true)} />
+          </div>
+          <div className="shrink-0">
+            <Timeline />
+          </div>
+        </div>
+
+        <div className="w-[280px] shrink-0 h-full overflow-hidden flex flex-col">
+          <div className="p-3">
+            <div className="inline-flex w-full items-center justify-center rounded-none bg-muted p-[3px] h-8 text-xs text-muted-foreground shrink-0">
+              <button
+                type="button"
+                onClick={() => setRightTab("agent")}
+                className={`relative inline-flex flex-1 h-[calc(100%-1px)] items-center justify-center rounded-none border border-transparent px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
+                  rightTab === "agent"
+                    ? "bg-background text-foreground dark:border-input dark:bg-input/30"
+                    : "text-foreground/60 dark:text-muted-foreground"
+                }`}
               >
-                <div className="h-full w-full flex flex-row gap-0 overflow-visible!">
-                  <MediaPanel />
-                  <div className="flex-1 min-w-0 min-h-0">
-                    <CanvasPanel
-                      onReady={() => {
-                        setIsReady(true);
-                      }}
-                    />
-                  </div>
-                </div>
-              </ResizablePanel>
-
-              <ResizableHandle className="w-full opacity-0 hover:opacity-100 bg-primary transition-opacity duration-200" />
-
-              {/* Bottom Panel: Timeline */}
-              <ResizablePanel
-                defaultSize={timeline}
-                minSize={15}
-                maxSize={70}
-                onResize={setTimeline}
-                className="min-h-0"
+                Agent
+              </button>
+              <button
+                type="button"
+                onClick={() => setRightTab("style")}
+                className={`relative inline-flex flex-1 h-[calc(100%-1px)] items-center justify-center rounded-none border border-transparent px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
+                  rightTab === "style"
+                    ? "bg-background text-foreground dark:border-input dark:bg-input/30"
+                    : "text-foreground/60 dark:text-muted-foreground"
+                }`}
               >
-                <Timeline />
-              </ResizablePanel>
-            </ResizablePanelGroup>
-          </ResizablePanel>
-
-          {isCopilotVisible && (
-            <>
-              <ResizableHandle className="opacity-0 hover:opacity-100 bg-primary transition-opacity duration-200" />
-
-              {/* Right Panel: Assistant (Full Height) */}
-              <ResizablePanel
-                defaultSize={copilotPanel}
-                minSize={15}
-                maxSize={40}
-                onResize={setCopilotPanel}
-                className="max-w-4xl min-w-[320px] relative overflow-visible! min-w-0"
-              >
-                <Assistant onClose={toggleCopilot} />
-              </ResizablePanel>
-            </>
-          )}
-        </ResizablePanelGroup>
+                Style
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 min-h-0 mt-0 overflow-hidden" hidden={rightTab !== "agent"}>
+            <Agent onClose={toggleCopilot} />
+          </div>
+          <div className="flex-1 min-h-0 mt-0 overflow-hidden" hidden={rightTab !== "style"}>
+            <PropertiesPanel />
+          </div>
+        </div>
       </div>
 
       {/* Floating Controls like Caption / Animation pickers */}

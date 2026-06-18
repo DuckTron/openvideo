@@ -158,14 +158,17 @@ import { ModalClient } from "modal";
 const modal = new ModalClient();
 const renderVideo = await modal.functions.fromName(
   "openvideo-video-renderer",
-  "render_video_modal"
+  "render_video_modal",
 );
 
 // With R2 upload (recommended — avoids transferring large binaries)
-const result = await renderVideo.remote([projectJson, {
-  r2_key: `renders/${Date.now()}.mp4`,
-  prioritizeSpeed: true,
-}]);
+const result = await renderVideo.remote([
+  projectJson,
+  {
+    r2_key: `renders/${Date.now()}.mp4`,
+    prioritizeSpeed: true,
+  },
+]);
 console.log("URL:", result.url);
 
 // Without R2 — returns raw MP4 bytes
@@ -207,10 +210,10 @@ curl -X POST http://localhost:8080/render \
 
 ### Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/health` | Health check |
-| `GET` | `/` | Health check |
+| Method | Path      | Description                    |
+| ------ | --------- | ------------------------------ |
+| `GET`  | `/health` | Health check                   |
+| `GET`  | `/`       | Health check                   |
 | `POST` | `/render` | Render video from project JSON |
 
 ### Request Body (`POST /render`)
@@ -230,7 +233,7 @@ No options needed — the file is automatically uploaded to R2 with an auto-gene
 ### Response
 
 ```json
-{"url": "https://cdn.example.com/renders/1718700000-a1b2c3d4.mp4", "size": 16685783}
+{ "url": "https://cdn.example.com/renders/1718700000-a1b2c3d4.mp4", "size": 16685783 }
 ```
 
 ---
@@ -336,16 +339,16 @@ gcloud artifacts repositories delete openvideo --location=us-central1 --quiet
 
 ## Render Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `width` | number | from project settings | Output video width |
-| `height` | number | from project settings | Output video height |
-| `fps` | number | from project settings | Frames per second |
-| `bitrate` | number | `12000000` | Video bitrate in bps |
-| `videoCodec` | string | `"avc1.640033"` | H.264 codec profile |
-| `audio` | boolean | `true` | Include audio track |
-| `audioCodec` | string | `"opus"` | Audio codec (opus recommended) |
-| `audioSampleRate` | number | `48000` | Audio sample rate |
-| `prioritizeSpeed` | boolean | `false` | Reduce bitrate by 30% for faster rendering |
-| `r2_key` | string | — | R2 object key; if set, uploads and returns `{url, size}` |
-| `timeout` | number | `600000` | Render timeout in ms |
+| Option            | Type    | Default               | Description                                              |
+| ----------------- | ------- | --------------------- | -------------------------------------------------------- |
+| `width`           | number  | from project settings | Output video width                                       |
+| `height`          | number  | from project settings | Output video height                                      |
+| `fps`             | number  | from project settings | Frames per second                                        |
+| `bitrate`         | number  | `12000000`            | Video bitrate in bps                                     |
+| `videoCodec`      | string  | `"avc1.640033"`       | H.264 codec profile                                      |
+| `audio`           | boolean | `true`                | Include audio track                                      |
+| `audioCodec`      | string  | `"opus"`              | Audio codec (opus recommended)                           |
+| `audioSampleRate` | number  | `48000`               | Audio sample rate                                        |
+| `prioritizeSpeed` | boolean | `false`               | Reduce bitrate by 30% for faster rendering               |
+| `r2_key`          | string  | —                     | R2 object key; if set, uploads and returns `{url, size}` |
+| `timeout`         | number  | `600000`              | Render timeout in ms                                     |

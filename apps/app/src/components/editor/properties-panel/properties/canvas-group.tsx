@@ -69,7 +69,7 @@ export function CanvasGroupProperty() {
     <div className="flex flex-col">
       {/* Section Header */}
       <div className="flex items-center justify-between py-2">
-        <span className="text-xs font-semibold text-foreground">Canvas Settings</span>
+        <span className="text-xs font-semibold text-foreground">Template</span>
         <Button
           variant="ghost"
           size="icon"
@@ -112,7 +112,7 @@ export function CanvasGroupProperty() {
 
         {/* Aspect Ratio */}
         <div className="flex items-center justify-between py-1 gap-4">
-          <span className="text-xs text-muted-foreground">Aspect Ratio</span>
+          <span className="text-xs text-muted-foreground truncate min-w-0">Aspect Ratio</span>
           <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
             <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
               <SelectValue placeholder="Aspect ratio" />

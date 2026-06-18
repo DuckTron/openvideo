@@ -23,8 +23,8 @@ interface PanelState {
 }
 
 export const usePanelStore = create<PanelState>((set) => ({
-  toolsPanel: 30,
-  copilotPanel: 25,
+  toolsPanel: 21,
+  copilotPanel: 21,
   previewPanel: 50,
   propertiesPanel: 25,
   mainContent: 70,

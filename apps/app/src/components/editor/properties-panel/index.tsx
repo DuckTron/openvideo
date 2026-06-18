@@ -17,10 +17,10 @@ export function PropertiesPanel() {
   const clip = selectedClips.length === 0 ? ({ type: "Scene" } as any) : selectedClips[0];
 
   return (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full px-4">
       <div
         className={cn(
-          "flex flex-col gap-4 px-4 transition-opacity",
+          "flex flex-col gap-4 transition-opacity",
           clip.locked && "opacity-50 pointer-events-none select-none",
         )}
       >

@@ -57,7 +57,7 @@ export type PropertyKey =
 // Property configuration for each clip type
 export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   // Scene settings (when no clips are selected)
-  Scene: ["projectMenu", "exportProperties", "sceneDuration", "sceneSizeProperties"],
+  Scene: ["sceneSizeProperties"],
 
   // Image clip properties
   Image: [
@@ -83,7 +83,6 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
     "animations",
     "volume",
     "fade",
-    "aiTools",
   ],
 
   // Text clip properties - grouped for unified UI
@@ -114,7 +113,7 @@ export const PROPERTY_REGISTRY: Record<string, PropertyKey[]> = {
   ],
 
   // Audio clip properties
-  Audio: ["volume", "fade", "aiTools"],
+  Audio: ["volume", "fade"],
 
   // Effect clip properties
   Effect: ["effectConfig"],

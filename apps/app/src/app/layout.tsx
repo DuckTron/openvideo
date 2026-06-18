@@ -7,16 +7,10 @@ import { cn } from "@/lib/utils";
 import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
-
 const figtreeHeading = Figtree({ subsets: ["latin"], variable: "--font-heading" });
 
 const figtree = Figtree({ subsets: ["latin"], variable: "--font-figtree-sans" });
-const geist = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-const albert = Albert_Sans({ subsets: ["latin"], variable: "--font-albert-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter-sans" });
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
@@ -102,11 +96,9 @@ export default function RootLayout({
       className={cn(
         geistMono.variable,
         figtree.variable,
-        geist.variable,
-        albert.variable,
+        inter.variable,
         figtreeHeading.variable,
         "font-sans",
-        inter.variable,
       )}
     >
       <head />

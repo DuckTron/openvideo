@@ -43,8 +43,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDirector } from "@/hooks/use-director";
-import { ChatPanel } from "@/components/editor/assistant/chat-panel";
-import { ChatHeader } from "@/components/editor/assistant/chat-header";
+import { AgentMessages } from "@/components/editor/agent/messages";
+import { AgentHeader } from "@/components/editor/agent/header";
+import { AgentInput } from "@/components/editor/agent/agent-input";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
 import { getPresignedConfig, uploadFileWithConfig } from "@/lib/upload-utils";
 import { generateThumbnail } from "@/lib/thumbnail-generator";
@@ -537,26 +538,27 @@ export default function ProjectView({ projectId }: { projectId: string }) {
 
         {/* Right: Workspace with Chat */}
         <div className="w-[480px] flex flex-col min-w-0 border-l bg-card">
-          <ChatHeader isConnected={true} />
-          <div className="flex-1 overflow-hidden">
-            <ChatPanel
-              messages={chatMessages}
-              isThinking={isThinking}
-              input={chatInput}
-              onInputChange={setChatInput}
-              onSend={handleSendMessage}
-              placeholder="Ask, Search or Chat..."
-              emptyState={
-                <div className="p-6">
-                  <div className="max-w-lg font-regular text-sm">
-                    Fresh project — describe what you want to see, or let&apos;s brainstorm about
-                    where to start.
-                  </div>
+          <AgentHeader />
+          <AgentMessages
+            messages={chatMessages}
+            isThinking={isThinking}
+            emptyState={
+              <div className="p-6">
+                <div className="max-w-lg font-regular text-sm">
+                  Fresh project — describe what you want to see, or let&apos;s brainstorm about
+                  where to start.
                 </div>
-              }
-              className="h-full"
-            />
-          </div>
+              </div>
+            }
+            className="flex-1 min-h-0 overflow-hidden"
+          />
+          <AgentInput
+            value={chatInput}
+            onChange={setChatInput}
+            onSend={handleSendMessage}
+            placeholder="Ask, Search or Chat..."
+            disabled={isThinking}
+          />
         </div>
       </div>
 

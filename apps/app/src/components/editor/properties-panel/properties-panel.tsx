@@ -644,7 +644,7 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 px-2">
+    <div className="flex flex-col gap-2 py-2">
       {propertyKeys.map((key, index) => (
         <React.Fragment key={key}>
           {/* {needsSeparator(key, index) && <Separator className="bg-white/10" />} */}

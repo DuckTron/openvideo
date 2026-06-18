@@ -17,10 +17,7 @@
       "id": "track_f3SSMx2R7h",
       "name": "Captions",
       "type": "caption",
-      "clipIds": [
-        "WJBGwuI6-rDDCF7-jiX9p"
-  
-      ]
+      "clipIds": ["WJBGwuI6-rDDCF7-jiX9p"]
     },
     {
       "id": "pturMA-tPQFWz6JKBuDMg",
@@ -279,6 +276,5 @@
       "wordsPerLine": "multiple",
       "fontUrl": "https://fonts.gstatic.com/s/poppins/v15/pxiByp8kv8JHgFVrLCz7V1tvFP-KUEg.ttf"
     }
-
   }
 }
