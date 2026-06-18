@@ -380,6 +380,52 @@ export class Transformer extends Container {
     this.emit("transforming");
   };
 
+  #getOtherClipsBounds(): Rectangle[] {
+    const boundsList: Rectangle[] = [];
+    if (!this.parent) return boundsList;
+
+    // Find ClipContainer
+    const clipContainer = this.parent.children.find(
+      (c) => c.label === "ClipContainer",
+    ) as Container;
+    if (!clipContainer) return boundsList;
+
+    // Inside ClipContainer, find ClipsNormal and ClipsEffect
+    const normalContainer = clipContainer.children.find(
+      (c) => c.label === "ClipsNormal",
+    ) as Container;
+    const effectContainer = clipContainer.children.find(
+      (c) => c.label === "ClipsEffect",
+    ) as Container;
+
+    const containers = [normalContainer, effectContainer].filter(Boolean);
+
+    for (const container of containers) {
+      for (const child of container.children) {
+        if (this.group.includes(child) || !child.visible) {
+          continue;
+        }
+
+        const b = this.#getContentBounds(child);
+
+        // Convert local bounds of child to parent space
+        const p1 = this.parent.toLocal(new Point(b.x, b.y), child);
+        const p2 = this.parent.toLocal(new Point(b.x + b.width, b.y), child);
+        const p3 = this.parent.toLocal(new Point(b.x + b.width, b.y + b.height), child);
+        const p4 = this.parent.toLocal(new Point(b.x, b.y + b.height), child);
+
+        const minX = Math.min(p1.x, p2.x, p3.x, p4.x);
+        const maxX = Math.max(p1.x, p2.x, p3.x, p4.x);
+        const minY = Math.min(p1.y, p2.y, p3.y, p4.y);
+        const maxY = Math.max(p1.y, p2.y, p3.y, p4.y);
+
+        boundsList.push(new Rectangle(minX, minY, maxX - minX, maxY - minY));
+      }
+    }
+
+    return boundsList;
+  }
+
   #calculateSnappedMove(e: FederatedPointerEvent) {
     const parentScale = Math.abs(this.parent!.worldTransform.a);
 
@@ -410,7 +456,12 @@ export class Transformer extends Container {
     );
 
     // Check for Snaps
-    const { dx: snapDx, dy: snapDy, guides } = this.#snappingManager.snapMove(proposedBounds);
+    const otherBounds = this.#getOtherClipsBounds();
+    const {
+      dx: snapDx,
+      dy: snapDy,
+      guides,
+    } = this.#snappingManager.snapMove(proposedBounds, otherBounds);
 
     this.#drawGuides(guides, parentScale);
 
@@ -535,10 +586,12 @@ export class Transformer extends Container {
       // The transformer's localTransform converts local → parent
       const proposedParent = this.localTransform.apply(new Point(proposed.x, proposed.y));
 
+      const otherBounds = this.#getOtherClipsBounds();
       const { corrected, guides } = this.#snappingManager.snapResize(
         proposed,
         proposedParent,
         handle as any,
+        otherBounds,
       );
       this.#drawGuides(guides, parentScale);
       const sx = corrected.width / this.#opBounds.width;

@@ -18,10 +18,11 @@ Supports three execution modes: **local** (bare metal), **Docker**, and **Modal.
 
 ```
 src/api/
-├── renderer.py      # Shared rendering core (no Modal dependency)
-├── render_local.py  # Local / Docker CLI entrypoint
-├── modal_app.py     # Modal.com deployment wrapper
-└── main.py          # Legacy Modal entrypoint (uses Modal SDK directly)
+├── renderer.py        # Shared rendering core (no Modal dependency)
+├── render_local.py    # Local / Docker CLI entrypoint
+├── serve_cloudrun.py  # Cloud Run HTTP server wrapper
+├── modal_app.py       # Modal.com deployment wrapper
+└── main.py            # Legacy Modal entrypoint (uses Modal SDK directly)
 ```
 
 ---
@@ -170,6 +171,126 @@ console.log("URL:", result.url);
 // Without R2 — returns raw MP4 bytes
 const videoBuffer = await renderVideo.remote([projectJson, {}]);
 await fs.writeFile("output.mp4", videoBuffer);
+```
+
+---
+
+## 4. Deploying to Google Cloud Run
+
+Serverless Docker deployment on GCP. Uses Gen1 execution environment with Xvfb for headed Chromium rendering.
+
+### Prerequisites
+
+- [Google Cloud CLI](https://cloud.google.com/sdk/docs/install) installed and authenticated
+- A GCP project with billing enabled
+- Docker installed locally
+
+### Step 1: Set GCP Project
+
+```bash
+gcloud config set project YOUR_PROJECT_ID
+```
+
+### Step 2: Enable Required APIs
+
+```bash
+gcloud services enable artifactregistry.googleapis.com run.googleapis.com --quiet
+```
+
+### Step 3: Create Artifact Registry Repository
+
+```bash
+gcloud artifacts repositories create openvideo \
+  --repository-format=docker \
+  --location=us-central1 \
+  --quiet
+```
+
+### Step 4: Authenticate Docker with Artifact Registry
+
+```bash
+gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+```
+
+### Step 5: Build the Docker Image (linux/amd64)
+
+```bash
+docker build --platform linux/amd64 \
+  -t us-central1-docker.pkg.dev/YOUR_PROJECT_ID/openvideo/renderer:latest .
+```
+
+### Step 6: Push to Artifact Registry
+
+```bash
+docker push us-central1-docker.pkg.dev/YOUR_PROJECT_ID/openvideo/renderer:latest
+```
+
+### Step 7: Deploy to Cloud Run
+
+```bash
+gcloud run deploy openvideo-renderer \
+  --image=us-central1-docker.pkg.dev/YOUR_PROJECT_ID/openvideo/renderer:latest \
+  --region=us-central1 \
+  --platform=managed \
+  --memory=4Gi \
+  --cpu=8 \
+  --timeout=600 \
+  --concurrency=1 \
+  --max-instances=2 \
+  --no-cpu-throttling \
+  --cpu-boost \
+  --execution-environment=gen1 \
+  --command="python3,-u,/app/src/api/serve_cloudrun.py" \
+  --port=8080 \
+  --set-env-vars="R2_ACCOUNT_ID=xxx,R2_ACCESS_KEY_ID=xxx,R2_SECRET_ACCESS_KEY=xxx,R2_BUCKET_NAME=xxx,R2_PUBLIC_DOMAIN=https://cdn.example.com" \
+  --allow-unauthenticated \
+  --quiet
+```
+
+Replace `YOUR_PROJECT_ID` with your GCP project ID and fill in the R2 env vars.
+
+### Step 8: Verify Deployment
+
+```bash
+curl https://YOUR_SERVICE_URL/health
+# {"status": "healthy", "service": "openvideo-renderer"}
+```
+
+### API Usage
+
+**POST /render** — Render a video from project JSON.
+
+```bash
+curl -X POST \
+  https://YOUR_SERVICE_URL/render \
+  -H "Content-Type: application/json" \
+  -d '{
+    "project": { ...your ProjectJSON... },
+    "options": {
+      "r2_key": "renders/my-video.mp4",
+      "audioCodec": "opus"
+    }
+  }'
+```
+
+**Response** (when `r2_key` is provided):
+```json
+{"url": "https://cdn.example.com/renders/my-video.mp4", "size": 16685783}
+```
+
+If `r2_key` is omitted, the response is raw MP4 bytes with `Content-Type: video/mp4`.
+
+### Performance Notes
+
+- Cloud Run Gen1 with 8 CPUs: **~90s** for a typical 12s video render
+- Cold starts add ~10-15s extra on first request
+- For faster renders (~26s), use Modal.com deployment instead
+
+### Cleanup
+
+```bash
+gcloud run services delete openvideo-renderer --region=us-central1 --quiet
+gcloud artifacts repositories delete openvideo --location=us-central1 --quiet
 ```
 
 ---
