@@ -20,7 +20,7 @@ Supports three execution modes: **local** (bare metal), **Docker**, and **Modal.
 src/api/
 ├── renderer.py        # Shared rendering core (no Modal dependency)
 ├── render_local.py    # Local / Docker CLI entrypoint
-├── serve_cloudrun.py  # Cloud Run HTTP server wrapper
+├── server.py          # HTTP API server (Docker, Cloud Run, Fly.io, etc.)
 ├── modal_app.py       # Modal.com deployment wrapper
 └── main.py            # Legacy Modal entrypoint (uses Modal SDK directly)
 ```
@@ -175,9 +175,69 @@ await fs.writeFile("output.mp4", videoBuffer);
 
 ---
 
-## 4. Deploying to Google Cloud Run
+## 4. Running as HTTP API (Docker)
 
-Serverless Docker deployment on GCP. Uses Gen1 execution environment with Xvfb for headed Chromium rendering.
+A single Docker image that exposes the renderer as an HTTP API on port 8080. Works locally, on Cloud Run, Fly.io, Railway, or any Docker-compatible platform.
+
+### Build
+
+```bash
+docker build -f Dockerfile.api -t openvideo-renderer-api .
+```
+
+### Run Locally
+
+```bash
+docker run --rm -p 8080:8080 --shm-size=2g \
+  -e R2_ACCOUNT_ID=xxx \
+  -e R2_ACCESS_KEY_ID=xxx \
+  -e R2_SECRET_ACCESS_KEY=xxx \
+  -e R2_BUCKET_NAME=xxx \
+  -e R2_PUBLIC_DOMAIN=https://cdn.example.com \
+  openvideo-renderer-api
+```
+
+Then call the API — just send the project JSON directly:
+
+```bash
+curl -X POST http://localhost:8080/render \
+  -H "Content-Type: application/json" \
+  -d '{"settings": {...}, "tracks": [...], "clips": {...}}'
+```
+
+### Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/` | Health check |
+| `POST` | `/render` | Render video from project JSON |
+
+### Request Body (`POST /render`)
+
+Send the project JSON directly as the request body:
+
+```json
+{
+  "settings": { "width": 1080, "height": 1920, "fps": 30, ... },
+  "tracks": [...],
+  "clips": {...}
+}
+```
+
+No options needed — the file is automatically uploaded to R2 with an auto-generated key.
+
+### Response
+
+```json
+{"url": "https://cdn.example.com/renders/1718700000-a1b2c3d4.mp4", "size": 16685783}
+```
+
+---
+
+## 5. Deploying to Google Cloud Run
+
+Uses the same `Dockerfile.api` image deployed to GCP's serverless Cloud Run platform.
 
 ### Prerequisites
 
@@ -215,7 +275,7 @@ gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 ### Step 5: Build the Docker Image (linux/amd64)
 
 ```bash
-docker build --platform linux/amd64 \
+docker build --platform linux/amd64 -f Dockerfile.api \
   -t us-central1-docker.pkg.dev/YOUR_PROJECT_ID/openvideo/renderer:latest .
 ```
 
@@ -240,7 +300,6 @@ gcloud run deploy openvideo-renderer \
   --no-cpu-throttling \
   --cpu-boost \
   --execution-environment=gen1 \
-  --command="python3,-u,/app/src/api/serve_cloudrun.py" \
   --port=8080 \
   --set-env-vars="R2_ACCOUNT_ID=xxx,R2_ACCESS_KEY_ID=xxx,R2_SECRET_ACCESS_KEY=xxx,R2_BUCKET_NAME=xxx,R2_PUBLIC_DOMAIN=https://cdn.example.com" \
   --allow-unauthenticated \
@@ -258,27 +317,7 @@ curl https://YOUR_SERVICE_URL/health
 
 ### API Usage
 
-**POST /render** — Render a video from project JSON.
-
-```bash
-curl -X POST \
-  https://YOUR_SERVICE_URL/render \
-  -H "Content-Type: application/json" \
-  -d '{
-    "project": { ...your ProjectJSON... },
-    "options": {
-      "r2_key": "renders/my-video.mp4",
-      "audioCodec": "opus"
-    }
-  }'
-```
-
-**Response** (when `r2_key` is provided):
-```json
-{"url": "https://cdn.example.com/renders/my-video.mp4", "size": 16685783}
-```
-
-If `r2_key` is omitted, the response is raw MP4 bytes with `Content-Type: video/mp4`.
+Same API as Section 4 — send project JSON directly to `POST /render`.
 
 ### Performance Notes
 

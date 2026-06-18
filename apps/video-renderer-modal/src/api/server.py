@@ -1,22 +1,33 @@
-"""Cloud Run HTTP server wrapper for the video renderer.
+"""HTTP API server for the OpenVideo video renderer.
 
-Exposes a POST /render endpoint that accepts project JSON and options,
-renders the video, and returns the R2 URL or raw bytes.
+Exposes a POST /render endpoint that accepts a project JSON,
+renders the video, uploads to R2, and returns the public URL.
 
-Usage (Cloud Run):
-    Entrypoint: python3 -u /app/src/api/serve_cloudrun.py
-    Port: 8080 (default Cloud Run port)
+Works on any platform: Docker locally, Cloud Run, Fly.io, Railway, etc.
+
+Usage:
+    python3 -u /app/src/api/server.py
+    Listens on PORT env var (default 8080).
 """
 
 import asyncio
 import json
 import os
 import sys
+import uuid
+import time
 
 sys.path.insert(0, os.path.dirname(__file__))
 
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from renderer import render_video
+
+
+def _generate_r2_key() -> str:
+    """Auto-generate a unique R2 object key for the rendered video."""
+    timestamp = int(time.time())
+    unique_id = uuid.uuid4().hex[:8]
+    return f"renders/{timestamp}-{unique_id}.mp4"
 
 
 class RenderHandler(BaseHTTPRequestHandler):
@@ -26,15 +37,16 @@ class RenderHandler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length)
             payload = json.loads(body)
 
-            project = payload.get("project")
-            options = payload.get("options", {})
-
-            if not project:
+            project = payload
+            if "settings" not in project or "tracks" not in project:
                 self.send_response(400)
                 self.send_header("Content-Type", "application/json")
                 self.end_headers()
-                self.wfile.write(json.dumps({"error": "missing 'project' field"}).encode())
+                self.wfile.write(json.dumps({"error": "Invalid project JSON. Must contain 'settings' and 'tracks'."}).encode())
                 return
+
+            r2_key = _generate_r2_key()
+            options = {"r2_key": r2_key}
 
             try:
                 result = asyncio.run(render_video(project, options))
@@ -45,6 +57,7 @@ class RenderHandler(BaseHTTPRequestHandler):
                     self.end_headers()
                     self.wfile.write(json.dumps(result).encode())
                 else:
+                    # Fallback if R2 is not configured — return raw bytes
                     self.send_response(200)
                     self.send_header("Content-Type", "video/mp4")
                     self.send_header("Content-Length", str(len(result)))
@@ -78,5 +91,5 @@ class RenderHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8080))
     server = HTTPServer(("0.0.0.0", port), RenderHandler)
-    print(f"[cloudrun] Listening on port {port}...")
+    print(f"[server] Listening on port {port}...")
     server.serve_forever()

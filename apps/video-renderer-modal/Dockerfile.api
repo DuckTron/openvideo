@@ -1,0 +1,74 @@
+# Dockerfile.api — OpenVideo Video Renderer HTTP API
+#
+# A portable HTTP server for video rendering. Works locally, on Cloud Run,
+# Fly.io, Railway, or any platform that supports Docker containers.
+#
+# Build:
+#   docker build -f Dockerfile.api -t openvideo-renderer-api .
+#
+# Run locally:
+#   docker run --rm -p 8080:8080 --shm-size=2g \
+#     -e R2_ACCOUNT_ID=xxx \
+#     -e R2_ACCESS_KEY_ID=xxx \
+#     -e R2_SECRET_ACCESS_KEY=xxx \
+#     -e R2_BUCKET_NAME=xxx \
+#     -e R2_PUBLIC_DOMAIN=https://cdn.example.com \
+#     openvideo-renderer-api
+#
+# API:
+#   GET  /health  — Health check
+#   POST /render  — Send project JSON, get back R2 URL
+
+# ---------------------------------------------------------------------------
+# Base: Debian Bookworm with Python 3.11
+# ---------------------------------------------------------------------------
+FROM python:3.11-slim-bookworm
+
+# ---------------------------------------------------------------------------
+# 1. System dependencies: ffmpeg, curl, Node.js 22
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    ffmpeg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# ---------------------------------------------------------------------------
+# 2. Python dependencies
+# ---------------------------------------------------------------------------
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir -r /tmp/requirements.txt && rm /tmp/requirements.txt
+
+# ---------------------------------------------------------------------------
+# 3. Xvfb + Playwright Chromium (full browser for WebCodecs support)
+# ---------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends xvfb && rm -rf /var/lib/apt/lists/*
+RUN playwright install --with-deps chromium
+
+# ---------------------------------------------------------------------------
+# 4. Install @openvideo/engine-pixi (browser bundle served to Playwright)
+# ---------------------------------------------------------------------------
+RUN mkdir -p /app && cd /app && npm install @openvideo/engine-pixi@1.2.0
+
+# ---------------------------------------------------------------------------
+# 5. Copy application code
+# ---------------------------------------------------------------------------
+WORKDIR /app
+
+COPY renderer.html /app/renderer.html
+COPY src/ /app/src/
+
+# ---------------------------------------------------------------------------
+# 6. Environment
+# ---------------------------------------------------------------------------
+ENV PYTHONUNBUFFERED=1
+ENV NODE_ENV=production
+ENV PORT=8080
+
+EXPOSE 8080
+
+# ---------------------------------------------------------------------------
+# 7. Entrypoint: HTTP API server
+# ---------------------------------------------------------------------------
+CMD ["python3", "-u", "/app/src/api/server.py"]
