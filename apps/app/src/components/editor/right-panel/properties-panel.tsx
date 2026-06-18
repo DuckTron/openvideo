@@ -1,6 +1,6 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { PropertiesPanelContent } from "./properties-panel";
+import { PropertiesPanelContent } from "./properties/properties-panel";
 import { useStudioStore } from "@/stores/studio-store";
 
 export function PropertiesPanel() {

@@ -25,7 +25,7 @@ import {
   AUDIO_FORMATS,
   FRAME_RATES,
   SAMPLE_RATES,
-} from "../../export-modal";
+} from "../../../export-modal";
 
 export function ExportGroupProperty() {
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);

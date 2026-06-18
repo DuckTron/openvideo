@@ -5,9 +5,9 @@ import { fontManager, IClip } from "@openvideo/engine-pixi";
 import { useStore } from "zustand";
 import { projectStore, core } from "@/lib/project";
 import { useEphemeralClip } from "@/hooks/use-ephemeral-clip";
-import useLayoutStore from "../store/use-layout-store";
+import useLayoutStore from "../../store/use-layout-store";
 import { PropertyKey, getPropertiesForType } from "./property-registry";
-import * as Properties from "./properties";
+import * as Properties from "./options";
 import { getFontByPostScriptName, getGroupedFonts } from "@/utils/font-utils";
 
 const GROUPED_FONTS = getGroupedFonts();

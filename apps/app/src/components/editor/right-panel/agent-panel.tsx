@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { useDirector } from "@/hooks/use-director";
 import { useProjectStore } from "@/stores/project-store";
-import { AgentHeader } from "./header";
-import { AgentMessages } from "./messages";
-import { AgentInput } from "./agent-input";
+import { AgentHeader } from "./agent/header";
+import { AgentMessages } from "./agent/messages";
+import { AgentInput } from "./agent/agent-input";
 
-export default function Agent({ onClose }: { onClose?: () => void }) {
+export default function AgentPanel() {
   const spaceId = useProjectStore((state) => state.spaceId);
   const { messages, sendMessage, isConnected, isThinking } = useDirector(spaceId || "");
   const [input, setInput] = useState("");

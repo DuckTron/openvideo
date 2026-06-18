@@ -9,8 +9,7 @@ import { Loading } from "@/components/editor/loading";
 import FloatingControl from "@/components/editor/floating-controls/floating-control";
 import { Compositor } from "@openvideo/engine-pixi";
 import { WebCodecsUnsupportedModal } from "@/components/editor/webcodecs-unsupported-modal";
-import Agent from "./agent/agent";
-import { PropertiesPanel } from "@/components/editor/properties-panel";
+import { RightPanel } from "./right-panel";
 import { core } from "@/lib/project";
 import { IProject } from "@openvideo/core";
 import { trpc } from "@/lib/trpc";
@@ -32,11 +31,10 @@ export default function Editor({
   const setProjectName = useProjectStore((state) => state.setProjectName);
   const resetProject = useProjectStore((state) => state.resetProject);
 
-  const { editorMode, isCopilotVisible, toggleCopilot } = usePanelStore();
+  const { editorMode } = usePanelStore();
 
   const [isReady, setIsReady] = useState(false);
   const [isWebCodecsSupported, setIsWebCodecsSupported] = useState(true);
-  const [rightTab, setRightTab] = useState<"agent" | "style">("agent");
 
   useEffect(() => {
     setTimeout(() => {
@@ -113,40 +111,7 @@ export default function Editor({
           </div>
         </div>
 
-        <div className="w-[280px] shrink-0 h-full overflow-hidden flex flex-col">
-          <div className="p-3">
-            <div className="inline-flex w-full items-center justify-center rounded-none bg-muted p-[3px] h-8 text-xs text-muted-foreground shrink-0">
-              <button
-                type="button"
-                onClick={() => setRightTab("agent")}
-                className={`relative inline-flex flex-1 h-[calc(100%-1px)] items-center justify-center rounded-none border border-transparent px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
-                  rightTab === "agent"
-                    ? "bg-background text-foreground dark:border-input dark:bg-input/30"
-                    : "text-foreground/60 dark:text-muted-foreground"
-                }`}
-              >
-                Agent
-              </button>
-              <button
-                type="button"
-                onClick={() => setRightTab("style")}
-                className={`relative inline-flex flex-1 h-[calc(100%-1px)] items-center justify-center rounded-none border border-transparent px-1.5 py-0.5 text-xs font-medium whitespace-nowrap transition-all hover:text-foreground focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 ${
-                  rightTab === "style"
-                    ? "bg-background text-foreground dark:border-input dark:bg-input/30"
-                    : "text-foreground/60 dark:text-muted-foreground"
-                }`}
-              >
-                Style
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 min-h-0 mt-0 overflow-hidden" hidden={rightTab !== "agent"}>
-            <Agent onClose={toggleCopilot} />
-          </div>
-          <div className="flex-1 min-h-0 mt-0 overflow-hidden" hidden={rightTab !== "style"}>
-            <PropertiesPanel />
-          </div>
-        </div>
+        <RightPanel />
       </div>
 
       {/* Floating Controls like Caption / Animation pickers */}

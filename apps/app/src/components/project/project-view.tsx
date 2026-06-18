@@ -43,9 +43,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useDirector } from "@/hooks/use-director";
-import { AgentMessages } from "@/components/editor/agent/messages";
-import { AgentHeader } from "@/components/editor/agent/header";
-import { AgentInput } from "@/components/editor/agent/agent-input";
+import { AgentMessages } from "@/components/editor/right-panel/agent/messages";
+import { AgentHeader } from "@/components/editor/right-panel/agent/header";
+import { AgentInput } from "@/components/editor/right-panel/agent/agent-input";
 import { useAssetsStore, type ProjectFile } from "@/stores/assets-store";
 import { getPresignedConfig, uploadFileWithConfig } from "@/lib/upload-utils";
 import { generateThumbnail } from "@/lib/thumbnail-generator";
