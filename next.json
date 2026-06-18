@@ -1,0 +1,140 @@
+[
+  {
+    "title": "Edit for clarity",
+    "description": {
+      "title": "Cut to the chase",
+      "content": "Remove filler words, digressions, blather — all the obvious cuts"
+    }
+  },
+  {
+    "title": "Studio Sound",
+    "description": {
+      "title": "Studio-quality sound in a click",
+      "content": "Remove background noise & enhance voices"
+    }
+  },
+  {
+    "title": "Remove filler words",
+    "description": {
+      "title": "Sound smarter",
+      "content": "Remove uhms, uhs, repeated words, and other verbal clutter"
+    }
+  },
+
+  {
+    "title": "Remove retakes",
+    "description": {
+      "title": "Get to the good stuff",
+      "content": "Cut all but your best takes"
+    }
+  },
+  {
+    "title": "Shorten word gaps",
+    "description": {
+      "title": "Do away with awkward silences",
+      "content": "Shrink or cut silences & lapses in conversation"
+    }
+  },
+  {
+    "title": "Add chapters",
+    "description": {
+      "title": "Divide & conquer",
+      "content": "Divide into chapters & add markers"
+    }
+  },
+  {
+    "title": "Quick design",
+    "description": {
+      "title": "Design your video",
+      "content": "Let AI add scenes, layouts, and some B-roll for an eye-catching look"
+    }
+  },
+  {
+    "title": "Eye Contact",
+    "description": {
+      "title": "No teleprompter, no problem",
+      "content": "Shift your on-screen eyes to the camera, even if your on-face eyes were looking elsewhere"
+    }
+  },
+  {
+    "title": "Center active speaker",
+    "description": {
+      "title": "Look who's talking",
+      "content": "Keep the active speaker smack-dab in the center"
+    }
+  },
+  {
+    "title": "Green screen",
+    "description": {
+      "title": "No green screen, no problem",
+      "content": "Remove your background so you can replace it with something more professional/less awful"
+    }
+  },
+  {
+    "title": "Automatic multicam",
+    "description": {
+      "title": "Who's speaking and who isn't",
+      "content": "Automatically pick layouts & cameras to show active conversations"
+    }
+  },
+  {
+    "title": "Generate media",
+    "description": {
+      "title": "Type words, create media",
+      "content": "Describe any image or video you can imagine; AI Tools will create it for you"
+    }
+  },
+  {
+    "title": "Blur speaker background",
+    "description": {
+      "title": "All eyes on you",
+      "content": "Blur your background so nobody gets distracted by whatever that is behind you"
+    }
+  },
+
+  {
+    "title": "Create clips",
+    "description": {
+      "title": "Viral bait, while you wait",
+      "content": "AI Tools picks your most viral-worthy moments & creates clips that pop"
+    }
+  },
+  {
+    "title": "Create highlight reel",
+    "description": {
+      "title": "Supercut, super-fast",
+      "content": "Create a new composition with all your best moments"
+    }
+  },
+
+  {
+    "title": "Find highlights",
+    "description": {
+      "title": "Did I say something interesting?",
+      "content": "Let AI Tools find the most compelling parts for you"
+    }
+  },
+
+  {
+    "title": "Translate",
+    "description": {
+      "title": "Go global",
+      "content": "Translate your transcript, captions and audio to other languages"
+    }
+  },
+  
+  {
+    "title": "Draft a title",
+    "description": {
+      "title": "What's in a name? A lot.",
+      "content": "Get title suggestions that capture what's most compelling about what you created"
+    }
+  },
+  {
+    "title": "Summarize",
+    "description": {
+      "title": "Break it down",
+      "content": "Get an accurate, concise synopsis of your content"
+    }
+  }
+]

@@ -51,7 +51,7 @@ export function MediaPanel() {
     <div className="h-full bg-background rounded-sm relative shrink-0 flex flex-row">
       <TabBar />
       {showPanelContent && (
-        <div className="w-[360px] border-r  h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
+        <div className="w-[320px] border-r  h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
           <div className="h-full flex flex-col">
             <div className="h-12 items-center flex gap-2 px-6 shrink-0">
               {hasSelection && (
