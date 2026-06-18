@@ -28,15 +28,7 @@ export function AgentMessages({ messages, isThinking, emptyState, className }: A
   }, [messages, isThinking]);
 
   if (messages.length === 0) {
-    return (
-      <div className={cn("flex-1", className)}>
-        {emptyState ?? (
-          <div className="flex flex-1 flex-col items-center justify-center space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-700 pb-24 px-6 text-center">
-            <p className="text-muted-foreground text-sm">Start a conversation</p>
-          </div>
-        )}
-      </div>
-    );
+    return null;
   }
 
   return (

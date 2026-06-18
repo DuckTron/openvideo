@@ -10,7 +10,7 @@ export function RightPanel() {
   const [rightTab, setRightTab] = useState<RightTab>("agent");
 
   return (
-    <div className="w-[280px] shrink-0 h-full overflow-hidden flex flex-col">
+    <div className="w-[280px] shrink-0 h-full overflow-hidden flex flex-col border-l">
       <div className="p-3">
         <div className="inline-flex w-full items-center justify-center rounded-none bg-muted p-[3px] h-8 text-xs text-muted-foreground shrink-0">
           <button

@@ -1,9 +1,7 @@
 "use client";
 
 import { RiArrowUpLine, RiAttachmentLine } from "@remixicon/react";
-
 import { cn } from "@/lib/utils";
-import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
 import {
   InputGroup,
   InputGroupAddon,
@@ -36,33 +34,29 @@ export function AgentInput({
   };
 
   return (
-    <div className={cn("p-4 md:p-3 pt-0 space-y-4 shrink-0", className)}>
-      <HoverBorderGradient containerClassName="rounded-sm w-full" className="w-full bg-card">
-        <InputGroup className="rounded-sm border-none has-disabled:opacity-100 bg-input/30!">
-          <InputGroupTextarea
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="min-h-16 max-h-[200px] border-none focus-visible:ring-0"
-          />
-          <InputGroupAddon align="block-end">
-            <InputGroupButton variant="ghost" className="rounded-lg text-foreground">
-              <RiAttachmentLine className="w-4 h-4" />
-            </InputGroupButton>
-            <InputGroupButton
-              variant="default"
-              className="rounded-full ml-auto bg-foreground hover:bg-foreground/90 text-background"
-              size="icon-xs"
-              onClick={onSend}
-              disabled={!value.trim() || disabled}
-            >
-              <RiArrowUpLine className="w-4 h-4" />
-              <span className="sr-only">Send</span>
-            </InputGroupButton>
-          </InputGroupAddon>
-        </InputGroup>
-      </HoverBorderGradient>
+    <div className={cn("pb-3 shrink-0", className)}>
+      <InputGroup className="has-disabled:opacity-100 bg-input/30!">
+        <InputGroupTextarea
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          onKeyDown={handleKeyDown}
+          placeholder={placeholder}
+        />
+        <InputGroupAddon align="block-end" className="justify-between">
+          <InputGroupButton variant="ghost" className="text-foreground">
+            <RiAttachmentLine className="size-4" />
+          </InputGroupButton>
+          <InputGroupButton
+            variant="secondary"
+            size="icon-sm"
+            onClick={onSend}
+            disabled={!value.trim() || disabled}
+          >
+            <RiArrowUpLine className="size-4" />
+            <span className="sr-only">Send</span>
+          </InputGroupButton>
+        </InputGroupAddon>
+      </InputGroup>
     </div>
   );
 }

@@ -20,22 +20,10 @@ export default function AgentPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden px-4">
+    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden px-4 space-y-2">
       <AgentHeader />
 
-      <AgentMessages
-        messages={messages}
-        isThinking={isThinking}
-        emptyState={
-          <div>
-            <div className="max-w-lg font-regular text-sm">
-              Fresh project — describe what you want to see, or let&apos;s brainstorm about where to
-              start.
-            </div>
-          </div>
-        }
-        className="flex-1 min-h-0"
-      />
+      <AgentMessages messages={messages} isThinking={isThinking} className="flex-1 min-h-0" />
 
       <AgentInput
         value={input}
