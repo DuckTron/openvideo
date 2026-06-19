@@ -1484,6 +1484,23 @@ export class Studio extends EventEmitter<StudioEvents> {
   }
 
   /**
+   * Alias for {@link renderFrame} with support for the current playhead.
+   * Captures a single frame as a base64-encoded PNG.
+   *
+   * @param timeMs Optional time in milliseconds. If omitted, the current
+   *   playhead position is used.
+   * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
+   *
+   * @example
+   * await studio.ready;
+   * const currentFrame = await studio.snapshot();     // current playhead
+   * const frameAt2s    = await studio.snapshot(2000); // explicit timestamp
+   */
+  public async snapshot(timeMs?: number): Promise<string> {
+    return this.renderFrame(timeMs ?? this.currentTime / 1000);
+  }
+
+  /**
    * Get current playback time (in microseconds)
    */
   getCurrentTime(): number {

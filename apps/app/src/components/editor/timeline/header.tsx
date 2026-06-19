@@ -24,6 +24,7 @@ import {
   RiSkipBackLine,
   RiSkipForwardLine,
   RiSplitCellsHorizontal,
+  RiCameraLine,
 } from "@remixicon/react";
 const Header = ({
   scale,
@@ -44,6 +45,21 @@ const Header = ({
 
   const handleSplit = () => {
     core.clip.split(currentTimeUs);
+  };
+
+  const handleSnapshot = async () => {
+    if (!studio) return;
+    try {
+      const base64 = await studio.snapshot();
+      const link = document.createElement("a");
+      link.href = base64;
+      link.download = `frame-${Math.floor(currentTime * fps)}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Failed to capture frame:", err);
+    }
   };
 
   const changeScale = (newScale: ITimelineScaleState) => {
@@ -106,6 +122,13 @@ const Header = ({
               className="flex items-center gap-1 px-2"
             >
               <RiFileCopyLine size={15} />
+            </Button>
+            <Button
+              onClick={handleSnapshot}
+              variant={"ghost"}
+              className="flex items-center gap-1 px-2"
+            >
+              <RiCameraLine size={15} />
             </Button>
           </div>
           <div className="flex items-center justify-center">

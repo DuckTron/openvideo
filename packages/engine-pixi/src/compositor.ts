@@ -780,4 +780,22 @@ export class Compositor extends EventEmitter<{
 
     return base64;
   }
+
+  /**
+   * Alias for {@link renderFrame} with an optional timestamp.
+   * Captures a single frame as a base64-encoded PNG.
+   *
+   * @param timeMs Optional time in milliseconds. If omitted, the first frame
+   *   at time 0 is captured.
+   * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
+   *
+   * @example
+   * const compositor = new Compositor({ width: 1280, height: 720 });
+   * await compositor.addSprite(videoClip);
+   * const firstFrame = await compositor.snapshot();     // time 0
+   * const frameAt2s  = await compositor.snapshot(2000); // explicit timestamp
+   */
+  public async snapshot(timeMs?: number): Promise<string> {
+    return this.renderFrame(timeMs ?? 0);
+  }
 }

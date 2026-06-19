@@ -343,7 +343,7 @@ export function PropertiesPanelContent({ clip }: PropertiesPanelContentProps) {
           (s: { postScriptName: string }) => s.postScriptName === fontFamily,
         ) ||
           fontStyles[0] || { postScriptName: fontFamily, fullName: currentFamily };
-        console.log({ style });
+
         return (
           <Properties.TextGroupProperty
             key={key}
