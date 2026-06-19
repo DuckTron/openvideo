@@ -81,7 +81,7 @@ function AssetCard({
 }) {
   return (
     <div className="flex flex-col gap-1.5 group cursor-pointer" onClick={() => onAdd(asset)}>
-      <div className="relative aspect-square rounded-sm overflow-hidden bg-foreground/20 border border-transparent group-hover:border-primary/50 transition-all flex items-center justify-center">
+      <div className="relative aspect-square overflow-hidden bg-foreground/20 border border-transparent group-hover:border-primary/50 transition-all flex items-center justify-center">
         {asset.type === "image" ? (
           <img src={asset.src} alt={asset.name} className="max-w-full max-h-full object-contain" />
         ) : asset.type === "audio" ? (

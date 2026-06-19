@@ -60,7 +60,7 @@ export const AudioItem = ({
         </div>
       }
     >
-      <div className="group relative flex items-center gap-3 p-2 bg-secondary rounded-sm border hover:border-white/10 transition-colors">
+      <div className="group relative flex items-center gap-3 p-2 bg-secondary border hover:border-white/10 transition-colors">
         <audio
           ref={audioRef}
           src={item.url}
@@ -72,7 +72,7 @@ export const AudioItem = ({
         <Button
           size="icon"
           variant="ghost"
-          className="h-8 w-8 rounded-full bg-white/5 hover:bg-white/10 shrink-0"
+          className="h-8 w-8 bg-white/5 hover:bg-white/10 shrink-0"
           onClick={togglePlay}
         >
           {isPlaying ? (

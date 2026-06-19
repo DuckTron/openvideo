@@ -147,13 +147,13 @@ export default function PanelVideos() {
                     },
                   }}
                   renderCustomPreview={
-                    <div className="w-20 aspect-video rounded-md overflow-hidden shadow-xl border-2 border-primary">
+                    <div className="w-20 aspect-video overflow-hidden shadow-xl border-2 border-primary">
                       <img src={video.image} className="w-full h-full object-cover" />
                     </div>
                   }
                 >
                   <div
-                    className="group relative aspect-square rounded-md overflow-hidden bg-secondary/50 cursor-pointer border border-transparent hover:border-primary/50 transition-all"
+                    className="group relative aspect-square overflow-hidden bg-secondary/50 cursor-pointer border border-transparent hover:border-primary/50 transition-all"
                     onClick={() => addItemToCanvas(video)}
                   >
                     <div

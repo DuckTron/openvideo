@@ -171,7 +171,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
               onChange={(e) => setPrompt(e.target.value)}
               placeholder={currentTypeOption.placeholder}
               className={cn(
-                "w-full min-h-[120px] resize-none rounded-xl border bg-transparent p-4 text-sm",
+                "w-full min-h-[120px] resize-none border bg-transparent p-4 text-sm",
                 "border-border/50 bg-secondary/30 placeholder:text-muted-foreground/50",
                 "focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/10",
                 "transition-all",
@@ -198,7 +198,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                 <PopoverContent
                   side="top"
                   align="start"
-                  className="p-1.5 w-44 bg-popover border border-border shadow-lg rounded-xl text-popover-foreground"
+                  className="p-1.5 w-44 bg-popover border border-border shadow-lg text-popover-foreground"
                 >
                   {ASSET_TYPES.map((option) => {
                     const isSelected = selectedType === option.id;
@@ -212,7 +212,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                           setTypeOpen(false);
                         }}
                         className={cn(
-                          "w-full flex items-center gap-2 px-2.5 py-2 text-xs rounded-lg transition-colors",
+                          "w-full flex items-center gap-2 px-2.5 py-2 text-xs transition-colors",
                           isSelected
                             ? "bg-primary/10 text-primary font-medium"
                             : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -237,7 +237,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                 <PopoverContent
                   side="top"
                   align="start"
-                  className="p-1.5 w-40 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                  className="p-1.5 w-40 bg-popover border border-border shadow-lg text-xs"
                 >
                   {MODELS.map((m) => (
                     <button
@@ -247,7 +247,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                         setModelOpen(false);
                       }}
                       className={cn(
-                        "w-full flex items-center px-2.5 py-2 rounded-lg transition-colors text-left",
+                        "w-full flex items-center px-2.5 py-2 transition-colors text-left",
                         selectedModel === m
                           ? "bg-primary/10 text-primary font-medium"
                           : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -270,7 +270,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                   </PopoverTrigger>
                   <PopoverContent
                     side="top"
-                    className="p-1.5 w-20 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                    className="p-1.5 w-20 bg-popover border border-border shadow-lg text-xs"
                   >
                     {RATIOS.map((r) => (
                       <button
@@ -280,7 +280,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                           setRatioOpen(false);
                         }}
                         className={cn(
-                          "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                          "w-full px-2.5 py-2 transition-colors text-center",
                           selectedRatio === r
                             ? "bg-primary/10 text-primary font-medium"
                             : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -304,7 +304,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                   </PopoverTrigger>
                   <PopoverContent
                     side="top"
-                    className="p-1.5 w-20 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                    className="p-1.5 w-20 bg-popover border border-border shadow-lg text-xs"
                   >
                     {DURATIONS.map((d) => (
                       <button
@@ -314,7 +314,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                           setDurationOpen(false);
                         }}
                         className={cn(
-                          "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                          "w-full px-2.5 py-2 transition-colors text-center",
                           selectedDuration === d
                             ? "bg-primary/10 text-primary font-medium"
                             : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -338,7 +338,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                   </PopoverTrigger>
                   <PopoverContent
                     side="top"
-                    className="p-1.5 w-16 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                    className="p-1.5 w-16 bg-popover border border-border shadow-lg text-xs"
                   >
                     {[1, 2, 3, 4].map((q) => (
                       <button
@@ -348,7 +348,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
                           setQuantityOpen(false);
                         }}
                         className={cn(
-                          "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                          "w-full px-2.5 py-2 transition-colors text-center",
                           quantity === q
                             ? "bg-primary/10 text-primary font-medium"
                             : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -370,7 +370,7 @@ export function AssetGeneratorModal({ open, onOpenChange }: AssetGeneratorModalP
               </Button>
               <Button
                 size="icon"
-                className="size-8 rounded-full bg-foreground hover:bg-foreground/90 text-background"
+                className="size-8 bg-foreground hover:bg-foreground/90 text-background"
                 onClick={handleGenerate}
                 disabled={loading || !prompt.trim()}
               >

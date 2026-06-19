@@ -26,7 +26,7 @@ export function MediaDragOverlay({
 
   return (
     <div
-      className="flex flex-col items-center justify-center gap-4 h-full text-center rounded-lg bg-foreground/5 hover:bg-foreground/10 transition-all duration-200 p-8"
+      className="flex flex-col items-center justify-center gap-4 h-full text-center bg-foreground/5 hover:bg-foreground/10 transition-all duration-200 p-8"
       onClick={handleClick}
     >
       <div className="flex items-center justify-center">
@@ -43,9 +43,9 @@ export function MediaDragOverlay({
 
       {isProcessing && (
         <div className="w-full max-w-xs">
-          <div className="w-full bg-muted/50 rounded-full h-2">
+          <div className="w-full bg-muted/50 h-2">
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300"
+              className="bg-primary h-2 transition-all duration-300"
               style={{ width: `${progress}%` }}
             />
           </div>

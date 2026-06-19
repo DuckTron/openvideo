@@ -129,13 +129,13 @@ export default function PanelImages() {
                   timing: { duration: 5_000_000 },
                 }}
                 renderCustomPreview={
-                  <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary">
+                  <div className="w-20 aspect-square overflow-hidden shadow-xl border-2 border-primary">
                     <img src={image.src.medium} className="w-full h-full object-cover" />
                   </div>
                 }
               >
                 <div
-                  className="group relative aspect-square rounded-md overflow-hidden bg-secondary/50 cursor-pointer border border-transparent hover:border-primary/50 transition-all"
+                  className="group relative aspect-square overflow-hidden bg-secondary/50 cursor-pointer border border-transparent hover:border-primary/50 transition-all"
                   onClick={() => addItemToCanvas(image)}
                   style={{
                     backgroundImage: `url(${image.src.medium})`,

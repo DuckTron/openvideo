@@ -40,7 +40,7 @@ export default function PanelElements() {
               key={element.id}
               onClick={() => handleAdd(element)}
               className={cn(
-                "group relative aspect-square rounded-lg border overflow-hidden",
+                "group relative aspect-square border overflow-hidden",
                 "bg-secondary/30 border-border/40",
                 "hover:border-border hover:bg-secondary/50",
                 "transition-all duration-150",

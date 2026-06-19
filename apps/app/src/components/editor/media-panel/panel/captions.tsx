@@ -395,7 +395,7 @@ export default function PanelCaptions() {
         {mediaItems.length === 0 ? (
           <div className="flex flex-1 items-center justify-center gap-4 select-none">
             <div className="flex flex-col items-center justify-center pb-12">
-              <div className="size-16 rounded-sm bg-secondary/30 flex items-center justify-center">
+              <div className="size-16 bg-secondary/30 flex items-center justify-center">
                 <RiSparkling2Line size={24} strokeWidth={1.5} className="text-muted-foreground" />
               </div>
               <h3 className="text-sm font-bold text-foreground mb-1.5">No Media Detected</h3>
@@ -545,7 +545,7 @@ function CaptionItem({
   return (
     <div
       className={cn(
-        "group relative flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-150 border",
+        "group relative flex items-center gap-3 px-3 py-2.5 transition-all duration-150 border",
         isActive
           ? "bg-white/[0.06] border-white/[0.08] shadow-[0_4px_20px_-4px_rgba(0,0,0,0.4)]"
           : "bg-transparent border-transparent hover:bg-white/[0.02] hover:border-white/[0.04]",

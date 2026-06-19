@@ -164,7 +164,7 @@ export default function PanelText() {
           }
         >
           <div
-            className="w-full h-9 bg-secondary hover:bg-secondary/80 text-secondary-foreground flex items-center justify-center rounded-md text-sm font-medium cursor-pointer transition-colors"
+            className="w-full h-9 bg-secondary hover:bg-secondary/80 text-secondary-foreground flex items-center justify-center text-sm font-medium cursor-pointer transition-colors"
             onClick={() => handleAddText()}
           >
             Add Text
@@ -200,7 +200,7 @@ export default function PanelText() {
             >
               <button
                 onClick={() => handleAddText(preset)}
-                className="aspect-square bg-secondary/50 rounded-lg flex items-center justify-center p-4 hover:bg-secondary transition-colors group relative overflow-hidden border border-border"
+                className="aspect-square bg-secondary/50 flex items-center justify-center p-4 hover:bg-secondary transition-colors group relative overflow-hidden border border-border"
               >
                 <span
                   style={{

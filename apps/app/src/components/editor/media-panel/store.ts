@@ -84,7 +84,7 @@ export const useMediaPanelStore = create<MediaPanelStore>((set) => ({
   clearHighlight: () => set({ highlightMediaId: null }),
   showProperties: false,
   setShowProperties: (show) => set({ showProperties: show }),
-  isOpen: false,
+  isOpen: true,
   setIsOpen: (open) => set({ isOpen: open }),
   showLabels: false,
   setShowLabels: (show) => set({ showLabels: show }),

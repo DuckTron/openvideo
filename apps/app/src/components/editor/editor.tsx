@@ -97,9 +97,7 @@ export default function Editor({
       {/* Main content row: left sidebar + center + right sidebar */}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden">
         {/* Left Sidebar: Media Panel */}
-        <div className="w-[280px] shrink-0 h-full overflow-hidden">
-          <MediaPanel />
-        </div>
+        <MediaPanel />
 
         {/* Center: Canvas (top) + Timeline (bottom) */}
         <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">

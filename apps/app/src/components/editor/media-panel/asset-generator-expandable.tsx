@@ -181,14 +181,14 @@ export function AssetGeneratorExpandable({
         ref={containerRef}
         className={cn("shrink-0 bg-card p-3", !floating && "border-t border-border")}
       >
-        <div className="flex w-full items-center gap-2 rounded-xl border border-border/60 bg-secondary/50 px-3 py-2 transition-all hover:border-primary/30 hover:bg-secondary">
+        <div className="flex w-full items-center gap-2 border border-border/60 bg-secondary/50 px-3 py-2 transition-all hover:border-primary/30 hover:bg-secondary">
           <button
             onClick={() => setIsExpanded(true)}
             className="group flex flex-1 items-center gap-3 text-left"
           >
             <div className="relative">
               <RiSparkling2Line className="size-4 shrink-0 text-primary transition-transform group-hover:scale-110" />
-              <div className="absolute inset-0 size-4 animate-pulse rounded-full bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className="absolute inset-0 size-4 animate-pulse bg-primary/20 blur-sm opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
               Describe what you want to create...
@@ -223,7 +223,7 @@ export function AssetGeneratorExpandable({
           onChange={(e) => setPrompt(e.target.value)}
           placeholder={currentTypeOption.placeholder}
           className={cn(
-            "w-full min-h-[100px] resize-none rounded-xl border bg-transparent p-3.5 text-sm",
+            "w-full min-h-[100px] resize-none border bg-transparent p-3.5 text-sm",
             "border-border/50 bg-secondary/30 placeholder:text-muted-foreground/50",
             "focus:border-primary/30 focus:outline-none focus:ring-2 focus:ring-primary/10",
             "transition-all",
@@ -251,7 +251,7 @@ export function AssetGeneratorExpandable({
             <PopoverContent
               side="top"
               align="start"
-              className="p-1.5 w-44 bg-popover border border-border shadow-lg rounded-xl text-popover-foreground"
+              className="p-1.5 w-44 bg-popover border border-border shadow-lg text-popover-foreground"
             >
               {ASSET_TYPES.map((option) => {
                 const isSelected = selectedType === option.id;
@@ -265,7 +265,7 @@ export function AssetGeneratorExpandable({
                       setTypeOpen(false);
                     }}
                     className={cn(
-                      "w-full flex items-center gap-2 px-2.5 py-2 text-xs rounded-lg transition-colors",
+                      "w-full flex items-center gap-2 px-2.5 py-2 text-xs transition-colors",
                       isSelected
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -290,7 +290,7 @@ export function AssetGeneratorExpandable({
             <PopoverContent
               side="top"
               align="start"
-              className="p-1.5 w-40 bg-popover border border-border shadow-lg rounded-xl text-xs"
+              className="p-1.5 w-40 bg-popover border border-border shadow-lg text-xs"
             >
               {MODELS.map((m) => (
                 <button
@@ -300,7 +300,7 @@ export function AssetGeneratorExpandable({
                     setModelOpen(false);
                   }}
                   className={cn(
-                    "w-full flex items-center px-2.5 py-2 rounded-lg transition-colors text-left",
+                    "w-full flex items-center px-2.5 py-2 transition-colors text-left",
                     selectedModel === m
                       ? "bg-primary/10 text-primary font-medium"
                       : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -323,7 +323,7 @@ export function AssetGeneratorExpandable({
               </PopoverTrigger>
               <PopoverContent
                 side="top"
-                className="p-1.5 w-20 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                className="p-1.5 w-20 bg-popover border border-border shadow-lg text-xs"
               >
                 {RATIOS.map((r) => (
                   <button
@@ -333,7 +333,7 @@ export function AssetGeneratorExpandable({
                       setRatioOpen(false);
                     }}
                     className={cn(
-                      "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                      "w-full px-2.5 py-2 transition-colors text-center",
                       selectedRatio === r
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -357,7 +357,7 @@ export function AssetGeneratorExpandable({
               </PopoverTrigger>
               <PopoverContent
                 side="top"
-                className="p-1.5 w-20 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                className="p-1.5 w-20 bg-popover border border-border shadow-lg text-xs"
               >
                 {DURATIONS.map((d) => (
                   <button
@@ -367,7 +367,7 @@ export function AssetGeneratorExpandable({
                       setDurationOpen(false);
                     }}
                     className={cn(
-                      "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                      "w-full px-2.5 py-2 transition-colors text-center",
                       selectedDuration === d
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -391,7 +391,7 @@ export function AssetGeneratorExpandable({
               </PopoverTrigger>
               <PopoverContent
                 side="top"
-                className="p-1.5 w-16 bg-popover border border-border shadow-lg rounded-xl text-xs"
+                className="p-1.5 w-16 bg-popover border border-border shadow-lg text-xs"
               >
                 {[1, 2, 3, 4].map((q) => (
                   <button
@@ -401,7 +401,7 @@ export function AssetGeneratorExpandable({
                       setQuantityOpen(false);
                     }}
                     className={cn(
-                      "w-full px-2.5 py-2 rounded-lg transition-colors text-center",
+                      "w-full px-2.5 py-2 transition-colors text-center",
                       quantity === q
                         ? "bg-primary/10 text-primary font-medium"
                         : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground",
@@ -419,7 +419,7 @@ export function AssetGeneratorExpandable({
         <div className="flex items-center gap-2">
           <Button
             size="icon"
-            className="size-6 rounded-full ml-auto bg-foreground hover:bg-foreground/90 text-background"
+            className="size-6 ml-auto bg-foreground hover:bg-foreground/90 text-background"
             onClick={handleGenerate}
             disabled={loading || !prompt.trim()}
           >

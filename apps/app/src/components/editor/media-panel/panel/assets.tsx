@@ -20,9 +20,7 @@ import {
   RiAddLine,
   RiSparkling2Line,
   RiDeleteBinLine,
-  RiUploadLine,
   RiVideoLine,
-  RiShiningLine,
 } from "@remixicon/react";
 import type { MediaType } from "@/types/media";
 import { useAssetUpload } from "@/hooks/use-asset-upload";
@@ -156,11 +154,11 @@ function AssetCard({
 
   const preview =
     asset.type === "image" ? (
-      <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary">
+      <div className="w-20 aspect-square overflow-hidden shadow-xl border-2 border-primary">
         <img src={asset.thumbnailSrc || asset.src} className="w-full h-full object-cover" />
       </div>
     ) : asset.type === "video" ? (
-      <div className="w-20 aspect-video rounded-md overflow-hidden shadow-xl border-2 border-primary bg-background">
+      <div className="w-20 aspect-video overflow-hidden shadow-xl border-2 border-primary bg-background">
         {asset.thumbnailSrc ? (
           <img src={asset.thumbnailSrc} className="w-full h-full object-cover" />
         ) : (
@@ -168,7 +166,7 @@ function AssetCard({
         )}
       </div>
     ) : (
-      <div className="w-20 aspect-square rounded-md overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
+      <div className="w-20 aspect-square overflow-hidden shadow-xl border-2 border-primary bg-secondary flex items-center justify-center">
         <RiMusic2Line size={24} className="text-primary" />
       </div>
     );
@@ -196,16 +194,16 @@ function AssetCard({
         className="flex flex-col gap-1.5 group cursor-pointer"
         onClick={() => !isTemp && onSelect(asset)}
       >
-        <div className="relative aspect-square rounded-xl overflow-hidden bg-secondary/15 border border-border/30 group-hover:border-border/60 group-hover:bg-secondary/25 transition-all duration-300 flex items-center justify-center select-none shadow-[0_2px_8px_-3px_rgba(0,0,0,0.3)] group-hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.5)] group-hover:scale-[1.02]">
+        <div className="relative aspect-square overflow-hidden bg-secondary/15 border border-border/30 group-hover:border-border/60 group-hover:bg-secondary/25 transition-all duration-300 flex items-center justify-center select-none shadow-[0_2px_8px_-3px_rgba(0,0,0,0.3)] group-hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.5)] group-hover:scale-[1.02]">
           {/* Media Type Icon & In Use Badge (Top Left) */}
           <div className="absolute top-1.5 left-1.5 flex items-center gap-1 z-10">
-            <div className="p-1 rounded-md bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none border border-border/10 shadow-sm">
+            <div className="p-1 bg-background/80 backdrop-blur-md text-foreground flex items-center justify-center pointer-events-none border border-border/10 shadow-sm">
               {asset.type === "image" && <RiImage2Line size={11} strokeWidth={2.5} />}
               {asset.type === "video" && <RiVideoLine size={11} strokeWidth={2.5} />}
               {asset.type === "audio" && <RiMusic2Line size={11} strokeWidth={2.5} />}
             </div>
             {isInUse && (
-              <div className="px-1.5 py-0.5 rounded-md bg-primary text-[8px] text-primary-foreground font-semibold shadow-sm">
+              <div className="px-1.5 py-0.5 bg-primary text-[8px] text-primary-foreground font-semibold shadow-sm">
                 In Use
               </div>
             )}
@@ -244,24 +242,24 @@ function AssetCard({
             <div className="w-full h-full flex flex-col items-center justify-center bg-secondary/20 relative gap-1.5 px-3">
               {asset.type === "audio" && !isTemp && (
                 <div className="flex items-center gap-0.5 h-8 px-2 opacity-40">
-                  <span className="w-[1.5px] h-2 bg-foreground/45 rounded-full" />
-                  <span className="w-[1.5px] h-4 bg-foreground/45 rounded-full" />
-                  <span className="w-[1.5px] h-6 bg-foreground/60 rounded-full" />
-                  <span className="w-[1.5px] h-3 bg-foreground/50 rounded-full" />
-                  <span className="w-[1.5px] h-5 bg-foreground/70 rounded-full" />
-                  <span className="w-[1.5px] h-7 bg-foreground rounded-full" />
-                  <span className="w-[1.5px] h-5 bg-foreground/80 rounded-full" />
-                  <span className="w-[1.5px] h-6 bg-foreground/60 rounded-full" />
-                  <span className="w-[1.5px] h-4 bg-foreground/50 rounded-full" />
-                  <span className="w-[1.5px] h-5 bg-foreground/70 rounded-full" />
-                  <span className="w-[1.5px] h-2 bg-foreground/45 rounded-full" />
+                  <span className="w-[1.5px] h-2 bg-foreground/45" />
+                  <span className="w-[1.5px] h-4 bg-foreground/45" />
+                  <span className="w-[1.5px] h-6 bg-foreground/60" />
+                  <span className="w-[1.5px] h-3 bg-foreground/50" />
+                  <span className="w-[1.5px] h-5 bg-foreground/70" />
+                  <span className="w-[1.5px] h-7 bg-foreground" />
+                  <span className="w-[1.5px] h-5 bg-foreground/80" />
+                  <span className="w-[1.5px] h-6 bg-foreground/60" />
+                  <span className="w-[1.5px] h-4 bg-foreground/50" />
+                  <span className="w-[1.5px] h-5 bg-foreground/70" />
+                  <span className="w-[1.5px] h-2 bg-foreground/45" />
                 </div>
               )}
 
               {/* Uploading Status Overlay */}
               {isUploading ? (
                 <div className="flex flex-col items-center gap-2 w-full px-3">
-                  <div className="p-2 rounded-full bg-primary/10 text-primary">
+                  <div className="p-2 bg-primary/10 text-primary">
                     <RiLoader5Line className="animate-spin size-4" />
                   </div>
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
@@ -278,7 +276,7 @@ function AssetCard({
                   {asset.uploadProgress !== undefined &&
                     asset.uploadProgress !== null &&
                     asset.uploadProgress < 100 && (
-                      <div className="w-full h-1 bg-border/50 rounded-full overflow-hidden">
+                      <div className="w-full h-1 bg-border/50 overflow-hidden">
                         <div
                           className="h-full bg-primary transition-all duration-300"
                           style={{ width: `${asset.uploadProgress}%` }}
@@ -303,7 +301,7 @@ function AssetCard({
                         </span>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-popover border border-border text-foreground p-2 rounded-lg max-w-[200px] text-xs">
+                    <TooltipContent className="bg-popover border border-border text-foreground p-2 max-w-[200px] text-xs">
                       {asset.indexingError ||
                         "An error occurred during indexing pipeline processing."}
                     </TooltipContent>
@@ -312,7 +310,7 @@ function AssetCard({
               ) : asset.indexingStatus === "completed" /* No badge for completed audio */ ? null : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <div className="p-2 rounded-full bg-amber-500/10 text-amber-500 animate-pulse">
+                  <div className="p-2 bg-amber-500/10 text-amber-500 animate-pulse">
                     <RiLoader5Line className="animate-spin size-4" />
                   </div>
                   <div className="text-[10px] font-semibold text-muted-foreground text-center">
@@ -343,7 +341,7 @@ function AssetCard({
                         </span>
                       </div>
                     </TooltipTrigger>
-                    <TooltipContent className="bg-popover border border-border text-foreground p-2 rounded-lg max-w-[200px] text-xs">
+                    <TooltipContent className="bg-popover border border-border text-foreground p-2 max-w-[200px] text-xs">
                       {asset.indexingError ||
                         "An error occurred during indexing pipeline processing."}
                     </TooltipContent>
@@ -352,7 +350,7 @@ function AssetCard({
               ) : (
                 /* Simplified to just "Analyzing" for all indexing states */
                 <div className="flex flex-col items-center gap-1.5 w-full">
-                  <div className="p-2 rounded-full bg-amber-500/20 text-amber-400">
+                  <div className="p-2 bg-amber-500/20 text-amber-400">
                     <RiLoader5Line className="animate-spin size-4" />
                   </div>
                   <div className="text-[10px] font-semibold text-white/90 text-center">
@@ -366,7 +364,7 @@ function AssetCard({
           {/* Duration Badge & Info Button */}
           {(asset.type === "video" || asset.type === "audio") && asset.duration && (
             <div className="absolute bottom-1.5 left-1.5 flex items-center gap-1 z-10">
-              <span className="px-1.5 py-0.5 rounded-md bg-background/80 backdrop-blur-md text-[9px] text-foreground font-semibold shadow-sm border border-border/10">
+              <span className="px-1.5 py-0.5 bg-background/80 backdrop-blur-md text-[9px] text-foreground font-semibold shadow-sm border border-border/10">
                 {formatDuration(asset.duration)}
               </span>
             </div>
@@ -380,7 +378,7 @@ function AssetCard({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="absolute top-1.5 right-1.5 p-1 rounded-md bg-background/80 backdrop-blur-md opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-all duration-200 hover:bg-secondary hover:text-foreground hover:scale-110 z-20"
+                    className="absolute top-1.5 right-1.5 p-1 bg-background/80 backdrop-blur-md opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 transition-all duration-200 hover:bg-secondary hover:text-foreground hover:scale-110 z-20"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <RiMoreLine size={12} className="text-foreground" />
@@ -420,7 +418,7 @@ function AssetCard({
               {/* Add/Plus Button (Bottom Right) */}
               <button
                 type="button"
-                className="absolute bottom-1.5 right-1.5 p-1 rounded-md bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-primary/90 hover:scale-110 z-20 shadow-md flex items-center justify-center"
+                className="absolute bottom-1.5 right-1.5 p-1 bg-primary text-primary-foreground opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-primary/90 hover:scale-110 z-20 shadow-md flex items-center justify-center"
                 onClick={(e) => {
                   e.stopPropagation();
                   onAdd(asset);
@@ -733,9 +731,9 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
 
       {/* ── Uploads area (scrollable) ── */}
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-        {/* Search, Filter, Generate, Upload Row (always visible) */}
+        {/* Search, Filter, Upload Row (always visible) */}
         <div className="flex flex-col gap-2 px-4 py-3 border-b border-border/40 bg-background/20 backdrop-blur-md">
-          {/* Row 1: Search & Filter */}
+          {/* Row 1: Search, Filter & Upload */}
           <div className="flex items-center gap-2 w-full">
             {/* Search Input Container using shadcn components */}
             <InputGroup>
@@ -755,14 +753,14 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="h-9 w-9 p-0 shrink-0 bg-secondary/30 hover:bg-secondary border-border/40 text-foreground flex items-center justify-center rounded-lg transition-colors"
+                  className="h-9 w-9 p-0 shrink-0 bg-secondary/30 hover:bg-secondary border-border/40 text-foreground flex items-center justify-center transition-colors"
                 >
                   <RiFilterLine size={15} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="border-border bg-popover text-popover-foreground rounded-xl w-36"
+                className="border-border bg-popover text-popover-foreground w-36"
               >
                 {[
                   { value: "all", label: "All Assets" },
@@ -773,42 +771,23 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   <DropdownMenuItem
                     key={option.value}
                     onClick={() => setFilterType(option.value as any)}
-                    className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 rounded-lg cursor-pointer"
+                    className="flex items-center justify-between px-3 py-2 text-[13px] font-medium hover:bg-secondary/50 cursor-pointer"
                   >
                     <span>{option.label}</span>
-                    {filterType === option.value && (
-                      <div className="size-1.5 rounded-full bg-foreground" />
-                    )}
+                    {filterType === option.value && <div className="size-1.5 bg-foreground" />}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
-
-          {/* Row 2: Action Buttons */}
-          <div className="grid grid-cols-2 gap-2 w-full">
-            {/* Generate Button (Premium AI/Sparkling styling using theme variables) */}
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 text-xs font-semibold rounded-lg bg-primary/5 hover:bg-primary/15 border-primary/20 hover:border-primary/45 text-foreground transition-all duration-300 relative overflow-hidden group/btn"
-              onClick={() => setIsGeneratorModalOpen(true)}
-            >
-              <div className="absolute inset-0 bg-primary/2 opacity-0 group-hover/btn:opacity-100 transition-opacity" />
-              <RiShiningLine size={14} />
-
-              <span>AI Generate</span>
-            </Button>
 
             {/* Upload Button */}
             <Button
               variant="outline"
-              size="sm"
-              className="h-9 gap-1.5 text-xs font-medium rounded-lg border-border/40 bg-secondary/30 hover:bg-secondary text-foreground hover:border-border transition-all duration-200"
+              size="icon"
+              className="h-9 w-9 p-0 shrink-0 bg-secondary/30 hover:bg-secondary border-border/40 text-foreground flex items-center justify-center transition-colors"
               onClick={() => fileInputRef.current?.click()}
             >
-              <RiUploadLine size={14} />
-              <span>Upload</span>
+              <RiAddLine size={16} />
             </Button>
           </div>
         </div>
@@ -817,7 +796,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           /* Empty state - styled like captions.tsx */
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center select-none">
             <div className="flex flex-col items-center justify-center pb-12">
-              <div className="size-16 rounded-xl bg-secondary/30 flex items-center justify-center mb-4">
+              <div className="size-16 bg-secondary/30 flex items-center justify-center mb-4">
                 <RiImage2Line size={24} strokeWidth={1.5} className="text-muted-foreground" />
               </div>
               <h3 className="text-sm font-bold text-foreground mb-1.5">No Assets Yet</h3>
@@ -872,18 +851,18 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   return (
                     <div
                       key={`${result.assetId}-${result.startMs}-${result.endMs}`}
-                      className="group flex flex-col gap-2 p-3 bg-secondary/20 hover:bg-secondary/40 border border-border/40 hover:border-primary/30 rounded-xl transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
+                      className="group flex flex-col gap-2 p-3 bg-secondary/20 hover:bg-secondary/40 border border-border/40 hover:border-primary/30 transition-all duration-200 cursor-pointer shadow-sm relative overflow-hidden"
                       onClick={() => setSelectedAssetId(result.assetId)}
                     >
                       {/* Match score label */}
                       <div className="absolute top-2.5 right-2.5">
-                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full border border-primary/20">
+                        <span className="text-[10px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 border border-primary/20">
                           {percentageScore}% match
                         </span>
                       </div>
 
                       <div className="flex items-center gap-3">
-                        <div className="relative size-12 rounded-lg overflow-hidden bg-background shrink-0 flex items-center justify-center border border-border/50">
+                        <div className="relative size-12 overflow-hidden bg-background shrink-0 flex items-center justify-center border border-border/50">
                           {result.assetType === "image" ? (
                             <img
                               src={visualAsset.thumbnailSrc || result.src}
@@ -921,7 +900,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                       </div>
 
                       {result.matchedText && (
-                        <div className="text-xs text-muted-foreground bg-background/40 p-2 rounded-lg italic border-l-2 border-primary/40 line-clamp-2">
+                        <div className="text-xs text-muted-foreground bg-background/40 p-2 italic border-l-2 border-primary/40 line-clamp-2">
                           "{result.matchedText}"
                         </div>
                       )}
@@ -930,7 +909,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         <Button
                           variant="ghost"
                           size="xs"
-                          className="h-7 px-2 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1 rounded-md"
+                          className="h-7 px-2 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedAssetId(result.assetId);
@@ -943,7 +922,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                         <Button
                           variant="ghost"
                           size="xs"
-                          className="h-7 px-2.5 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1 rounded-md"
+                          className="h-7 px-2.5 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/10 gap-1"
                           onClick={(e) => {
                             e.stopPropagation();
                             addItemToCanvas({
@@ -967,7 +946,7 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
           /* With assets: grid */
           <ScrollArea className="flex-1 px-4">
             {isSemanticMode && searchQuery.trim().length > 0 && searchQuery.trim().length < 3 && (
-              <div className="text-[11px] text-amber-500 font-medium mb-3 px-1 py-1.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-center animate-pulse">
+              <div className="text-[11px] text-amber-500 font-medium mb-3 px-1 py-1.5 bg-amber-500/10 border border-amber-500/20 text-center animate-pulse">
                 Type 3+ characters to search with AI...
               </div>
             )}
@@ -1015,19 +994,19 @@ export default function PanelAssets({ showHeader = true, showGenerator = true }:
                   <img
                     src={selectedAsset.src}
                     alt={selectedAsset.name}
-                    className="max-w-full max-h-[420px] object-contain rounded-md shadow-xl"
+                    className="max-w-full max-h-[420px] object-contain shadow-xl"
                   />
                 )}
                 {selectedAsset.type === "video" && (
                   <video
                     src={selectedAsset.src}
                     controls
-                    className="max-w-full max-h-[420px] object-contain rounded-md shadow-xl"
+                    className="max-w-full max-h-[420px] object-contain shadow-xl"
                   />
                 )}
                 {selectedAsset.type === "audio" && (
                   <div className="flex flex-col items-center justify-center gap-4">
-                    <div className="size-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="size-16 bg-primary/10 flex items-center justify-center">
                       <RiMusic2Line size={28} className="text-primary" />
                     </div>
                     <audio src={selectedAsset.src} controls className="w-48" />

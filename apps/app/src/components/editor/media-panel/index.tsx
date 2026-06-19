@@ -1,7 +1,7 @@
 "use client";
 
 import { TabBar } from "./tabbar";
-import { tabs, useMediaPanelStore, type Tab } from "./store";
+import { useMediaPanelStore, type Tab } from "./store";
 import PanelAssets from "./panel/assets";
 import PanelEffect from "./panel/effects";
 import PanelTransition from "./panel/transition";
@@ -22,16 +22,11 @@ export function MediaPanel() {
   const { activeTab, isOpen } = useMediaPanelStore();
 
   return (
-    <div className="h-full bg-background rounded-sm relative shrink-0 flex flex-row">
+    <div className="w-[300px] shrink-0 h-full flex flex-col overflow-hidden">
       <TabBar />
       {isOpen && (
-        <div className="w-[320px] border-r h-full flex flex-col overflow-hidden animate-in slide-in-from-left-2 duration-200">
-          <div className="h-full flex flex-col">
-            <div className="h-12 items-center flex gap-2 px-6 shrink-0">
-              <span className="text-sm font-medium">{tabs[activeTab].label}</span>
-            </div>
-            <div className="flex-1 overflow-auto">{viewMap[activeTab]}</div>
-          </div>
+        <div className="flex-1 min-h-0 flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-200">
+          <div className="flex-1 overflow-auto">{viewMap[activeTab]}</div>
         </div>
       )}
     </div>
