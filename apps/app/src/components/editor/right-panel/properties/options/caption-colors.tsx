@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { RiSubtractLine, RiArrowUpDownLine, RiEqualizer3Line } from "@remixicon/react";
+import { RiSubtractLine, RiArrowUpDownLine, RiEqualizerLine } from "@remixicon/react";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import { SectionHeader } from "./section-header";
@@ -283,90 +283,106 @@ function WordStyleSection({
   );
 }
 
-/** Circular color swatch */
-function CircularSwatch({ color }: { color: string }) {
-  return (
-    <div
-      className="size-4 border border-border/50 shadow-sm flex-shrink-0 pointer-events-none"
-      style={{ backgroundColor: color }}
-    />
-  );
-}
-
 export function CaptionColorsProperty({ captionColors, setColors }: CaptionColorsPropertyProps) {
   const active = captionColors.active ?? {};
   const future = captionColors.future ?? {};
 
-  // Get colors for preview swatches (active fill and border)
-  const activeColor = active.color || "#FFFFFF";
-  const activeBorderColor = active.border?.color || activeColor;
+  const hasAnyColors =
+    !!active.color || !!active.background || !!active.border?.color || !!future.color;
+
+  const handleAdd = () => {
+    setColors({
+      ...captionColors,
+      active: { color: "#FFFFFF", background: "#000000" },
+      future: { color: "#999999" },
+    });
+  };
+
+  const handleRemove = () => {
+    setColors({ active: {}, future: {}, keyword: undefined });
+  };
 
   return (
-    <div className="flex flex-col bg-card p-3 gap-3">
-      {/* Style Header */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-foreground">Style</span>
-      </div>
-
-      {/* Custom Row */}
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">Custom</span>
-
-        <div className="flex items-center gap-2">
-          {/* Sliders button - opens full color picker popover */}
-          <Popover modal>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-7 text-muted-foreground hover:text-foreground"
-                title="Customize colors"
-              >
-                <RiEqualizer3Line className="size-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80 p-0" align="end" side="left" sideOffset={8}>
-              <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <span className="text-sm font-semibold">Caption Colors</span>
-              </div>
-              <div className="px-4 pb-3 overflow-y-auto max-h-[70vh] divide-y divide-border/60">
-                <WordStyleSection
-                  title="Active word"
-                  style={active}
-                  showBackground
-                  onChange={(patch) =>
-                    setColors({ ...captionColors, active: { ...active, ...patch } })
-                  }
-                  onReset={() => setColors({ ...captionColors, active: {} })}
-                />
-                <WordStyleSection
-                  title="Future words"
-                  style={future}
-                  showBackground={false}
-                  onChange={(patch) =>
-                    setColors({ ...captionColors, future: { ...future, ...patch } })
-                  }
-                  onReset={() => setColors({ ...captionColors, future: {} })}
-                />
-
-                {/* Keyword section with enable toggle */}
-                <KeywordSection
-                  keyword={captionColors.keyword}
-                  onChange={(keyword) => setColors({ ...captionColors, keyword })}
-                />
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          {/* Color preview swatches */}
-          <Button variant="ghost" size="icon" className="size-7">
-            <CircularSwatch color={activeColor} />
-          </Button>
-          <Button variant="ghost" size="icon" className="size-7">
-            <CircularSwatch color={active.background || "#000000"} />
+    <Collapsible open={hasAnyColors}>
+      <div className="flex items-center justify-between py-2">
+        <span className="text-xs font-semibold text-foreground">Caption Colors</span>
+        <div className="flex items-center gap-1">
+          {hasAnyColors && (
+            <Popover modal>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-6 rounded-sm text-muted-foreground"
+                >
+                  <RiEqualizerLine className="size-3.5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-0 bg-card" align="end" side="left" sideOffset={8}>
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+                  <span className="text-xs font-semibold">Caption Colors</span>
+                </div>
+                <div className="px-4 pb-3 overflow-y-auto max-h-[70vh] divide-y divide-border/60">
+                  <WordStyleSection
+                    title="Active word"
+                    style={active}
+                    showBackground
+                    onChange={(patch) =>
+                      setColors({ ...captionColors, active: { ...active, ...patch } })
+                    }
+                    onReset={() => setColors({ ...captionColors, active: {} })}
+                  />
+                  <WordStyleSection
+                    title="Future words"
+                    style={future}
+                    showBackground={false}
+                    onChange={(patch) =>
+                      setColors({ ...captionColors, future: { ...future, ...patch } })
+                    }
+                    onReset={() => setColors({ ...captionColors, future: {} })}
+                  />
+                  <KeywordSection
+                    keyword={captionColors.keyword}
+                    onChange={(keyword) => setColors({ ...captionColors, keyword })}
+                  />
+                </div>
+              </PopoverContent>
+            </Popover>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-6 rounded-sm text-muted-foreground"
+            onClick={hasAnyColors ? handleRemove : handleAdd}
+          >
+            {hasAnyColors ? (
+              <RiSubtractLine className="size-4" />
+            ) : (
+              <RiSubtractLine className="size-4 rotate-90" />
+            )}
           </Button>
         </div>
       </div>
-    </div>
+      <CollapsibleContent>
+        <div className="py-1 flex flex-col">
+          <ColorRow
+            label="Active"
+            value={active.color}
+            fallback="#FFFFFF"
+            onChange={(hex) =>
+              setColors({ ...captionColors, active: { ...active, color: hex || undefined } })
+            }
+          />
+          <ColorRow
+            label="Future"
+            value={future.color}
+            fallback="#999999"
+            onChange={(hex) =>
+              setColors({ ...captionColors, future: { ...future, color: hex || undefined } })
+            }
+          />
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
