@@ -50,7 +50,7 @@ const Header = ({
   const handleSnapshot = async () => {
     if (!studio) return;
     try {
-      const base64 = await studio.snapshot();
+      const base64 = await studio.snapshot({ transparent: true });
       const link = document.createElement("a");
       link.href = base64;
       link.download = `frame-${Math.floor(currentTime * fps)}.png`;

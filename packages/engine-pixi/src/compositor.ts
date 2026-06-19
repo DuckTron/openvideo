@@ -1,4 +1,4 @@
-import { Application } from "pixi.js";
+import { Application, RenderTexture } from "pixi.js";
 import { DEFAULT_AUDIO_CONF, getDefaultAudioConf, type IClip, Transition } from "./clips";
 import { recodemux } from "wrapbox";
 import { Log } from "./utils/log";
@@ -724,14 +724,17 @@ export class Compositor extends EventEmitter<{
    * the compositor's encoding state.
    *
    * @param timeMs Time in milliseconds
+   * @param options.transparent If true, the renderer background is made
+   *   transparent so the resulting PNG has a transparent background.
    * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
    *
    * @example
    * const compositor = new Compositor({ width: 1280, height: 720 });
    * await compositor.addSprite(videoClip);
    * const frame = await compositor.renderFrame(2000); // frame at 2 s
+   * const transparent = await compositor.renderFrame(2000, { transparent: true });
    */
-  public async renderFrame(timeMs: number): Promise<string> {
+  public async renderFrame(timeMs: number, options?: { transparent?: boolean }): Promise<string> {
     if (this.destroyed) {
       throw new Error("Compositor has been destroyed.");
     }
@@ -764,19 +767,42 @@ export class Compositor extends EventEmitter<{
       scaleY: this.opts.height > 0 ? this.opts.height / jsonHeight : 1,
     });
 
+    let base64: string;
     try {
       await spriteRender.render(timeUs);
+
+      // Make the renderer background transparent when requested.
+      const transparent = options?.transparent ?? false;
+      const prevBgAlpha = this.pixiApp.renderer.background.alpha;
+      if (transparent) {
+        this.pixiApp.renderer.background.alpha = 0;
+      }
+
+      // Render into a fixed-size texture so the output always matches the
+      // configured width × height, even when the stage's visible bounds would
+      // otherwise shrink to only the content.
+      const renderTexture = RenderTexture.create({
+        width: this.opts.width,
+        height: this.opts.height,
+      });
+
+      try {
+        this.pixiApp.renderer.render({
+          container: this.pixiApp.stage,
+          target: renderTexture,
+          clear: true,
+        });
+        base64 = await (this.pixiApp.renderer.extract as any).base64(renderTexture, "image/png", 1);
+      } finally {
+        renderTexture.destroy();
+        if (transparent) {
+          this.pixiApp.renderer.background.alpha = prevBgAlpha;
+        }
+      }
     } finally {
       // Clean up temporary containers / renderers created by createSpritesRender
       spriteRender.cleanup();
     }
-
-    // Extract the rendered frame from the Pixi stage as a base64 PNG
-    const base64 = await (this.pixiApp.renderer.extract as any).base64(
-      this.pixiApp.stage,
-      "image/png",
-      1,
-    );
 
     return base64;
   }
@@ -785,17 +811,26 @@ export class Compositor extends EventEmitter<{
    * Alias for {@link renderFrame} with an optional timestamp.
    * Captures a single frame as a base64-encoded PNG.
    *
-   * @param timeMs Optional time in milliseconds. If omitted, the first frame
-   *   at time 0 is captured.
+   * @param timeMs Optional time in milliseconds, or an options object. If
+   *   omitted, the first frame at time 0 is captured.
+   * @param options.transparent If true, the renderer background is made
+   *   transparent so the resulting PNG has a transparent background.
    * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
    *
    * @example
    * const compositor = new Compositor({ width: 1280, height: 720 });
    * await compositor.addSprite(videoClip);
-   * const firstFrame = await compositor.snapshot();     // time 0
-   * const frameAt2s  = await compositor.snapshot(2000); // explicit timestamp
+   * const firstFrame = await compositor.snapshot();              // time 0
+   * const frameAt2s  = await compositor.snapshot(2000);          // explicit timestamp
+   * const transparent = await compositor.snapshot({ transparent: true }); // time 0, transparent
    */
-  public async snapshot(timeMs?: number): Promise<string> {
-    return this.renderFrame(timeMs ?? 0);
+  public async snapshot(timeMs?: number | { transparent?: boolean }): Promise<string>;
+  public async snapshot(
+    timeMs?: number | { transparent?: boolean },
+    options?: { transparent?: boolean },
+  ): Promise<string> {
+    const opts = typeof timeMs === "number" ? options : timeMs;
+    const ms = typeof timeMs === "number" ? timeMs : undefined;
+    return this.renderFrame(ms ?? 0, opts);
   }
 }

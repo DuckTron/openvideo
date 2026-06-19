@@ -1437,15 +1437,18 @@ export class Studio extends EventEmitter<StudioEvents> {
    * regardless of the current viewport zoom.
    *
    * @param timeMs Time in milliseconds
+   * @param options.transparent If true, the artboard background fill is
+   *   hidden so the resulting PNG has a transparent background.
    * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
    *
    * @example
    * await studio.ready;
    * const frame = await studio.renderFrame(1500); // frame at 1.5 s
+   * const transparent = await studio.renderFrame(1500, { transparent: true });
    * const img = document.createElement('img');
    * img.src = frame;
    */
-  public async renderFrame(timeMs: number): Promise<string> {
+  public async renderFrame(timeMs: number, options?: { transparent?: boolean }): Promise<string> {
     await this.ready;
     if (!this.pixiApp || !this.artboard) {
       throw new Error(
@@ -1469,11 +1472,45 @@ export class Studio extends EventEmitter<StudioEvents> {
     this.artboard.x = 0;
     this.artboard.y = 0;
 
+    // Hide the artboard background fill when transparency is requested.
+    const transparent = options?.transparent ?? false;
+    if (transparent && this.artboardBg) {
+      this.artboardBg.visible = false;
+    }
+
+    // Render into a fixed-size texture so the output always matches the
+    // project's configured width × height, even when the background fill is
+    // hidden and the artboard's visible bounds would otherwise shrink to
+    // only the content.
+    const renderTexture = RenderTexture.create({
+      width: this.opts.width,
+      height: this.opts.height,
+    });
+
+    // Make the renderer background transparent when requested so the
+    // render-texture clear color has alpha 0.
+    const prevBgAlpha = this.pixiApp.renderer.background.alpha;
+    if (transparent) {
+      this.pixiApp.renderer.background.alpha = 0;
+    }
+
     let base64: string;
     try {
-      base64 = await (this.pixiApp.renderer.extract as any).base64(this.artboard, "image/png", 1);
+      this.pixiApp.renderer.render({
+        container: this.artboard,
+        target: renderTexture,
+        clear: true,
+      });
+      base64 = await (this.pixiApp.renderer.extract as any).base64(renderTexture, "image/png", 1);
     } finally {
+      renderTexture.destroy();
       // Always restore the original artboard layout
+      if (transparent) {
+        this.pixiApp.renderer.background.alpha = prevBgAlpha;
+      }
+      if (transparent && this.artboardBg) {
+        this.artboardBg.visible = true;
+      }
       this.artboard.scale.set(prevScale.x, prevScale.y);
       this.artboard.x = prevX;
       this.artboard.y = prevY;
@@ -1487,17 +1524,27 @@ export class Studio extends EventEmitter<StudioEvents> {
    * Alias for {@link renderFrame} with support for the current playhead.
    * Captures a single frame as a base64-encoded PNG.
    *
-   * @param timeMs Optional time in milliseconds. If omitted, the current
-   *   playhead position is used.
+   * @param timeMs Optional time in milliseconds, or an options object. If
+   *   omitted, the current playhead position is used.
+   * @param options.transparent If true, the artboard background fill is
+   *   hidden so the resulting PNG has a transparent background.
    * @returns Base64 data-URL string (e.g. "data:image/png;base64,...")
    *
    * @example
    * await studio.ready;
-   * const currentFrame = await studio.snapshot();     // current playhead
-   * const frameAt2s    = await studio.snapshot(2000); // explicit timestamp
+   * const currentFrame = await studio.snapshot();              // current playhead
+   * const frameAt2s    = await studio.snapshot(2000);          // explicit timestamp
+   * const transparent  = await studio.snapshot({ transparent: true }); // current frame, transparent
+   * const transparent2s = await studio.snapshot(2000, { transparent: true });
    */
-  public async snapshot(timeMs?: number): Promise<string> {
-    return this.renderFrame(timeMs ?? this.currentTime / 1000);
+  public async snapshot(timeMs?: number | { transparent?: boolean }): Promise<string>;
+  public async snapshot(
+    timeMs?: number | { transparent?: boolean },
+    options?: { transparent?: boolean },
+  ): Promise<string> {
+    const opts = typeof timeMs === "number" ? options : timeMs;
+    const ms = typeof timeMs === "number" ? timeMs : undefined;
+    return this.renderFrame(ms ?? this.currentTime / 1000, opts);
   }
 
   /**
