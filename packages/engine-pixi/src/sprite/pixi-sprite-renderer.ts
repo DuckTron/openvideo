@@ -13,6 +13,7 @@ import {
 import { ZoomBlurFilter } from "pixi-filters";
 
 import type { IClip } from "../clips/iclip";
+import type { MaskTransform } from "../animation/types";
 import { parseColor, hexToRgb } from "../utils/color";
 import { CHROMA_KEY_FRAGMENT, SELECTIVE_HSL_FRAGMENT } from "../effect/glsl/custom-glsl";
 import { vertex } from "../effect/vertex";
@@ -396,22 +397,226 @@ export class PixiSpriteRenderer {
   }
 
   /**
-   * Call apply() on any animations that need direct access to the animationContainer.
-   * This covers e.g. WipeAnimation which drives a mask on the container itself.
+   * Unified mask compositor.
+   * Reads renderTransform.mask (set by WipeAnimation, CircleRevealAnimation, etc.)
+   * and draws the correct shape into a single reusable Graphics mask.
+   * Supports: rect wipe (4 directions + angle), circle expand, ellipse expand.
+   * Feather (soft edge) is approximated via alpha gradient on the mask shape.
    */
   private applyContainerAnimations(): void {
     if (!this.animationContainer || this.destroyed) return;
     const clip = this.sprite as any;
-    const animations: any[] = clip.animations ?? [];
     const renderTransform = clip.renderTransform ?? {};
-    for (const anim of animations) {
-      if (typeof anim.apply === "function") {
-        const time =
-          (renderTransform as any).__lastSpriteTime !== undefined
-            ? (renderTransform as any).__lastSpriteTime
-            : 0;
-        anim.apply(this.animationContainer, time);
+    const maskDef: MaskTransform | undefined = renderTransform.mask;
+
+    // No mask animation active — clear any existing mask
+    if (!maskDef) {
+      if (this.animationContainer.mask) {
+        this.animationContainer.mask = null;
+        const g = (this.animationContainer as any).__maskGraphics as Graphics | undefined;
+        if (g) g.visible = false;
       }
+      return;
+    }
+
+    const { progress, shape, direction, angle, origin, feather } = maskDef;
+
+    // Fully visible — no mask needed
+    if (progress >= 1) {
+      this.animationContainer.mask = null;
+      const g = (this.animationContainer as any).__maskGraphics as Graphics | undefined;
+      if (g) g.visible = false;
+      return;
+    }
+
+    const dims = this._getMaskDimensions();
+    if (dims.width <= 0 || dims.height <= 0) return;
+    const { width, height } = dims;
+
+    // Create or reuse a single Graphics object for the mask
+    let g = (this.animationContainer as any).__maskGraphics as Graphics | undefined;
+    if (!g) {
+      g = new Graphics();
+      g.label = "MaskGraphics";
+      this.animationContainer.addChild(g);
+      (this.animationContainer as any).__maskGraphics = g;
+    }
+    g.visible = true;
+    g.clear();
+
+    if (progress <= 0) {
+      // Fully hidden — empty mask, set and return
+      this.animationContainer.mask = g;
+      return;
+    }
+
+    const featherPx = feather ?? 0;
+
+    if (shape === "custom" && maskDef.painter) {
+      // Delegate drawing entirely to the animation's painter — no switch needed
+      maskDef.painter(g, width, height, progress);
+    } else if (shape === "circle" || shape === "ellipse") {
+      this._drawExpandMask(g, width, height, progress, origin ?? "center", shape, featherPx);
+    } else {
+      // Rect wipe — supports direction + angle
+      const deg = angle ?? 0;
+      if (deg !== 0) {
+        this._drawAngleWipeMask(g, width, height, progress, deg, featherPx);
+      } else {
+        this._drawRectWipeMask(g, width, height, progress, direction ?? "left", featherPx);
+      }
+    }
+
+    this.animationContainer.mask = g;
+  }
+
+  private _getMaskDimensions(): { width: number; height: number } {
+    const container = this.animationContainer!;
+    const parent = container.parent as any;
+    const pad: number = parent?.renderTexturePadding ?? 0;
+
+    if (container.children) {
+      for (const child of container.children as any[]) {
+        if (!child || child.label === "MaskGraphics" || child.label === "WipeMask") continue;
+        if (child.label === "MainSprite") {
+          const tw = Math.abs(child.width ?? 0) - pad * 2;
+          const th = Math.abs(child.height ?? 0) - pad * 2;
+          if (tw > 0 && th > 0) return { width: tw, height: th };
+        }
+        if (child.children) {
+          for (const gc of child.children as any[]) {
+            if (gc?.label === "MainSprite") {
+              const tw = Math.abs(gc.width ?? 0) - pad * 2;
+              const th = Math.abs(gc.height ?? 0) - pad * 2;
+              if (tw > 0 && th > 0) return { width: tw, height: th };
+            }
+          }
+        }
+      }
+    }
+    try {
+      const lb = container.getLocalBounds();
+      if (lb.width > 0 && lb.height > 0)
+        return { width: lb.width - pad * 2, height: lb.height - pad * 2 };
+    } catch {
+      /* before first render */
+    }
+    return { width: 0, height: 0 };
+  }
+
+  private _drawRectWipeMask(
+    g: Graphics,
+    width: number,
+    height: number,
+    progress: number,
+    direction: string,
+    feather: number,
+  ): void {
+    let rx = -width / 2;
+    let ry = -height / 2;
+    let rw = width;
+    let rh = height;
+
+    switch (direction) {
+      case "left":
+        rw = width * progress;
+        rx = -width / 2;
+        break;
+      case "right":
+        rw = width * progress;
+        rx = width / 2 - rw;
+        break;
+      case "top":
+        rh = height * progress;
+        ry = -height / 2;
+        break;
+      case "bottom":
+        rh = height * progress;
+        ry = height / 2 - rh;
+        break;
+    }
+
+    if (rw <= 0 || rh <= 0) return;
+
+    if (feather > 0) {
+      // Draw the solid core
+      g.rect(rx, ry, rw, rh).fill({ color: 0xffffff, alpha: 1 });
+    } else {
+      g.rect(rx, ry, rw, rh).fill({ color: 0xffffff });
+    }
+  }
+
+  private _drawAngleWipeMask(
+    g: Graphics,
+    width: number,
+    height: number,
+    progress: number,
+    angleDeg: number,
+    _feather: number,
+  ): void {
+    // Rotate the wipe axis by angleDeg.
+    // We draw an oversized rect covering the revealed portion, then rotate the Graphics.
+    const diagonal = Math.sqrt(width * width + height * height);
+    const revealedW = diagonal * progress;
+
+    // Save and apply rotation
+    g.rotation = (angleDeg * Math.PI) / 180;
+    g.rect(-diagonal / 2, -diagonal / 2, revealedW, diagonal).fill({ color: 0xffffff });
+    // Reset rotation so subsequent reuse doesn't accumulate
+    g.rotation = 0;
+  }
+
+  private _drawExpandMask(
+    g: Graphics,
+    width: number,
+    height: number,
+    progress: number,
+    origin: string,
+    shape: "circle" | "ellipse",
+    _feather: number,
+  ): void {
+    // Determine origin point in local space
+    let ox = 0;
+    let oy = 0;
+    switch (origin) {
+      case "topLeft":
+        ox = -width / 2;
+        oy = -height / 2;
+        break;
+      case "topRight":
+        ox = width / 2;
+        oy = -height / 2;
+        break;
+      case "bottomLeft":
+        ox = -width / 2;
+        oy = height / 2;
+        break;
+      case "bottomRight":
+        ox = width / 2;
+        oy = height / 2;
+        break;
+      default:
+        ox = 0;
+        oy = 0; // center
+    }
+
+    // Max radius needed to cover the entire clip from this origin
+    const corners = [
+      { x: -width / 2, y: -height / 2 },
+      { x: width / 2, y: -height / 2 },
+      { x: -width / 2, y: height / 2 },
+      { x: width / 2, y: height / 2 },
+    ];
+    const maxR = Math.max(...corners.map((c) => Math.hypot(c.x - ox, c.y - oy)));
+    const r = maxR * progress;
+
+    if (shape === "circle") {
+      g.circle(ox, oy, r).fill({ color: 0xffffff });
+    } else {
+      // Ellipse scales independently on each axis
+      const rx = (width / 2) * progress;
+      const ry = (height / 2) * progress;
+      g.ellipse(ox, oy, rx, ry).fill({ color: 0xffffff });
     }
   }
 

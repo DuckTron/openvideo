@@ -1,6 +1,5 @@
-import { Graphics } from "pixi.js";
 import { getEasing } from "./easings";
-import { AnimationOptions, AnimationTransform, IAnimation } from "./types";
+import { AnimationOptions, AnimationTransform, IAnimation, MaskTransform } from "./types";
 
 /**
  * Direction the wipe edge travels FROM:
@@ -20,16 +19,19 @@ export type WipeMode = "reveal" | "conceal";
 export interface WipeAnimationParams {
   direction: WipeDirection;
   mode: WipeMode;
+  /** Optional angle offset for diagonal wipes (degrees) */
+  angle?: number;
+  /** Soft edge feather width in pixels. 0 = hard edge. */
+  feather?: number;
 }
 
 /**
  * WipeAnimation
  *
- * Applies a rectangular mask that grows/shrinks over time to create a
- * wipe-in or wipe-out transition for any clip type.
- *
- * The mask is applied to the clip's animationContainer via the
- * PixiSpriteRenderer which calls `anim.apply(animationContainer, time)`.
+ * Rectangular edge-sweep mask animation. Emits a MaskTransform via
+ * getTransform() so it composes cleanly with other animations.
+ * The actual mask drawing is handled by PixiSpriteRenderer's unified
+ * mask compositor, which reads renderTransform.mask each frame.
  *
  * Example (AI usage):
  *
@@ -40,6 +42,7 @@ export interface WipeAnimationParams {
  * }, {
  *   direction: "left",
  *   mode: "reveal",
+ *   feather: 0,        // hard edge (default)
  * });
  * ```
  */
@@ -62,29 +65,12 @@ export class WipeAnimation implements IAnimation {
     };
   }
 
-  /**
-   * WipeAnimation does not contribute standard transform offsets;
-   * all visual work is done inside apply() on the Pixi container.
-   */
-  getTransform(_time: number): AnimationTransform {
-    return {};
-  }
-
-  /**
-   * Apply the wipe mask to the PixiJS animationContainer.
-   *
-   * @param target  The PixiJS Container (animationContainer from PixiSpriteRenderer)
-   * @param time    Relative time in microseconds (from clip start)
-   */
-  apply(target: any, time: number): void {
-    if (!target) return;
-
+  getTransform(time: number): AnimationTransform {
     const { duration, delay, easing, iterCount } = this.options;
-    const { direction, mode } = this.params;
+    const { direction, mode, angle, feather } = this.params;
 
     const offsetTime = time - delay;
 
-    // Before the animation starts — set mask to fully hidden (conceal) or no mask (reveal)
     let rawProgress: number;
     if (offsetTime < 0) {
       rawProgress = 0;
@@ -98,121 +84,14 @@ export class WipeAnimation implements IAnimation {
     const easingFn = getEasing(easing);
     const progress = easingFn(rawProgress);
 
-    // Wipe progress: for "reveal" 0=nothing visible → 1=fully visible
-    //               for "conceal" 0=fully visible → 1=nothing visible
-    const wipeProgress = mode === "reveal" ? progress : 1 - progress;
+    const mask: MaskTransform = {
+      shape: "rect",
+      progress: mode === "reveal" ? progress : 1 - progress,
+      direction,
+      angle: angle ?? 0,
+      feather: feather ?? 0,
+    };
 
-    // We need the clip's logical dimensions. The animationContainer's parent is the
-    // root Container whose renderTexturePadding we can read. Alternatively we try to
-    // measure from the pixiSprite child (first Sprite child of the animationContainer).
-    const dims = this._getTargetDimensions(target);
-    if (dims.width <= 0 || dims.height <= 0) return;
-
-    const { width, height } = dims;
-
-    // Calculate the visible rect depending on direction
-    let rx = -width / 2;
-    let ry = -height / 2;
-    let rw = width;
-    let rh = height;
-
-    switch (direction) {
-      case "left":
-        rw = width * wipeProgress;
-        rx = -width / 2;
-        break;
-      case "right":
-        rw = width * wipeProgress;
-        rx = width / 2 - rw;
-        break;
-      case "top":
-        rh = height * wipeProgress;
-        ry = -height / 2;
-        break;
-      case "bottom":
-        rh = height * wipeProgress;
-        ry = height / 2 - rh;
-        break;
-    }
-
-    // Fully visible — remove mask to avoid unnecessary overdraw
-    if (wipeProgress >= 1) {
-      target.mask = null;
-      const existingGraphics = (target as any).__wipeMask;
-      if (existingGraphics) existingGraphics.visible = false;
-      return;
-    }
-
-    // Fully hidden — zero-size mask (hide the clip completely)
-    if (wipeProgress <= 0) {
-      rw = 0;
-      rh = 0;
-    }
-
-    // Create or reuse the wipe mask Graphics object
-    let wipeGraphics = (target as any).__wipeMask;
-    if (!wipeGraphics) {
-      wipeGraphics = new Graphics();
-      wipeGraphics.label = "WipeMask";
-      (wipeGraphics as any).__wipe = true;
-      (target as any).__wipeMask = wipeGraphics;
-      // Graphics masks in Pixi v8 must be in the display list for stencil masking.
-      // Add as a child so transforms align automatically.
-      target.addChild(wipeGraphics);
-    }
-    wipeGraphics.visible = true;
-
-    wipeGraphics.clear();
-    if (rw > 0 && rh > 0) {
-      wipeGraphics.rect(rx, ry, rw, rh).fill({ color: 0xffffff });
-    }
-
-    target.mask = wipeGraphics;
-  }
-
-  /**
-   * Derive the clip's logical width/height from the animationContainer.
-   * Tries multiple strategies so it works for all clip types.
-   */
-  private _getTargetDimensions(target: any): { width: number; height: number } {
-    // renderTexturePadding is stored on the root (parent of animationContainer) by PixiSpriteRenderer.
-    // Text/Caption clips bake this extra padding into their render texture so slide animations
-    // have room to move. We must subtract it to get the true visible clip dimensions.
-    const parent = target.parent as any;
-    const pad: number = parent?.renderTexturePadding ?? 0;
-
-    if (target.children) {
-      // 1. Walk direct children looking for MainSprite (works for all clip types)
-      for (const child of target.children) {
-        if (!child) continue;
-        if (child.label === "MainSprite") {
-          const tw = Math.abs((child as any).width ?? 0) - pad * 2;
-          const th = Math.abs((child as any).height ?? 0) - pad * 2;
-          if (tw > 0 && th > 0) return { width: tw, height: th };
-        }
-        // 2. Also check one level deeper (MirrorContainer wraps MainSprite)
-        if (child.children) {
-          for (const grandchild of child.children) {
-            if (grandchild && grandchild.label === "MainSprite") {
-              const tw = Math.abs((grandchild as any).width ?? 0) - pad * 2;
-              const th = Math.abs((grandchild as any).height ?? 0) - pad * 2;
-              if (tw > 0 && th > 0) return { width: tw, height: th };
-            }
-          }
-        }
-      }
-    }
-
-    // 3. Fallback: getLocalBounds minus padding
-    try {
-      const lb = target.getLocalBounds();
-      if (lb.width > 0 && lb.height > 0) {
-        return { width: lb.width - pad * 2, height: lb.height - pad * 2 };
-      }
-    } catch {
-      // may throw before first render
-    }
-
-    return { width: 0, height: 0 };
+    return { mask };
   }
 }

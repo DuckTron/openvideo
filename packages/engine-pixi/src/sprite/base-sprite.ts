@@ -450,7 +450,10 @@ export abstract class BaseSprite<
       if (transform.mirror !== undefined)
         this.renderTransform.mirror = Math.max(this.renderTransform.mirror || 0, transform.mirror);
 
-      if (target && anim.apply && anim.type !== "wipe") {
+      // Mask: last animation with a mask wins (overwrite, not accumulate)
+      if (transform.mask !== undefined) this.renderTransform.mask = transform.mask;
+
+      if (target && anim.apply) {
         anim.apply(target, time);
       }
     }

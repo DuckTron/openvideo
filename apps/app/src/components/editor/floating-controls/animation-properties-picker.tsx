@@ -5,6 +5,7 @@ import {
   AnimationOptions,
   KeyframeData,
   WipeDirection,
+  type MaskTransform,
 } from "@openvideo/engine-pixi";
 import {
   getPresetKeyframes,
@@ -49,21 +50,41 @@ export function AnimationPropertiesPicker() {
   const clipDuration = clip?.duration || 0;
   const typeClip = clip?.type || "";
 
-  const WIPE_PRESETS = ["wipeIn", "wipeOut"];
+  // All mask-type presets — these emit a MaskTransform via getTransform(), not keyframes
+  const MASK_PRESETS = [
+    "wipeIn",
+    "wipeOut",
+    "circleRevealIn",
+    "circleRevealOut",
+    "rectExpandIn",
+    "rectExpandOut",
+    "angleWipeIn",
+    "angleWipeOut",
+    "centerExpandIn",
+    "centerExpandOut",
+  ];
+  const WIPE_PRESETS = MASK_PRESETS; // kept for backward-compat references below
 
   const [activeTab, setActiveTab] = useState<string>("in");
-  const [preset, setPreset] = useState<string>(
-    animation?.type === "wipe"
-      ? animation.params?.mode === "reveal"
-        ? "wipeIn"
-        : "wipeOut"
-      : animation?.type || "",
-  );
+  const [preset, setPreset] = useState<string>(() => {
+    if (!animation) return "";
+    const t = animation.type;
+    const mode = animation.params?.mode === "reveal" ? "In" : "Out";
+    if (t === "wipe") return `wipeIn`.replace("In", mode);
+    if (t === "circleReveal") return `circleRevealIn`.replace("In", mode);
+    if (t === "rectExpand") return `rectExpandIn`.replace("In", mode);
+    if (t === "angleWipe") return `angleWipeIn`.replace("In", mode);
+    if (t === "centerExpand") return `centerExpandIn`.replace("In", mode);
+    return t || "";
+  });
   const [presetParams, setPresetParams] = useState<any>({
     direction: "left",
     distance: 300,
     stagger: 0.05,
     wipeDirection: (animation?.params?.direction as WipeDirection) ?? "left",
+    maskOrigin: (animation?.params?.origin as MaskTransform["origin"]) ?? "center",
+    maskAngle: (animation?.params?.angle as number) ?? 0,
+    maskAxis: (animation?.params?.axis as string) ?? "vertical",
   });
   const [keyframes, setKeyframes] = useState<Record<string, Partial<AnimationProps>>>(
     animation?.params || { "0%": {}, "100%": {} },
@@ -86,15 +107,25 @@ export function AnimationPropertiesPicker() {
   useEffect(() => {
     if (animation && animation.params) {
       // Wipe animations have non-keyframe params — restore direction and derive preset name
-      if (animation.type === "wipe") {
-        const wipePresetName = animation.params.mode === "reveal" ? "wipeIn" : "wipeOut";
-        setPreset(wipePresetName);
+      const maskTypes = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
+      if (maskTypes.includes(animation.type)) {
+        const mode = animation.params.mode === "reveal" ? "In" : "Out";
+        const typeMap: Record<string, string> = {
+          wipe: "wipe",
+          circleReveal: "circleReveal",
+          rectExpand: "rectExpand",
+          angleWipe: "angleWipe",
+          centerExpand: "centerExpand",
+        };
+        setPreset(`${typeMap[animation.type]}${mode}`);
         setPresetParams((prev: any) => ({
           ...prev,
           wipeDirection: animation.params.direction ?? "left",
+          maskOrigin: animation.params.origin ?? "center",
+          maskAngle: animation.params.angle ?? 0,
+          maskAxis: animation.params.axis ?? "vertical",
         }));
-        const isOut = animation.params.mode === "conceal";
-        setActiveTab(isOut ? "out" : "in");
+        setActiveTab(animation.params.mode === "conceal" ? "out" : "in");
         return;
       }
 
@@ -157,7 +188,7 @@ export function AnimationPropertiesPicker() {
       return;
     }
     if (preset !== "custom" && preset !== "") {
-      if (!(preset in GSAP_PRESETS) && !WIPE_PRESETS.includes(preset)) {
+      if (!(preset in GSAP_PRESETS) && !MASK_PRESETS.includes(preset)) {
         const template = getPresetKeyframes(preset);
         setKeyframes(template);
       }
@@ -261,13 +292,19 @@ export function AnimationPropertiesPicker() {
     };
 
     const isStagger = preset in GSAP_PRESETS;
-    const isWipe = WIPE_PRESETS.includes(preset);
-    const type = isWipe ? "wipe" : isStagger ? "stagger" : "keyframes";
+    const isMask = MASK_PRESETS.includes(preset);
+    const isWipe = isMask; // alias
+    const maskAnimType = preset.replace(/In$|Out$/, ""); // "wipe" | "circleReveal" | "rectExpand" | "angleWipe" | "centerExpand"
+    const maskMode = preset.endsWith("In") ? "reveal" : "conceal";
+    const type = isMask ? maskAnimType : isStagger ? "stagger" : "keyframes";
 
-    const finalParams: any = isWipe
+    const finalParams: any = isMask
       ? {
           direction: presetParams.wipeDirection ?? "left",
-          mode: preset === "wipeIn" ? "reveal" : "conceal",
+          origin: presetParams.maskOrigin ?? "center",
+          angle: presetParams.maskAngle ?? 0,
+          axis: presetParams.maskAxis ?? "vertical",
+          mode: maskMode,
         }
       : isStagger
         ? (() => {
@@ -278,7 +315,7 @@ export function AnimationPropertiesPicker() {
           })()
         : structuredClone(keyframes);
 
-    if (!isStagger && !isWipe) {
+    if (!isStagger && !isMask) {
       Object.keys(finalParams).forEach((key) => {
         if (key.includes("%")) {
           finalParams[key].mirror = mirrorEnabled ? 1 : 0;
@@ -362,6 +399,10 @@ export function AnimationPropertiesPicker() {
     { label: "Slide In", value: "slideIn" },
     { label: "Blur In", value: "blurIn" },
     { label: "Wipe In", value: "wipeIn" },
+    { label: "Circle Reveal", value: "circleRevealIn" },
+    { label: "Rect Expand", value: "rectExpandIn" },
+    { label: "Angle Wipe", value: "angleWipeIn" },
+    { label: "Center Expand", value: "centerExpandIn" },
     { label: "Pulse", value: "pulse" },
     ...(isTextLike
       ? [
@@ -406,6 +447,10 @@ export function AnimationPropertiesPicker() {
     { label: "Slide Out", value: "slideOut" },
     { label: "Blur Out", value: "blurOut" },
     { label: "Wipe Out", value: "wipeOut" },
+    { label: "Circle Conceal", value: "circleRevealOut" },
+    { label: "Rect Shrink", value: "rectExpandOut" },
+    { label: "Angle Wipe Out", value: "angleWipeOut" },
+    { label: "Center Shrink", value: "centerExpandOut" },
     { label: "Pulse", value: "pulse" },
   ];
 
@@ -519,31 +564,102 @@ export function AnimationPropertiesPicker() {
                     handlePresetChange={handlePresetChange}
                   />
 
-                  {/* Wipe Direction */}
-                  {WIPE_PRESETS.includes(preset) && (
+                  {/* Mask Animation Params */}
+                  {MASK_PRESETS.includes(preset) && (
                     <div className="grid grid-cols-1 gap-1.5 p-2 bg-secondary/20 rounded-md">
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-muted-foreground">Direction</label>
-                        <Select
-                          value={presetParams.wipeDirection}
-                          onValueChange={(val) =>
-                            setPresetParams((prev: any) => ({
-                              ...prev,
-                              wipeDirection: val as WipeDirection,
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="z-[250]">
-                            <SelectItem value="left">Left → Right</SelectItem>
-                            <SelectItem value="right">Right → Left</SelectItem>
-                            <SelectItem value="top">Top → Bottom</SelectItem>
-                            <SelectItem value="bottom">Bottom → Top</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                      {/* Direction — rect wipes only */}
+                      {(preset === "wipeIn" || preset === "wipeOut") && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] text-muted-foreground">Direction</label>
+                          <Select
+                            value={presetParams.wipeDirection}
+                            onValueChange={(val) =>
+                              setPresetParams((prev: any) => ({
+                                ...prev,
+                                wipeDirection: val as WipeDirection,
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-[250]">
+                              <SelectItem value="left">Left → Right</SelectItem>
+                              <SelectItem value="right">Right → Left</SelectItem>
+                              <SelectItem value="top">Top → Bottom</SelectItem>
+                              <SelectItem value="bottom">Bottom → Top</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      {/* Angle — angleWipe only */}
+                      {(preset === "angleWipeIn" || preset === "angleWipeOut") && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] text-muted-foreground">
+                            Angle ({presetParams.maskAngle}°)
+                          </label>
+                          <Slider
+                            value={[presetParams.maskAngle ?? 0]}
+                            min={0}
+                            max={360}
+                            step={1}
+                            onValueChange={([val]) =>
+                              setPresetParams((prev: any) => ({ ...prev, maskAngle: val }))
+                            }
+                            className="flex-1"
+                          />
+                        </div>
+                      )}
+                      {/* Axis — centerExpand only */}
+                      {(preset === "centerExpandIn" || preset === "centerExpandOut") && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] text-muted-foreground">Axis</label>
+                          <Select
+                            value={presetParams.maskAxis ?? "vertical"}
+                            onValueChange={(val) =>
+                              setPresetParams((prev: any) => ({ ...prev, maskAxis: val }))
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-[250]">
+                              <SelectItem value="vertical">Vertical (top + bottom)</SelectItem>
+                              <SelectItem value="horizontal">Horizontal (left + right)</SelectItem>
+                              <SelectItem value="both">Both</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+                      {/* Origin — expand masks */}
+                      {(preset === "circleRevealIn" ||
+                        preset === "circleRevealOut" ||
+                        preset === "rectExpandIn" ||
+                        preset === "rectExpandOut") && (
+                        <div className="flex flex-col gap-1">
+                          <label className="text-[10px] text-muted-foreground">Origin</label>
+                          <Select
+                            value={presetParams.maskOrigin ?? "center"}
+                            onValueChange={(val) =>
+                              setPresetParams((prev: any) => ({
+                                ...prev,
+                                maskOrigin: val as MaskTransform["origin"],
+                              }))
+                            }
+                          >
+                            <SelectTrigger className="h-7 text-xs">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="z-[250]">
+                              <SelectItem value="center">Center</SelectItem>
+                              <SelectItem value="topLeft">Top Left</SelectItem>
+                              <SelectItem value="topRight">Top Right</SelectItem>
+                              <SelectItem value="bottomLeft">Bottom Left</SelectItem>
+                              <SelectItem value="bottomRight">Bottom Right</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -607,7 +723,7 @@ export function AnimationPropertiesPicker() {
                     </div>
                   )}
 
-                  {!(preset in GSAP_PRESETS) && !WIPE_PRESETS.includes(preset) && (
+                  {!(preset in GSAP_PRESETS) && !MASK_PRESETS.includes(preset) && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold">Keyframes</label>
@@ -643,7 +759,7 @@ export function AnimationPropertiesPicker() {
                   {/* Mirror Effect */}
                   {typeClip !== "Text" &&
                     !(preset in GSAP_PRESETS) &&
-                    !WIPE_PRESETS.includes(preset) && (
+                    !MASK_PRESETS.includes(preset) && (
                       <div className="flex items-center justify-between px-2 py-1.5 bg-secondary/20 rounded-md">
                         <span className="text-[10px] text-muted-foreground">Mirror</span>
                         <Switch checked={mirrorEnabled} onCheckedChange={setMirrorEnabled} />
