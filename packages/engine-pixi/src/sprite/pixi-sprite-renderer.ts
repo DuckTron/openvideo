@@ -444,26 +444,32 @@ export class PixiSpriteRenderer {
     g.visible = true;
     g.clear();
 
-    if (progress <= 0) {
+    const featherPx = feather ?? 0;
+
+    // Remap progress: initialProgress defines the starting size (default 0).
+    // All painters/shapes receive a remapped value in [0, 1] so they don't
+    // need to handle this individually.
+    const ip = maskDef.initialProgress ?? 0;
+    const remapped = ip + (1 - ip) * progress;
+
+    if (remapped <= 0) {
       // Fully hidden — empty mask, set and return
       this.animationContainer.mask = g;
       return;
     }
 
-    const featherPx = feather ?? 0;
-
     if (shape === "custom" && maskDef.painter) {
       // Delegate drawing entirely to the animation's painter — no switch needed
-      maskDef.painter(g, width, height, progress);
+      maskDef.painter(g, width, height, remapped);
     } else if (shape === "circle" || shape === "ellipse") {
-      this._drawExpandMask(g, width, height, progress, origin ?? "center", shape, featherPx);
+      this._drawExpandMask(g, width, height, remapped, origin ?? "center", shape, featherPx);
     } else {
       // Rect wipe — supports direction + angle
       const deg = angle ?? 0;
       if (deg !== 0) {
-        this._drawAngleWipeMask(g, width, height, progress, deg, featherPx);
+        this._drawAngleWipeMask(g, width, height, remapped, deg, featherPx);
       } else {
-        this._drawRectWipeMask(g, width, height, progress, direction ?? "left", featherPx);
+        this._drawRectWipeMask(g, width, height, remapped, direction ?? "left", featherPx);
       }
     }
 

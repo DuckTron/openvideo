@@ -48,7 +48,12 @@ abstract class BaseMaskAnimation implements IAnimation {
     const progress = easingFn(rawProgress);
     const finalProgress = this.params.mode === "conceal" ? 1 - progress : progress;
 
-    return { mask: this.buildMask(finalProgress) };
+    const mask = this.buildMask(finalProgress);
+    // Propagate initialProgress from params so the renderer can remap
+    if (this.params.initialProgress != null) {
+      mask.initialProgress = this.params.initialProgress as number;
+    }
+    return { mask };
   }
 
   protected abstract buildMask(progress: number): MaskTransform;

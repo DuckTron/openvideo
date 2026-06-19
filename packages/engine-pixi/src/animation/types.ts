@@ -99,6 +99,13 @@ export interface MaskTransform {
   /** Soft edge width in pixels. 0 = hard edge. */
   feather?: number;
   /**
+   * Normalized starting size of the mask (0–1). Default: 0.
+   * e.g. 0.2 means the mask starts at 20% size and grows to 100%.
+   * The painter receives a `progress` value already remapped from
+   * initialProgress→1 so individual painters don't need to handle this.
+   */
+  initialProgress?: number;
+  /**
    * Custom painter for shape === "custom".
    * Draw any path into the provided Graphics object.
    * The renderer calls this instead of its built-in shape dispatch.

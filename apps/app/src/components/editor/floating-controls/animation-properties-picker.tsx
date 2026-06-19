@@ -85,6 +85,7 @@ export function AnimationPropertiesPicker() {
     maskOrigin: (animation?.params?.origin as MaskTransform["origin"]) ?? "center",
     maskAngle: (animation?.params?.angle as number) ?? 0,
     maskAxis: (animation?.params?.axis as string) ?? "vertical",
+    maskInitialProgress: (animation?.params?.initialProgress as number) ?? 0,
   });
   const [keyframes, setKeyframes] = useState<Record<string, Partial<AnimationProps>>>(
     animation?.params || { "0%": {}, "100%": {} },
@@ -124,6 +125,7 @@ export function AnimationPropertiesPicker() {
           maskOrigin: animation.params.origin ?? "center",
           maskAngle: animation.params.angle ?? 0,
           maskAxis: animation.params.axis ?? "vertical",
+          maskInitialProgress: animation.params.initialProgress ?? 0,
         }));
         setActiveTab(animation.params.mode === "conceal" ? "out" : "in");
         return;
@@ -304,6 +306,7 @@ export function AnimationPropertiesPicker() {
           origin: presetParams.maskOrigin ?? "center",
           angle: presetParams.maskAngle ?? 0,
           axis: presetParams.maskAxis ?? "vertical",
+          initialProgress: presetParams.maskInitialProgress ?? 0,
           mode: maskMode,
         }
       : isStagger
@@ -660,6 +663,24 @@ export function AnimationPropertiesPicker() {
                           </Select>
                         </div>
                       )}
+                    </div>
+                  )}
+                  {/* Initial Size — all mask presets */}
+                  {MASK_PRESETS.includes(preset) && (
+                    <div className="flex items-center gap-2 p-2 bg-secondary/20 rounded-md">
+                      <label className="text-[10px] text-muted-foreground shrink-0 w-20">
+                        Initial {Math.round((presetParams.maskInitialProgress ?? 0) * 100)}%
+                      </label>
+                      <Slider
+                        value={[presetParams.maskInitialProgress ?? 0]}
+                        min={0}
+                        max={0.9}
+                        step={0.01}
+                        onValueChange={([val]) =>
+                          setPresetParams((prev: any) => ({ ...prev, maskInitialProgress: val }))
+                        }
+                        className="flex-1"
+                      />
                     </div>
                   )}
 

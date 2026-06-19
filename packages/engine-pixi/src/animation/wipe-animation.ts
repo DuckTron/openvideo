@@ -23,6 +23,8 @@ export interface WipeAnimationParams {
   angle?: number;
   /** Soft edge feather width in pixels. 0 = hard edge. */
   feather?: number;
+  /** Starting mask size 0–1. Default: 0 (starts from nothing). */
+  initialProgress?: number;
 }
 
 /**
@@ -90,6 +92,7 @@ export class WipeAnimation implements IAnimation {
       direction,
       angle: angle ?? 0,
       feather: feather ?? 0,
+      ...(this.params.initialProgress != null && { initialProgress: this.params.initialProgress }),
     };
 
     return { mask };
