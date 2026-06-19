@@ -116,15 +116,15 @@ export interface ICaptionWordStyle {
 }
 
 export interface ICaptionColors {
-  /** Currently spoken word */
-  active?: ICaptionWordStyle;
-  /** Upcoming / future words */
-  future?: ICaptionWordStyle;
-  /** Keyword words (isKeyWord=true) */
+  /** Currently spoken word — null/undefined to disable */
+  active?: ICaptionWordStyle | null;
+  /** Upcoming / future words — null/undefined to disable */
+  future?: ICaptionWordStyle | null;
+  /** Keyword words (isKeyWord=true) — null/undefined to disable */
   keyword?: {
     color?: string;
     preserveAfterSpoken?: boolean;
-  };
+  } | null;
 }
 
 export interface IClipStroke {

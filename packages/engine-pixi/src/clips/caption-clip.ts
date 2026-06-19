@@ -24,9 +24,12 @@ export interface ICaptionWordStyle {
 
 /** Caption color configuration */
 export interface ICaptionColors {
-  active?: ICaptionWordStyle;
-  future?: ICaptionWordStyle;
-  keyword?: { color?: string; preserveAfterSpoken?: boolean };
+  /** Currently spoken word — null/undefined to disable */
+  active?: ICaptionWordStyle | null;
+  /** Upcoming / future words — null/undefined to disable */
+  future?: ICaptionWordStyle | null;
+  /** Keyword words (isKeyWord=true) — null/undefined to disable */
+  keyword?: { color?: string; preserveAfterSpoken?: boolean } | null;
 }
 
 /**
@@ -157,10 +160,10 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
       if (this.originalOpts) this.originalOpts.words = v.words;
     }
     if (v.colors) {
-      if (v.colors.active !== undefined) this.originalOpts.activeStyle = v.colors.active;
-      if (v.colors.future !== undefined) this.originalOpts.futureStyle = v.colors.future;
+      if ("active" in v.colors) this.originalOpts.activeStyle = v.colors.active ?? undefined;
+      if ("future" in v.colors) this.originalOpts.futureStyle = v.colors.future ?? undefined;
       if ("keyword" in v.colors) {
-        if (v.colors.keyword !== undefined) {
+        if (v.colors.keyword != null) {
           this.originalOpts.keywordColor = v.colors.keyword.color;
           this.originalOpts.keywordPreserveAfterSpoken = v.colors.keyword.preserveAfterSpoken;
         } else {
@@ -285,11 +288,18 @@ export class Caption extends BaseTextClip<ICaptionEvents> implements IClip {
     if (opts.caption) {
       if (opts.caption.words) this._words = opts.caption.words;
       const c = opts.caption;
-      if (c.colors?.active !== undefined) this.originalOpts.activeStyle = c.colors.active;
-      if (c.colors?.future !== undefined) this.originalOpts.futureStyle = c.colors.future;
-      if (c.colors?.keyword !== undefined) {
-        this.originalOpts.keywordColor = c.colors.keyword.color;
-        this.originalOpts.keywordPreserveAfterSpoken = c.colors.keyword.preserveAfterSpoken;
+      if (c.colors && "active" in c.colors)
+        this.originalOpts.activeStyle = c.colors.active ?? undefined;
+      if (c.colors && "future" in c.colors)
+        this.originalOpts.futureStyle = c.colors.future ?? undefined;
+      if (c.colors && "keyword" in c.colors) {
+        if (c.colors.keyword != null) {
+          this.originalOpts.keywordColor = c.colors.keyword.color;
+          this.originalOpts.keywordPreserveAfterSpoken = c.colors.keyword.preserveAfterSpoken;
+        } else {
+          this.originalOpts.keywordColor = undefined;
+          this.originalOpts.keywordPreserveAfterSpoken = undefined;
+        }
       }
       if (c.wordAnimation !== undefined) this.originalOpts.wordAnimation = c.wordAnimation;
       if (c.positioning?.videoWidth !== undefined)
