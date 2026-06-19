@@ -4,6 +4,7 @@ import {
   AnimationProps,
   AnimationOptions,
   KeyframeData,
+  WipeDirection,
 } from "@openvideo/engine-pixi";
 import {
   getPresetKeyframes,
@@ -48,12 +49,21 @@ export function AnimationPropertiesPicker() {
   const clipDuration = clip?.duration || 0;
   const typeClip = clip?.type || "";
 
+  const WIPE_PRESETS = ["wipeIn", "wipeOut"];
+
   const [activeTab, setActiveTab] = useState<string>("in");
-  const [preset, setPreset] = useState<string>(animation?.type || "");
+  const [preset, setPreset] = useState<string>(
+    animation?.type === "wipe"
+      ? animation.params?.mode === "reveal"
+        ? "wipeIn"
+        : "wipeOut"
+      : animation?.type || "",
+  );
   const [presetParams, setPresetParams] = useState<any>({
     direction: "left",
     distance: 300,
     stagger: 0.05,
+    wipeDirection: (animation?.params?.direction as WipeDirection) ?? "left",
   });
   const [keyframes, setKeyframes] = useState<Record<string, Partial<AnimationProps>>>(
     animation?.params || { "0%": {}, "100%": {} },
@@ -75,6 +85,19 @@ export function AnimationPropertiesPicker() {
   // Initialize from animation
   useEffect(() => {
     if (animation && animation.params) {
+      // Wipe animations have non-keyframe params — restore direction and derive preset name
+      if (animation.type === "wipe") {
+        const wipePresetName = animation.params.mode === "reveal" ? "wipeIn" : "wipeOut";
+        setPreset(wipePresetName);
+        setPresetParams((prev: any) => ({
+          ...prev,
+          wipeDirection: animation.params.direction ?? "left",
+        }));
+        const isOut = animation.params.mode === "conceal";
+        setActiveTab(isOut ? "out" : "in");
+        return;
+      }
+
       setKeyframes(animation.params);
       if (animation.params.presetParams) {
         setPresetParams(animation.params.presetParams);
@@ -134,7 +157,7 @@ export function AnimationPropertiesPicker() {
       return;
     }
     if (preset !== "custom" && preset !== "") {
-      if (!(preset in GSAP_PRESETS)) {
+      if (!(preset in GSAP_PRESETS) && !WIPE_PRESETS.includes(preset)) {
         const template = getPresetKeyframes(preset);
         setKeyframes(template);
       }
@@ -238,18 +261,24 @@ export function AnimationPropertiesPicker() {
     };
 
     const isStagger = preset in GSAP_PRESETS;
-    const type = isStagger ? "stagger" : "keyframes";
+    const isWipe = WIPE_PRESETS.includes(preset);
+    const type = isWipe ? "wipe" : isStagger ? "stagger" : "keyframes";
 
-    const finalParams: any = isStagger
-      ? (() => {
-          const staggerPreset = GSAP_PRESETS[preset];
-          const p = structuredClone(staggerPreset.params);
-          p.stagger = presetParams.stagger ?? p.stagger ?? 0.05;
-          return p;
-        })()
-      : structuredClone(keyframes);
+    const finalParams: any = isWipe
+      ? {
+          direction: presetParams.wipeDirection ?? "left",
+          mode: preset === "wipeIn" ? "reveal" : "conceal",
+        }
+      : isStagger
+        ? (() => {
+            const staggerPreset = GSAP_PRESETS[preset];
+            const p = structuredClone(staggerPreset.params);
+            p.stagger = presetParams.stagger ?? p.stagger ?? 0.05;
+            return p;
+          })()
+        : structuredClone(keyframes);
 
-    if (!isStagger) {
+    if (!isStagger && !isWipe) {
       Object.keys(finalParams).forEach((key) => {
         if (key.includes("%")) {
           finalParams[key].mirror = mirrorEnabled ? 1 : 0;
@@ -332,6 +361,7 @@ export function AnimationPropertiesPicker() {
     { label: "Zoom In", value: "zoomIn" },
     { label: "Slide In", value: "slideIn" },
     { label: "Blur In", value: "blurIn" },
+    { label: "Wipe In", value: "wipeIn" },
     { label: "Pulse", value: "pulse" },
     ...(isTextLike
       ? [
@@ -375,6 +405,7 @@ export function AnimationPropertiesPicker() {
     { label: "Zoom Out", value: "zoomOut" },
     { label: "Slide Out", value: "slideOut" },
     { label: "Blur Out", value: "blurOut" },
+    { label: "Wipe Out", value: "wipeOut" },
     { label: "Pulse", value: "pulse" },
   ];
 
@@ -488,6 +519,34 @@ export function AnimationPropertiesPicker() {
                     handlePresetChange={handlePresetChange}
                   />
 
+                  {/* Wipe Direction */}
+                  {WIPE_PRESETS.includes(preset) && (
+                    <div className="grid grid-cols-1 gap-1.5 p-2 bg-secondary/20 rounded-md">
+                      <div className="flex flex-col gap-1">
+                        <label className="text-[10px] text-muted-foreground">Direction</label>
+                        <Select
+                          value={presetParams.wipeDirection}
+                          onValueChange={(val) =>
+                            setPresetParams((prev: any) => ({
+                              ...prev,
+                              wipeDirection: val as WipeDirection,
+                            }))
+                          }
+                        >
+                          <SelectTrigger className="h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="z-[250]">
+                            <SelectItem value="left">Left → Right</SelectItem>
+                            <SelectItem value="right">Right → Left</SelectItem>
+                            <SelectItem value="top">Top → Bottom</SelectItem>
+                            <SelectItem value="bottom">Bottom → Top</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Preset Parameters (Slide Only) */}
                   {(preset === "slideIn" || preset === "slideOut") && (
                     <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
@@ -548,7 +607,7 @@ export function AnimationPropertiesPicker() {
                     </div>
                   )}
 
-                  {!(preset in GSAP_PRESETS) && (
+                  {!(preset in GSAP_PRESETS) && !WIPE_PRESETS.includes(preset) && (
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-semibold">Keyframes</label>
@@ -582,12 +641,14 @@ export function AnimationPropertiesPicker() {
                   )}
 
                   {/* Mirror Effect */}
-                  {typeClip !== "Text" && !(preset in GSAP_PRESETS) && (
-                    <div className="flex items-center justify-between px-2 py-1.5 bg-secondary/20 rounded-md">
-                      <span className="text-[10px] text-muted-foreground">Mirror</span>
-                      <Switch checked={mirrorEnabled} onCheckedChange={setMirrorEnabled} />
-                    </div>
-                  )}
+                  {typeClip !== "Text" &&
+                    !(preset in GSAP_PRESETS) &&
+                    !WIPE_PRESETS.includes(preset) && (
+                      <div className="flex items-center justify-between px-2 py-1.5 bg-secondary/20 rounded-md">
+                        <span className="text-[10px] text-muted-foreground">Mirror</span>
+                        <Switch checked={mirrorEnabled} onCheckedChange={setMirrorEnabled} />
+                      </div>
+                    )}
 
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold">Timing</label>

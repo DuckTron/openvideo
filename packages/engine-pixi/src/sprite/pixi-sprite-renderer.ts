@@ -392,6 +392,27 @@ export class PixiSpriteRenderer {
     }
 
     this.applyStyle();
+    this.applyContainerAnimations();
+  }
+
+  /**
+   * Call apply() on any animations that need direct access to the animationContainer.
+   * This covers e.g. WipeAnimation which drives a mask on the container itself.
+   */
+  private applyContainerAnimations(): void {
+    if (!this.animationContainer || this.destroyed) return;
+    const clip = this.sprite as any;
+    const animations: any[] = clip.animations ?? [];
+    const renderTransform = clip.renderTransform ?? {};
+    for (const anim of animations) {
+      if (typeof anim.apply === "function") {
+        const time =
+          (renderTransform as any).__lastSpriteTime !== undefined
+            ? (renderTransform as any).__lastSpriteTime
+            : 0;
+        anim.apply(this.animationContainer, time);
+      }
+    }
   }
 
   /**

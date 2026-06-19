@@ -427,7 +427,8 @@ export abstract class BaseSprite<
       brightness: 1,
       mirror: 0,
       motionBlur: 0,
-    };
+      __lastSpriteTime: time,
+    } as any;
 
     // 1. Process new modular animations
     for (const anim of this.animations) {
@@ -449,7 +450,7 @@ export abstract class BaseSprite<
       if (transform.mirror !== undefined)
         this.renderTransform.mirror = Math.max(this.renderTransform.mirror || 0, transform.mirror);
 
-      if (target && anim.apply) {
+      if (target && anim.apply && anim.type !== "wipe") {
         anim.apply(target, time);
       }
     }

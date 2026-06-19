@@ -1,5 +1,6 @@
 import { KeyframeAnimation } from "./keyframe-animation";
 import { GsapAnimation } from "./gsap-animation";
+import { WipeAnimation } from "./wipe-animation";
 import { AnimationOptions, IAnimation, KeyframeData } from "./types";
 
 export type AnimationFactory = (options: AnimationOptions, params?: any) => IAnimation;
@@ -15,6 +16,7 @@ class AnimationRegistry {
     const staggerFactory: AnimationFactory = (options, params) =>
       new GsapAnimation(params, options, "stagger");
     this.register("stagger", staggerFactory);
+    this.register("wipe", (options, params) => new WipeAnimation(params, options));
   }
 
   register(name: string, factory: AnimationFactory) {
