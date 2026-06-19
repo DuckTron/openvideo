@@ -34,7 +34,7 @@ export function ProjectGroupProperty() {
         <UserMenu />
         <div className="flex items-center gap-2">
           {/* Split Share Button */}
-          <div className="flex items-center bg-white text-black hover:bg-white/90 rounded-lg h-7 border border-white/20 select-none overflow-hidden shrink-0">
+          <div className="flex items-center bg-white text-black hover:bg-white/90 h-7 border border-white/20 select-none overflow-hidden shrink-0">
             <button
               onClick={handleCopyLink}
               className="px-3 h-full text-xs font-semibold hover:bg-black/5 cursor-pointer transition-colors flex items-center justify-center"
@@ -50,7 +50,7 @@ export function ProjectGroupProperty() {
         <Input
           value={title}
           onChange={handleTitleChange}
-          className="flex-1 h-7 text-xs bg-secondary border rounded-md"
+          className="flex-1 h-7 text-xs bg-secondary border"
           placeholder="Untitled video"
         />
       </div>

@@ -42,7 +42,7 @@ export function AiToolsProperty({
         {/* Noise Reduction */}
         <div
           className={cn(
-            "p-3 rounded-lg border transition-all duration-300",
+            "p-3 border transition-all duration-300",
             noiseReduction
               ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",
@@ -64,7 +64,7 @@ export function AiToolsProperty({
         {/* Enhance Voice */}
         <div
           className={cn(
-            "p-3 rounded-lg border transition-all duration-300",
+            "p-3 border transition-all duration-300",
             enhanceVoice
               ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",
@@ -86,7 +86,7 @@ export function AiToolsProperty({
         {/* Beats Detection */}
         <div
           className={cn(
-            "p-3 rounded-lg border transition-all duration-300",
+            "p-3 border transition-all duration-300",
             beatsDetection
               ? "bg-gradient-to-r from-primary/10 to-primary/5 border-primary/30 shadow-[0_0_12px_rgba(var(--primary),0.05)]"
               : "bg-secondary/30 border-border/40 hover:border-border/60",

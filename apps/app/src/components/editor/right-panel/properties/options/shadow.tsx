@@ -107,7 +107,7 @@ export function ShadowProperty({
                   <PopoverTrigger asChild>
                     <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                       <div
-                        className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                        className="h-4 w-4 border border-input shadow-sm"
                         style={{ backgroundColor: shadowColor || "#000000" }}
                       />
                     </InputGroupButton>
@@ -118,7 +118,7 @@ export function ShadowProperty({
                         const hexColor = color.rgb(colorValue as number[]).hex();
                         onColorChange(hexColor);
                       }}
-                      className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                      className="w-72 h-72 border bg-background p-4 shadow-sm"
                     >
                       <ColorPickerSelection />
                       <div className="flex items-center gap-4">

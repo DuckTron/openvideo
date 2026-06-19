@@ -17,7 +17,7 @@ export function SectionHeader({ title, hasContent, onAdd, onRemove }: SectionHea
       <Button
         variant="ghost"
         size="icon"
-        className="size-6 rounded-sm text-muted-foreground"
+        className="size-6 text-muted-foreground"
         onClick={hasContent ? onRemove : onAdd}
       >
         {hasContent ? <RiSubtractLine className="size-4" /> : <RiAddLine className="size-4" />}

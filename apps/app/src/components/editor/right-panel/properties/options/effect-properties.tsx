@@ -456,7 +456,7 @@ const ColorProperty = ({ value, onChange }: ColorPropertyProps) => {
           <PopoverTrigger asChild>
             <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
               <div
-                className="h-5 w-5 rounded-sm border border-input shadow-sm"
+                className="h-5 w-5 border border-input shadow-sm"
                 style={{ backgroundColor: value }}
               />
             </InputGroupButton>
@@ -468,7 +468,7 @@ const ColorProperty = ({ value, onChange }: ColorPropertyProps) => {
                 const hex = rgbaArrayToHex(colorValue);
                 onChange(hex);
               }}
-              className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+              className="w-72 h-72 border bg-background p-4 shadow-sm"
             >
               <ColorPickerSelection />
               <div className="flex items-center gap-4">
@@ -692,7 +692,7 @@ export function EffectProperties({ clip }: EffectPropertiesProps) {
                     value={currentValue.toString()}
                     onValueChange={(value) => handleUpdate(property, Number(value))}
                   >
-                    <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                    <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>

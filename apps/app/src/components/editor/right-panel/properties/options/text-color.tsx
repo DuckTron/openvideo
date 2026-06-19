@@ -23,7 +23,7 @@ interface TextColorPropertyProps {
 function CircularSwatch({ color: swatchColor }: { color: string }) {
   return (
     <div
-      className="size-4 rounded-full border border-border/50 shadow-sm flex-shrink-0 pointer-events-none"
+      className="size-4 border border-border/50 shadow-sm flex-shrink-0 pointer-events-none"
       style={{ backgroundColor: swatchColor }}
     />
   );
@@ -43,7 +43,7 @@ export function TextColorProperty({ color: textColor, onColorChange }: TextColor
   };
 
   return (
-    <div className="flex flex-col bg-card p-3 rounded-lg">
+    <div className="flex flex-col bg-card p-3">
       {/* Fill Row */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-foreground">Fill</span>
@@ -54,7 +54,7 @@ export function TextColorProperty({ color: textColor, onColorChange }: TextColor
               {/* Color swatch button - opens picker */}
               <Popover modal={true} open={colorOpen} onOpenChange={setColorOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="size-7 rounded-sm">
+                  <Button variant="ghost" size="icon" className="size-7">
                     <CircularSwatch color={textColor} />
                   </Button>
                 </PopoverTrigger>
@@ -65,7 +65,7 @@ export function TextColorProperty({ color: textColor, onColorChange }: TextColor
                       const hexColor = color.rgb((colorValue as number[]).slice(0, 3)).hex();
                       onColorChange(hexColor);
                     }}
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                    className="w-72 h-72 border bg-background p-4 shadow-sm"
                   >
                     <ColorPickerSelection />
                     <div className="flex items-center gap-4">
@@ -86,7 +86,7 @@ export function TextColorProperty({ color: textColor, onColorChange }: TextColor
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-sm text-muted-foreground hover:text-destructive"
+                className="size-7 text-muted-foreground hover:text-destructive"
                 onClick={handleRemove}
                 title="Remove color"
               >
@@ -98,7 +98,7 @@ export function TextColorProperty({ color: textColor, onColorChange }: TextColor
             <Button
               variant="ghost"
               size="icon"
-              className="size-7 rounded-sm text-muted-foreground hover:text-foreground"
+              className="size-7 text-muted-foreground hover:text-foreground"
               onClick={handleAdd}
               title="Add color"
             >

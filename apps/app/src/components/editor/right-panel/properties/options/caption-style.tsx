@@ -116,7 +116,7 @@ export function CaptionStyleProperty({
 
       {/* Text Transform */}
       <Select value={textTransform} onValueChange={(v) => onTextTransformChange(v as any)}>
-        <SelectTrigger className="h-7 bg-secondary border rounded-md text-xs!">
+        <SelectTrigger className="h-7 bg-secondary border text-xs!">
           <SelectValue placeholder="Text transform" />
         </SelectTrigger>
         <SelectContent>

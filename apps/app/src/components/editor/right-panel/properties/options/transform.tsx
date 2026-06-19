@@ -62,7 +62,7 @@ export function TransformProperty({
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Position</span>
           <div className="flex gap-1.5 w-[160px]">
-            <InputGroup className="flex-1 h-7 bg-secondary border rounded-md">
+            <InputGroup className="flex-1 h-7 bg-secondary border">
               <InputGroupAddon align="inline-start">
                 <span className="text-xs text-muted-foreground px-2">X</span>
               </InputGroupAddon>
@@ -72,7 +72,7 @@ export function TransformProperty({
                 className="pl-0 bg-transparent text-xs!"
               />
             </InputGroup>
-            <InputGroup className="flex-1 h-7 bg-secondary border rounded-md">
+            <InputGroup className="flex-1 h-7 bg-secondary border">
               <InputGroupAddon align="inline-start">
                 <span className="text-xs text-muted-foreground px-2">Y</span>
               </InputGroupAddon>
@@ -89,7 +89,7 @@ export function TransformProperty({
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Size</span>
           <div className="flex gap-1.5 w-[160px]">
-            <InputGroup className="flex-1 h-7 bg-secondary border rounded-md">
+            <InputGroup className="flex-1 h-7 bg-secondary border">
               <InputGroupAddon align="inline-start">
                 <span className="text-xs text-muted-foreground px-2">W</span>
               </InputGroupAddon>
@@ -99,7 +99,7 @@ export function TransformProperty({
                 className="pl-0 bg-transparent text-xs!"
               />
             </InputGroup>
-            <InputGroup className="flex-1 h-7 bg-secondary border rounded-md">
+            <InputGroup className="flex-1 h-7 bg-secondary border">
               <InputGroupAddon align="inline-start">
                 <span className="text-xs text-muted-foreground px-2">H</span>
               </InputGroupAddon>
@@ -115,7 +115,7 @@ export function TransformProperty({
         {/* Rotation Row */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Rotation</span>
-          <InputGroup className="w-[160px] h-7 bg-secondary border rounded-md">
+          <InputGroup className="w-[160px] h-7 bg-secondary border">
             <InputGroupAddon align="inline-start">
               <svg
                 xmlns="http://www.w3.org/2000/svg"

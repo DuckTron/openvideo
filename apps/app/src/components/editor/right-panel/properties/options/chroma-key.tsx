@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   ColorPicker,
   ColorPickerEyeDropper,
@@ -18,9 +17,10 @@ import {
 import { NumberInput } from "@/components/ui/number-input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
-import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import color from "color";
 import { useSliderThrottle } from "../hooks/use-slider-throttle";
+import { SectionHeader } from "./section-header";
 
 interface ChromaKeyPropertyProps {
   enabled: boolean;
@@ -43,8 +43,6 @@ export function ChromaKeyProperty({
   onSimilarityChange,
   onSpillChange,
 }: ChromaKeyPropertyProps) {
-  const [open, setOpen] = useState(enabled);
-
   const toPercent = (v: number) => Math.round((v ?? 0) * 100);
   const fromPercent = (v: number) => v / 100;
 
@@ -54,20 +52,14 @@ export function ChromaKeyProperty({
   const sp = useSliderThrottle(toPercent(spill ?? 0.05), (pct) => onSpillChange(fromPercent(pct)));
 
   return (
-    <div className="flex flex-col">
-      {/* Section Header */}
-      <div className="flex items-center justify-between py-2">
-        <span className="text-xs font-semibold text-foreground">Chroma Key</span>
-        <Switch
-          checked={enabled}
-          onCheckedChange={(checked) => {
-            onEnabledChange(checked);
-            setOpen(checked);
-          }}
-        />
-      </div>
-
-      {enabled && (
+    <Collapsible open={enabled}>
+      <SectionHeader
+        title="Chroma Key"
+        hasContent={enabled}
+        onAdd={() => onEnabledChange(true)}
+        onRemove={() => onEnabledChange(false)}
+      />
+      <CollapsibleContent>
         <div className="py-1 flex flex-col">
           {/* Key Color */}
           <div className="flex items-center justify-between py-1 gap-4">
@@ -78,7 +70,7 @@ export function ChromaKeyProperty({
                   <PopoverTrigger asChild>
                     <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                       <div
-                        className="h-5 w-5 rounded-sm border border-input shadow-sm"
+                        className="h-5 w-5 border border-input shadow-sm"
                         style={{ backgroundColor: chromaColor || "#FFFFFF" }}
                       />
                     </InputGroupButton>
@@ -98,7 +90,7 @@ export function ChromaKeyProperty({
                       className="w-full"
                     >
                       <div className="flex flex-col gap-3">
-                        <ColorPickerSelection className="min-h-32 w-full rounded-md shadow-sm" />
+                        <ColorPickerSelection className="min-h-32 w-full shadow-sm" />
                         <div className="flex flex-col gap-2">
                           <ColorPickerHue />
                           <ColorPickerEyeDropper />
@@ -172,7 +164,7 @@ export function ChromaKeyProperty({
             </div>
           </div>
         </div>
-      )}
-    </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }

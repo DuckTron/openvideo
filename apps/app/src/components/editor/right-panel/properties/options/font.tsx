@@ -27,7 +27,7 @@ export function FontProperty({ currentFamily, onChange }: FontPropertyProps) {
       <button
         key={family.family}
         className={cn(
-          "flex w-full items-center px-2 py-2 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
+          "flex w-full items-center px-2 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
           currentFontFamily?.family === family.family && "bg-accent/50 text-accent-foreground",
         )}
         onClick={() => {

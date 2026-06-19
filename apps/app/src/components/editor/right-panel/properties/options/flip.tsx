@@ -40,7 +40,7 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
               onPressedChange={(pressed) => onChange({ ...value, x: pressed })}
               variant="outline"
               size="sm"
-              className="flex-1 h-7 text-xs bg-secondary border rounded-md"
+              className="flex-1 h-7 text-xs bg-secondary border"
             >
               <RiFlipHorizontalLine className="size-3.5 mr-1" />
               <span>X</span>
@@ -50,7 +50,7 @@ export function FlipProperty({ value, onChange }: FlipPropertyProps) {
               onPressedChange={(pressed) => onChange({ ...value, y: pressed })}
               variant="outline"
               size="sm"
-              className="flex-1 h-7 text-xs bg-secondary border rounded-md"
+              className="flex-1 h-7 text-xs bg-secondary border"
             >
               <RiFlipVerticalLine className="size-3.5 mr-1" />
               <span>Y</span>

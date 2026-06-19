@@ -75,7 +75,7 @@ export function TextBackgroundProperty({
                   <PopoverTrigger asChild>
                     <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                       <div
-                        className="h-5 w-5 rounded-sm border border-input shadow-sm"
+                        className="h-5 w-5 border border-input shadow-sm"
                         style={{ backgroundColor: localBgColor }}
                       />
                     </InputGroupButton>
@@ -88,7 +88,7 @@ export function TextBackgroundProperty({
                         setLocalBgColor(hexColor);
                         onBackgroundColorChange?.(hexColor);
                       }}
-                      className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                      className="w-72 h-72 border bg-background p-4 shadow-sm"
                     >
                       <ColorPickerSelection />
                       <div className="flex items-center gap-4">

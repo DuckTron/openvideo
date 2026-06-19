@@ -65,7 +65,7 @@ function ColorRow({
             <PopoverTrigger asChild>
               <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                 <div
-                  className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                  className="h-4 w-4 border border-input shadow-sm"
                   style={{ backgroundColor: display }}
                 />
               </InputGroupButton>
@@ -74,7 +74,7 @@ function ColorRow({
               <ColorPicker
                 value={value}
                 onChange={(cv) => onChange(color.rgb(cv as number[]).hex())}
-                className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                className="w-72 h-72 border bg-background p-4 shadow-sm"
               >
                 <ColorPickerSelection />
                 <div className="flex items-center gap-4">
@@ -139,7 +139,7 @@ function BorderRow({
               <PopoverTrigger asChild>
                 <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                   <div
-                    className="h-4 w-4 rounded-sm border border-input shadow-sm"
+                    className="h-4 w-4 border border-input shadow-sm"
                     style={{ backgroundColor: borderColor }}
                   />
                 </InputGroupButton>
@@ -148,7 +148,7 @@ function BorderRow({
                 <ColorPicker
                   value={border?.color}
                   onChange={(cv) => onChange({ ...border, color: color.rgb(cv as number[]).hex() })}
-                  className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                  className="w-72 h-72 border bg-background p-4 shadow-sm"
                 >
                   <ColorPickerSelection />
                   <div className="flex items-center gap-4">
@@ -251,7 +251,7 @@ function WordStyleSection({
         <Button
           variant="ghost"
           size="icon"
-          className="size-6 rounded-sm text-muted-foreground"
+          className="size-6 text-muted-foreground"
           onClick={onReset}
           disabled={!hasAnyValue}
           title="Reset"
@@ -287,7 +287,7 @@ function WordStyleSection({
 function CircularSwatch({ color }: { color: string }) {
   return (
     <div
-      className="size-4 rounded-full border border-border/50 shadow-sm flex-shrink-0 pointer-events-none"
+      className="size-4 border border-border/50 shadow-sm flex-shrink-0 pointer-events-none"
       style={{ backgroundColor: color }}
     />
   );
@@ -302,7 +302,7 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
   const activeBorderColor = active.border?.color || activeColor;
 
   return (
-    <div className="flex flex-col bg-card p-3 rounded-lg gap-3">
+    <div className="flex flex-col bg-card p-3 gap-3">
       {/* Style Header */}
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-foreground">Style</span>
@@ -319,7 +319,7 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
               <Button
                 variant="ghost"
                 size="icon"
-                className="size-7 rounded-sm text-muted-foreground hover:text-foreground"
+                className="size-7 text-muted-foreground hover:text-foreground"
                 title="Customize colors"
               >
                 <RiEqualizer3Line className="size-4" />
@@ -359,10 +359,10 @@ export function CaptionColorsProperty({ captionColors, setColors }: CaptionColor
           </Popover>
 
           {/* Color preview swatches */}
-          <Button variant="ghost" size="icon" className="size-7 rounded-sm">
+          <Button variant="ghost" size="icon" className="size-7">
             <CircularSwatch color={activeColor} />
           </Button>
-          <Button variant="ghost" size="icon" className="size-7 rounded-sm">
+          <Button variant="ghost" size="icon" className="size-7">
             <CircularSwatch color={active.background || "#000000"} />
           </Button>
         </div>

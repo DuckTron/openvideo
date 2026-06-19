@@ -114,7 +114,7 @@ export function CanvasGroupProperty() {
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground truncate min-w-0">Aspect Ratio</span>
           <Select value={aspectRatio} onValueChange={onAspectRatioChange}>
-            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
               <SelectValue placeholder="Aspect ratio" />
             </SelectTrigger>
             <SelectContent>
@@ -148,7 +148,7 @@ export function CanvasGroupProperty() {
                 <PopoverTrigger asChild>
                   <InputGroupButton variant="ghost" size="icon-xs" className="h-full w-8 pl-2">
                     <div
-                      className="h-5 w-5 rounded-sm border border-input shadow-sm animate-none"
+                      className="h-5 w-5 border border-input shadow-sm animate-none"
                       style={{ backgroundColor: backgroundColor || "#111111" }}
                     />
                   </InputGroupButton>
@@ -160,7 +160,7 @@ export function CanvasGroupProperty() {
                       const hexColor = color.rgb(colorValue as number[]).hex();
                       onBackgroundColorChange(hexColor);
                     }}
-                    className="w-72 h-72 rounded-md border bg-background p-4 shadow-sm"
+                    className="w-72 h-72 border bg-background p-4 shadow-sm"
                   >
                     <ColorPickerSelection />
                     <div className="flex items-center gap-4">

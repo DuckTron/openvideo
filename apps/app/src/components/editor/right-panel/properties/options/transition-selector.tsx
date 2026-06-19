@@ -83,7 +83,7 @@ export function TransitionSelectorProperty({
           className="flex w-full items-center gap-2 flex-col group cursor-pointer relative select-none"
           onClick={() => onSelect(effect.key)}
         >
-          <div className="relative w-full aspect-video rounded-md bg-input/30 border overflow-hidden">
+          <div className="relative w-full aspect-video bg-input/30 border overflow-hidden">
             {!isReady && (
               <div className="absolute inset-0 z-10 flex items-center justify-center">
                 <RiLoader5Line className="animate-spin text-muted-foreground" />
@@ -94,7 +94,7 @@ export function TransitionSelectorProperty({
                 src={effect.previewStatic}
                 onLoad={() => markLoaded(effect.key, "static")}
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover rounded-sm transition-opacity duration-150 opacity-100 group-hover:opacity-0"
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-150 opacity-100 group-hover:opacity-0"
               />
             )}
             {effect.previewDynamic && (
@@ -102,7 +102,7 @@ export function TransitionSelectorProperty({
                 src={effect.previewDynamic}
                 onLoad={() => markLoaded(effect.key, "dynamic")}
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover rounded-sm transition-opacity duration-150 opacity-0 group-hover:opacity-100"
+                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-150 opacity-0 group-hover:opacity-100"
               />
             )}
             <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent text-white text-xs font-medium truncate text-center transition-opacity duration-150 group-hover:opacity-0">
@@ -123,10 +123,10 @@ export function TransitionSelectorProperty({
                 zIndex: 99999,
                 pointerEvents: "none",
               }}
-              className="w-20 aspect-video rounded-md bg-input/80 border overflow-hidden shadow-xl"
+              className="w-20 aspect-video bg-input/80 border overflow-hidden shadow-xl"
             >
               {effect.previewStatic && (
-                <img src={effect.previewStatic} className="w-full h-full object-cover rounded-sm" />
+                <img src={effect.previewStatic} className="w-full h-full object-cover" />
               )}
             </div>,
             document.body,
@@ -175,7 +175,7 @@ export function TransitionSelectorProperty({
                   className="flex w-full items-center gap-2 flex-col group cursor-pointer relative select-none"
                   onClick={() => onSelect(`custom_transition_${preset.id}`)}
                 >
-                  <div className="relative w-full aspect-video rounded-md bg-primary/40 border overflow-hidden">
+                  <div className="relative w-full aspect-video bg-primary/40 border overflow-hidden">
                     <div className="absolute bottom-0 left-0 w-full p-2 bg-gradient-to-t from-black/80 to-transparent text-white text-xs font-medium truncate text-center">
                       {preset.data.label || preset.name}
                     </div>

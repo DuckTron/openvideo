@@ -81,7 +81,7 @@ export function DropShadowProperty({
             <Popover>
               <PopoverTrigger asChild>
                 <div
-                  className="w-10 h-7 rounded-md border cursor-pointer shrink-0"
+                  className="w-10 h-7 border cursor-pointer shrink-0"
                   style={{ backgroundColor: shadowColor || "#000000" }}
                 />
               </PopoverTrigger>
@@ -100,7 +100,7 @@ export function DropShadowProperty({
                   className="w-full"
                 >
                   <div className="flex flex-col gap-3">
-                    <ColorPickerSelection className="min-h-32 w-full rounded-md shadow-sm" />
+                    <ColorPickerSelection className="min-h-32 w-full shadow-sm" />
                     <div className="flex flex-col gap-2">
                       <ColorPickerHue />
                       <ColorPickerEyeDropper />

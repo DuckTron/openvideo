@@ -203,7 +203,7 @@ export function ExportGroupProperty() {
                       selectCustom();
                       setIsPresetPopoverOpen(false);
                     }}
-                    className="flex items-center justify-between w-full px-2 py-1.5 text-left text-xs rounded hover:bg-white/5 transition-colors cursor-pointer text-foreground font-semibold"
+                    className="flex items-center justify-between w-full px-2 py-1.5 text-left text-xs hover:bg-white/5 transition-colors cursor-pointer text-foreground font-semibold"
                   >
                     <span>Custom</span>
                     <span className="text-[10px] text-muted-foreground">Custom Export</span>
@@ -218,7 +218,7 @@ export function ExportGroupProperty() {
       {activePreset && (
         <div className="flex flex-col gap-2 mt-1.5">
           {/* Selected Preset Badge */}
-          <div className="flex items-center justify-between bg-secondary border rounded-md px-3 py-1.5">
+          <div className="flex items-center justify-between bg-secondary border px-3 py-1.5">
             <div className="flex items-center gap-2">
               <RiVideoLine className="size-4 text-blue-500 shrink-0" />
               <span className="text-xs font-medium text-foreground">
@@ -269,7 +269,7 @@ export function ExportGroupProperty() {
                               setSelectedPresetLabel("Custom");
                             }}
                           >
-                            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="z-[110]">
@@ -299,7 +299,7 @@ export function ExportGroupProperty() {
                               setSelectedPresetLabel("Custom");
                             }}
                           >
-                            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="z-[110]">
@@ -324,7 +324,7 @@ export function ExportGroupProperty() {
                               setQuality(String(Number(e.target.value) * 1_000_000));
                               setSelectedPresetLabel("Custom");
                             }}
-                            className="w-[160px] h-7 text-xs! bg-secondary border rounded-md"
+                            className="w-[160px] h-7 text-xs! bg-secondary border"
                           />
                         </div>
                       </>
@@ -354,7 +354,7 @@ export function ExportGroupProperty() {
                               setSelectedPresetLabel("Custom");
                             }}
                           >
-                            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="z-[110]">
@@ -377,7 +377,7 @@ export function ExportGroupProperty() {
                               setSelectedPresetLabel("Custom");
                             }}
                           >
-                            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="z-[110]">
@@ -402,7 +402,7 @@ export function ExportGroupProperty() {
                           setSelectedPresetLabel("Custom");
                         }}
                       >
-                        <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                        <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent className="z-[110]">
@@ -426,7 +426,7 @@ export function ExportGroupProperty() {
                             setSelectedPresetLabel("Custom");
                           }}
                         >
-                          <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+                          <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="z-[110]">
@@ -458,7 +458,7 @@ export function ExportGroupProperty() {
               setAutoStartExport(true);
               setIsExportModalOpen(true);
             }}
-            className="w-full h-7 bg-primary hover:bg-primary/80 text-primary-foreground font-semibold text-xs rounded-md cursor-pointer transition-colors"
+            className="w-full h-7 bg-primary hover:bg-primary/80 text-primary-foreground font-semibold text-xs cursor-pointer transition-colors"
           >
             Export
           </Button>

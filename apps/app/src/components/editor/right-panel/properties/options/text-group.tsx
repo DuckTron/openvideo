@@ -50,7 +50,7 @@ const FontPicker = React.memo(
         <button
           key={family.family}
           className={cn(
-            "flex w-full items-center px-2 py-2 text-sm rounded-md transition-colors hover:bg-accent hover:text-accent-foreground",
+            "flex w-full items-center px-2 py-2 text-sm transition-colors hover:bg-accent hover:text-accent-foreground",
             currentFamily.family === family.family && "bg-accent/50 text-accent-foreground",
           )}
           onClick={() => {
@@ -154,7 +154,7 @@ export function TextGroupProperty({
           <Input
             value={text}
             onChange={(e) => onTextChange(e.target.value)}
-            className="w-[160px] h-7 text-xs! bg-secondary border rounded-md"
+            className="w-[160px] h-7 text-xs! bg-secondary border"
             placeholder="Text"
           />
         </div>
@@ -170,7 +170,7 @@ export function TextGroupProperty({
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Style</span>
           <Select value={currentFont.postScriptName} onValueChange={onFontStyleChange}>
-            <SelectTrigger className="w-[160px] h-7 bg-secondary border rounded-md text-xs!">
+            <SelectTrigger className="w-[160px] h-7 bg-secondary border text-xs!">
               <SelectValue placeholder="Style" />
             </SelectTrigger>
             <SelectContent>
@@ -201,7 +201,7 @@ export function TextGroupProperty({
         {/* Align */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Align</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
+          <div className="flex items-center bg-secondary p-0.5 w-[160px]">
             {[
               { icon: RiAlignLeft, value: "left" },
               { icon: RiAlignCenter, value: "center" },
@@ -211,7 +211,7 @@ export function TextGroupProperty({
                 key={item.value}
                 onClick={() => onTextAlignChange(item.value as "left" | "center" | "right")}
                 className={cn(
-                  "flex-1 flex items-center justify-center h-6 rounded-sm transition-colors",
+                  "flex-1 flex items-center justify-center h-6 transition-colors",
                   textAlign === item.value
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -226,7 +226,7 @@ export function TextGroupProperty({
         {/* Decoration */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Decoration</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
+          <div className="flex items-center bg-secondary p-0.5 w-[160px]">
             {[
               { icon: RiUnderline, value: "underline", active: underline },
               { icon: TextOverline, value: "overline", active: overline },
@@ -240,7 +240,7 @@ export function TextGroupProperty({
                   if (item.value === "strikethrough") onLinethroughChange(!linethrough);
                 }}
                 className={cn(
-                  "flex-1 flex items-center justify-center h-6 rounded-sm transition-colors",
+                  "flex-1 flex items-center justify-center h-6 transition-colors",
                   item.active
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",
@@ -255,7 +255,7 @@ export function TextGroupProperty({
         {/* Case */}
         <div className="flex items-center justify-between py-1 gap-4">
           <span className="text-xs text-muted-foreground">Case</span>
-          <div className="flex items-center bg-secondary rounded-md p-0.5 w-[160px]">
+          <div className="flex items-center bg-secondary p-0.5 w-[160px]">
             {[
               { label: "aA", value: "none" },
               { label: "AA", value: "uppercase" },
@@ -265,7 +265,7 @@ export function TextGroupProperty({
                 key={item.value}
                 onClick={() => onTextCaseChange(item.value as "none" | "uppercase" | "lowercase")}
                 className={cn(
-                  "flex-1 h-6 text-[10px] font-medium rounded-sm transition-colors",
+                  "flex-1 h-6 text-[10px] font-medium transition-colors",
                   textCase === item.value
                     ? "bg-muted text-foreground"
                     : "text-muted-foreground hover:text-foreground",

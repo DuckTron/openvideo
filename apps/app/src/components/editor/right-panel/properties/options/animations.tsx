@@ -63,7 +63,7 @@ export function AnimationsProperty({
               return (
                 <div
                   key={anim.options?.id ?? anim.id}
-                  className="flex items-center gap-2 p-2 bg-secondary/20 hover:bg-secondary/30 rounded-md group border border-transparent hover:border-secondary/50 transition-colors"
+                  className="flex items-center gap-2 p-2 bg-secondary/20 hover:bg-secondary/30 group border border-transparent hover:border-secondary/50 transition-colors"
                 >
                   <div className="flex items-center justify-center size-7 rounded bg-primary/10 text-primary shrink-0">
                     <RiDiamondLine className="size-3.5" />
