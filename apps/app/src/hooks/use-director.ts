@@ -33,6 +33,9 @@ export function useDirector(spaceId: string) {
       query: { spaceId },
       transports: ["websocket"],
       autoConnect: true,
+      // animAI: o director (IA) é opcional e pode não estar a correr — não fica
+      // a tentar reconectar (evita o spam de erros no dev overlay).
+      reconnection: false,
     });
 
     socketRef.current = socket;
@@ -51,7 +54,8 @@ export function useDirector(spaceId: string) {
     });
 
     socket.on("connect_error", (error) => {
-      console.error("[Director] Connection error:", error);
+      // animAI: warn (não error) — o director é opcional; evita o overlay do Next dev.
+      console.warn("[Director] WS indisponível (director não está a correr):", error?.message || error);
       setIsConnected(false);
     });
 

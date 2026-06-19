@@ -38,3 +38,6 @@ yarn-error.log*
 *.pem
 .trigger
 __pycache__
+
+# Runtime user uploads (large media, not source)
+apps/app/public/uploads/
