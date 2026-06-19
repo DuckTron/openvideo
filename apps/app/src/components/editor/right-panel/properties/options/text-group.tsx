@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   RiArrowUpDownLine,
   RiCheckLine,
@@ -44,9 +44,27 @@ const FontPicker = React.memo(
     handleFontChange: (postScriptName: string) => void;
   }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState("");
+    const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+      if (isOpen) {
+        setSearchQuery("");
+        // Focus the search input after the popover opens.
+        const id = requestAnimationFrame(() => {
+          searchWrapperRef.current?.querySelector("input")?.focus();
+        });
+        return () => cancelAnimationFrame(id);
+      }
+    }, [isOpen]);
 
     const fontItems = useMemo(() => {
-      return GROUPED_FONTS.map((family) => (
+      const query = searchQuery.trim().toLowerCase();
+      const filtered = GROUPED_FONTS.filter((family) =>
+        family.family.toLowerCase().includes(query),
+      ).sort((a, b) => a.family.localeCompare(b.family));
+
+      return filtered.map((family) => (
         <button
           key={family.family}
           className={cn(
@@ -62,7 +80,7 @@ const FontPicker = React.memo(
           {currentFamily.family === family.family && <RiCheckLine className="size-4 ml-2" />}
         </button>
       ));
-    }, [currentFamily.family, handleFontChange]);
+    }, [currentFamily.family, handleFontChange, searchQuery]);
 
     return (
       <Popover open={isOpen} onOpenChange={setIsOpen}>
@@ -77,9 +95,25 @@ const FontPicker = React.memo(
             <RiArrowUpDownLine className="size-4 opacity-50 shrink-0 absolute right-2" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0 gap-0" align="start">
+        <PopoverContent className="p-0 gap-0" align="end">
+          <div ref={searchWrapperRef} className="p-2 border-b border-border">
+            <Input
+              placeholder="Search fonts..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="h-8 text-xs"
+            />
+          </div>
           <ScrollArea className="h-72 w-full">
-            <div className="flex flex-col p-1 gap-px">{fontItems}</div>
+            <div className="flex flex-col p-1 gap-px">
+              {fontItems.length === 0 ? (
+                <div className="px-2 py-3 text-sm text-muted-foreground text-center">
+                  No fonts found
+                </div>
+              ) : (
+                fontItems
+              )}
+            </div>
           </ScrollArea>
         </PopoverContent>
       </Popover>
