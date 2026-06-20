@@ -1,281 +1,506 @@
 ---
 title: Animations
-description: Create dynamic motion with presets, keyframes, and batch operations using the Command API.
+description: Create dynamic motion with presets, mask reveals, keyframes, and custom shapes using the animation system.
 ---
 
-Animations bring life to your video compositions by changing clip properties over time. In OpenVideo Core, animations are data-driven — you define animation states as part of your clip data and update them via commands.
+Animations bring life to your video compositions by changing clip properties over time. In OpenVideo, animations are **data-driven** — each animation emits a transform each frame, and all transforms are accumulated and applied together by the renderer.
 
 ## Overview
 
 Animations in OpenVideo are:
 
-- **Stackable**: Multiple animations can run on a single clip
-- **Precise**: Timing in microseconds for smooth playback
-- **Reversible**: All changes are undoable via the command system
-- **AI-friendly**: Easy to generate programmatically
+- **Stackable** — Multiple animations can run on the same clip simultaneously
+- **Composable** — Mask animations compose with property animations (scale, opacity, position)
+- **Precise** — Timing in microseconds for frame-accurate playback
+- **Reversible** — All changes are undoable via the command system
+- **Extensible** — Custom mask shapes via the painter API, no engine changes required
+
+## Animation Categories
+
+OpenVideo has two categories of animations that can run in parallel:
+
+| Category | Types | How it works |
+|---|---|---|
+| **Property animations** | `keyframes`, `fadeIn`, `slideIn`, `zoomIn` etc. | Modifies scalar properties (x, y, scale, opacity…) |
+| **Mask animations** | `wipe`, `circleReveal`, `rectExpand`, `centerExpand`, `angleWipe`, `starReveal` | Draws a mask shape that reveals/conceals the clip |
+
+Both categories can be active on the same clip at the same time.
 
 ## Animation Structure
 
-Each animation has the following structure:
-
 ```ts
 interface Animation {
-  id: string; // Unique identifier
-  type: string; // Animation type (preset or "keyframes")
-  duration: number; // Duration in microseconds
-  delay?: number; // Delay before start (microseconds)
-  easing?: string; // Easing function name
-  iterCount?: number; // Iterations (default: 1, use Infinity for loop)
-  params?: object; // Type-specific parameters
-  keyframes?: object; // For custom keyframe animations
+  id: string;        // Unique identifier
+  type: string;      // Animation type name
+  duration: number;  // Duration in microseconds
+  delay?: number;    // Delay before start (microseconds)
+  easing?: string;   // Easing function name
+  iterCount?: number; // Iterations (default: 1, Infinity = loop)
+  params?: object;   // Type-specific parameters
 }
 ```
 
-## Animation Presets
+---
 
-OpenVideo provides built-in animation presets for common transitions. These presets automatically calculate keyframes based on the clip's current state.
+## Property Animations
 
-### Entry Animations (In)
+### Entry Presets
 
 ```ts
 import { core } from "@openvideo/core";
 
-// Fade in from transparent
+// Fade in
+core.clip.update(clipId, {
+  animations: [{
+    id: "fade-in",
+    type: "fadeIn",
+    duration: 1_000_000,
+    easing: "easeOutQuad",
+  }],
+});
+
+// Slide in from left
+core.clip.update(clipId, {
+  animations: [{
+    id: "slide-in",
+    type: "slideIn",
+    duration: 800_000,
+    easing: "easeOutBack",
+    params: {
+      direction: "left", // "left" | "right" | "top" | "bottom"
+      distance: 500,
+    },
+  }],
+});
+
+// Zoom in
+core.clip.update(clipId, {
+  animations: [{
+    id: "zoom-in",
+    type: "zoomIn",
+    duration: 600_000,
+    easing: "easeOutCubic",
+  }],
+});
+```
+
+### Exit Presets
+
+```ts
+// Fade out (start 4 seconds into clip)
+core.clip.update(clipId, {
+  animations: [{
+    id: "fade-out",
+    type: "fadeOut",
+    duration: 800_000,
+    easing: "easeInQuad",
+    delay: 4_000_000,
+  }],
+});
+
+// Slide out to right
+core.clip.update(clipId, {
+  animations: [{
+    id: "slide-out",
+    type: "slideOut",
+    duration: 600_000,
+    easing: "easeInBack",
+    params: { direction: "right", distance: 300 },
+  }],
+});
+```
+
+### All Property Presets
+
+| Preset      | Description                           | Params                  |
+| ----------- | ------------------------------------- | ----------------------- |
+| `fadeIn`    | Opacity 0 → 1                         | —                       |
+| `fadeOut`   | Opacity 1 → 0                         | —                       |
+| `zoomIn`    | Scale 0 → 1                           | —                       |
+| `zoomOut`   | Scale 1 → 0                           | —                       |
+| `blurIn`    | Blur clears as clip enters            | —                       |
+| `blurOut`   | Blur increases as clip exits          | —                       |
+| `slideIn`   | Enter from edge                       | `direction`, `distance` |
+| `slideOut`  | Exit to edge                          | `direction`, `distance` |
+| `pulse`     | Scale pulses (looping)                | —                       |
+
+---
+
+## Mask Animations
+
+Mask animations reveal or conceal a clip through a growing/shrinking shape. They are fully independent of property animations and can be layered on top.
+
+### Architecture
+
+Under the hood, mask animations emit a `MaskTransform` object each frame via `getTransform()`. The renderer accumulates these and draws a single `Graphics` mask. This means:
+
+- You never touch the mask directly — just configure the animation
+- Multiple mask animations on the same clip: **last one wins**
+- A mask animation + a property animation run completely independently
+
+### Common Parameters
+
+All mask animations share these parameters:
+
+| Parameter         | Type      | Default    | Description                                         |
+| ----------------- | --------- | ---------- | --------------------------------------------------- |
+| `mode`            | `string`  | `"reveal"` | `"reveal"` = wipe in, `"conceal"` = wipe out        |
+| `initialProgress` | `number`  | `0`        | Starting mask size (0–1). `0.2` = starts at 20%     |
+| `feather`         | `number`  | `0`        | Soft edge width in pixels                           |
+
+### Wipe (`wipe`)
+
+A rectangular edge sweep — the classic wipe transition.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "wipe-in",
+    type: "wipe",
+    duration: 1_000_000,
+    easing: "easeInOutCubic",
+    params: {
+      mode: "reveal",
+      direction: "left",    // "left" | "right" | "top" | "bottom"
+      angle: 0,             // Degrees — non-zero creates a diagonal wipe
+      feather: 0,
+      initialProgress: 0,
+    },
+  }],
+});
+```
+
+| `direction` | Effect |
+|---|---|
+| `"left"` | Mask sweeps left → right |
+| `"right"` | Mask sweeps right → left |
+| `"top"` | Mask sweeps top → bottom |
+| `"bottom"` | Mask sweeps bottom → top |
+
+Set `angle` to any non-zero value to tilt the wipe edge diagonally (e.g. `angle: 45` for a 45° diagonal).
+
+### Circle Reveal (`circleReveal`)
+
+An expanding circle (or ellipse) that grows from an origin point.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "circle-reveal",
+    type: "circleReveal",
+    duration: 1_000_000,
+    easing: "easeOutCubic",
+    params: {
+      mode: "reveal",
+      origin: "center",   // "center" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
+      feather: 0,
+      initialProgress: 0,
+    },
+  }],
+});
+```
+
+The circle expands from the `origin` point outward, growing until it covers the entire clip.
+
+### Rect Expand (`rectExpand`)
+
+A rectangle that expands from an origin point.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "rect-expand",
+    type: "rectExpand",
+    duration: 1_000_000,
+    easing: "easeOutQuart",
+    params: {
+      mode: "reveal",
+      origin: "center",   // "center" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight"
+      initialProgress: 0.2, // Start at 20% — avoids a sharp "nothing to something" pop
+    },
+  }],
+});
+```
+
+Unlike `circleReveal`, the mask stays rectangular — useful for clean box iris transitions.
+
+### Center Expand (`centerExpand`)
+
+The clip starts as a thin bar (full-width or full-height) at the center, then expands outward along one or both axes.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "center-expand",
+    type: "centerExpand",
+    duration: 1_000_000,
+    easing: "easeOutCubic",
+    params: {
+      mode: "reveal",
+      axis: "vertical",   // "vertical" | "horizontal" | "both"
+      initialProgress: 0,
+    },
+  }],
+});
+```
+
+| `axis`         | Starting shape                  | Expands toward      |
+| -------------- | ------------------------------- | ------------------- |
+| `"vertical"`   | Full-width, zero-height bar     | Top and bottom      |
+| `"horizontal"` | Full-height, zero-width bar     | Left and right      |
+| `"both"`       | Single point at center          | All directions      |
+
+### Angle Wipe (`angleWipe`)
+
+A wipe at an arbitrary angle — like a spinning door reveal.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "angle-wipe",
+    type: "angleWipe",
+    duration: 1_000_000,
+    easing: "easeInOutQuad",
+    params: {
+      mode: "reveal",
+      angle: 45,    // Degrees of rotation (0–360)
+      feather: 0,
+      initialProgress: 0,
+    },
+  }],
+});
+```
+
+### Star Reveal (`starReveal`)
+
+A star-shaped mask that expands from the center. Demonstrates the custom painter API.
+
+```ts
+core.clip.update(clipId, {
+  animations: [{
+    id: "star-reveal",
+    type: "starReveal",
+    duration: 1_200_000,
+    easing: "easeOutBack",
+    params: {
+      mode: "reveal",
+      points: 5,          // Number of star points
+      innerRatio: 0.4,    // Inner radius / outer radius (0–1)
+      initialProgress: 0,
+    },
+  }],
+});
+```
+
+---
+
+## Combining Mask + Property Animations
+
+Mask and property animations are fully independent and compose automatically.
+
+```ts
+// Circle reveal + scale up simultaneously
 core.clip.update(clipId, {
   animations: [
     {
-      id: "fade-in-anim",
-      type: "fadeIn",
+      id: "circle",
+      type: "circleReveal",
       duration: 1_000_000,
+      easing: "easeOutCubic",
+      params: { mode: "reveal", origin: "center" },
+    },
+    {
+      id: "scale",
+      type: "keyframes",
+      duration: 1_000_000,
+      easing: "easeOutCubic",
+      params: {
+        "0%": { scale: 0.8 },
+        "100%": { scale: 1 },
+      },
+    },
+  ],
+});
+
+// Wipe in + fade in together
+core.clip.update(clipId, {
+  animations: [
+    {
+      id: "wipe",
+      type: "wipe",
+      duration: 800_000,
+      easing: "easeOutQuad",
+      params: { mode: "reveal", direction: "left" },
+    },
+    {
+      id: "fade",
+      type: "fadeIn",
+      duration: 400_000,
       easing: "easeOutQuad",
     },
   ],
 });
-
-// Slide in from a direction
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "slide-in-anim",
-      type: "slideIn",
-      duration: 800_000,
-      easing: "easeOutBack",
-      params: {
-        direction: "left", // "left", "right", "top", "bottom"
-        distance: 500, // Pixels to travel
-      },
-    },
-  ],
-});
-
-// Zoom in from smaller size
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "zoom-in-anim",
-      type: "zoomIn",
-      duration: 600_000,
-      easing: "easeOutCubic",
-    },
-  ],
-});
 ```
 
-### Exit Animations (Out)
-
-```ts
-// Fade out to transparent
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "fade-out-anim",
-      type: "fadeOut",
-      duration: 800_000,
-      easing: "easeInQuad",
-      delay: 4_000_000, // Start at 4 seconds into clip
-    },
-  ],
-});
-
-// Slide out to a direction
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "slide-out-anim",
-      type: "slideOut",
-      duration: 600_000,
-      easing: "easeInBack",
-      params: {
-        direction: "right",
-        distance: 300,
-      },
-    },
-  ],
-});
-
-// Zoom out to smaller size
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "zoom-out-anim",
-      type: "zoomOut",
-      duration: 500_000,
-      easing: "easeInExpo",
-    },
-  ],
-});
-```
-
-### Available Presets
-
-| Preset     | Description                           | Parameters              |
-| ---------- | ------------------------------------- | ----------------------- |
-| `fadeIn`   | Opacity 0 → 1                         | —                       |
-| `fadeOut`  | Opacity 1 → 0                         | —                       |
-| `zoomIn`   | Scale 0 → 1                           | —                       |
-| `zoomOut`  | Scale 1 → 0                           | —                       |
-| `slideIn`  | Enter from edge                       | `direction`, `distance` |
-| `slideOut` | Exit to edge                          | `direction`, `distance` |
-| `stagger`  | Character-by-character text animation | GSAP-based              |
+---
 
 ## Custom Keyframe Animations
 
-For full control, define keyframes at specific percentage points:
-
-```ts
-// Complex multi-step animation
-core.clip.update(clipId, {
-  animations: [
-    {
-      id: "complex-anim",
-      type: "keyframes",
-      duration: 3_000_000,
-      easing: "easeInOutQuad",
-      keyframes: {
-        "0%": {
-          // Start state
-          opacity: 0,
-          scale: 0.5,
-          x: 0,
-          y: 0,
-        },
-        "30%": {
-          // At 30% through animation
-          opacity: 1,
-          scale: 1.2,
-          x: 100,
-        },
-        "60%": {
-          // At 60% through
-          scale: 1,
-          x: 200,
-          y: 50,
-        },
-        "100%": {
-          // End state
-          x: 300,
-          y: 100,
-          angle: 45,
-        },
-      },
-    },
-  ],
-});
-```
-
-### Keyframe Shorthand
-
-Use `from` and `to` for simple start/end animations:
+Define keyframes at specific percentage points for full control over property animations.
 
 ```ts
 core.clip.update(clipId, {
-  animations: [
-    {
-      id: "simple-move",
-      type: "keyframes",
-      duration: 2_000_000,
-      keyframes: {
-        from: { x: 0, opacity: 0 },
-        to: { x: 500, opacity: 1 },
-      },
+  animations: [{
+    id: "complex",
+    type: "keyframes",
+    duration: 3_000_000,
+    easing: "easeInOutQuad",
+    params: {
+      "0%":   { opacity: 0, scale: 0.5, x: 0, y: 0 },
+      "30%":  { opacity: 1, scale: 1.2, x: 100 },
+      "60%":  { scale: 1,  x: 200, y: 50 },
+      "100%": { x: 300, y: 100, angle: 45 },
     },
-  ],
+  }],
 });
 ```
-
-## Easing Functions
-
-Control the acceleration and deceleration of animations:
-
-| Easing           | Description                           |
-| ---------------- | ------------------------------------- |
-| `linear`         | Constant speed                        |
-| `easeInQuad`     | Accelerate from zero                  |
-| `easeOutQuad`    | Decelerate to zero                    |
-| `easeInOutQuad`  | Accelerate then decelerate            |
-| `easeInCubic`    | Strong acceleration                   |
-| `easeOutCubic`   | Strong deceleration                   |
-| `easeInOutCubic` | Strong accel/decel                    |
-| `easeInSine`     | Sine curve acceleration               |
-| `easeOutSine`    | Sine curve deceleration               |
-| `easeInExpo`     | Exponential acceleration              |
-| `easeOutExpo`    | Exponential deceleration              |
-| `easeInCirc`     | Circular acceleration                 |
-| `easeOutCirc`    | Circular deceleration                 |
-| `slow`           | SlowMo with configurable linear ratio |
 
 ### Per-Keyframe Easing
 
-Override the global easing for specific keyframe segments:
+Override the global easing for individual segments:
 
 ```ts
 core.clip.update(clipId, {
-  animations: [
-    {
-      id: "multi-ease",
-      type: "keyframes",
-      duration: 2_000_000,
-      easing: "easeInOutQuad", // Global easing
-      disableGlobalEasing: true, // Allow per-keyframe easing
-      keyframes: {
-        "0%": { x: 0 },
-        "50%": {
-          // Easing from 0% to 50%
-          x: 100,
-          easing: "easeOutBack",
-        },
-        "100%": { x: 200 }, // Uses global easing from 50% to 100%
-      },
+  animations: [{
+    id: "multi-ease",
+    type: "keyframes",
+    duration: 2_000_000,
+    easing: "easeInOutQuad",
+    disableGlobalEasing: true,
+    params: {
+      "0%":   { x: 0 },
+      "50%":  { x: 100, easing: "easeOutBack" }, // easing for 0% → 50%
+      "100%": { x: 200 },                         // uses global from 50% → 100%
     },
-  ],
+  }],
 });
 ```
 
+---
+
+## Text-Specific Animations
+
+### GSAP Stagger
+
+Character-by-character text reveals using GSAP:
+
+```ts
+core.clip.update(textClipId, {
+  animations: [{
+    id: "text-reveal",
+    type: "stagger",
+    duration: 2_000_000,
+    easing: "easeOutBack",
+    params: {
+      from: "start",  // "start" | "center" | "edges" | "random"
+      amount: 0.5,    // Total stagger spread as fraction of duration
+      y: 50,          // Characters start 50px below final position
+      opacity: 0,     // Characters start invisible
+    },
+  }],
+});
+```
+
+Stagger animations decompose the text into individual characters, so they are only available on `Text` and `Caption` clip types.
+
+---
+
+## Custom Mask Shapes (Painter API)
+
+For any shape not covered by built-ins, implement a custom `painter` function. No engine changes are needed — the renderer calls your painter directly.
+
+```ts
+import type { MaskPainter, MaskTransform } from "@openvideo/engine-pixi";
+
+// Diamond reveal — custom painter
+const diamondPainter: MaskPainter = (g, width, height, progress) => {
+  const r = Math.max(width, height) * progress;
+  g.poly([0, -r, r, 0, 0, r, -r, 0], true).fill({ color: 0xffffff });
+};
+
+// Use inside an animation class or inject directly into a MaskTransform
+// via a custom animation class that extends BaseMaskAnimation:
+//
+// protected buildMask(progress: number): MaskTransform {
+//   return { shape: "custom", progress, painter: diamondPainter };
+// }
+```
+
+The `painter` receives:
+
+| Argument   | Type      | Description                              |
+| ---------- | --------- | ---------------------------------------- |
+| `g`        | `Graphics` | Cleared PixiJS Graphics object          |
+| `width`    | `number`  | Clip's logical width in pixels           |
+| `height`   | `number`  | Clip's logical height in pixels          |
+| `progress` | `number`  | Normalized reveal progress `0 → 1`, already remapped by `initialProgress` |
+
+Draw your shape into `g` filled with `0xffffff`. The alpha of the fill controls mask opacity.
+
+---
+
+## Easing Functions
+
+| Easing             | Description                        |
+| ------------------ | ---------------------------------- |
+| `linear`           | Constant speed                     |
+| `easeInQuad`       | Accelerate from zero               |
+| `easeOutQuad`      | Decelerate to zero                 |
+| `easeInOutQuad`    | Accelerate then decelerate         |
+| `easeInCubic`      | Strong acceleration                |
+| `easeOutCubic`     | Strong deceleration                |
+| `easeInOutCubic`   | Strong accel/decel                 |
+| `easeInQuart`      | Very strong acceleration           |
+| `easeOutQuart`     | Very strong deceleration           |
+| `easeInSine`       | Sine curve acceleration            |
+| `easeOutSine`      | Sine curve deceleration            |
+| `easeInExpo`       | Exponential acceleration           |
+| `easeOutExpo`      | Exponential deceleration           |
+| `easeInCirc`       | Circular acceleration              |
+| `easeOutCirc`      | Circular deceleration              |
+| `easeOutBack`      | Overshoot then settle              |
+| `easeInBack`       | Pull back then launch              |
+| `easeInOutBack`    | Pull back + overshoot              |
+| `easeOutBounce`    | Bouncing deceleration              |
+| `slow`             | SlowMo with configurable ratio     |
+
+---
+
 ## Animatable Properties
 
-The following properties can be animated across all clip types:
+The following properties can be animated in keyframe / property animations:
 
-| Property     | Type   | Description                             |
-| ------------ | ------ | --------------------------------------- |
-| `x`          | number | Horizontal position offset (pixels)     |
-| `y`          | number | Vertical position offset (pixels)       |
-| `width`      | number | Width offset (pixels)                   |
-| `height`     | number | Height offset (pixels)                  |
-| `scale`      | number | Uniform scale multiplier (1.0 = normal) |
-| `scaleX`     | number | Horizontal scale multiplier             |
-| `scaleY`     | number | Vertical scale multiplier               |
-| `opacity`    | number | Opacity multiplier (0.0 - 1.0)          |
-| `angle`      | number | Rotation in degrees                     |
-| `blur`       | number | Blur amount                             |
-| `brightness` | number | Brightness multiplier                   |
-| `mirror`     | number | Mirror effect (0 or 1)                  |
-| `motionBlur` | number | Motion blur amount                      |
+| Property     | Type     | Description                              |
+| ------------ | -------- | ---------------------------------------- |
+| `x`          | `number` | Horizontal position offset (pixels)      |
+| `y`          | `number` | Vertical position offset (pixels)        |
+| `width`      | `number` | Width offset (pixels)                    |
+| `height`     | `number` | Height offset (pixels)                   |
+| `scale`      | `number` | Uniform scale multiplier (`1.0` = normal) |
+| `scaleX`     | `number` | Horizontal scale multiplier              |
+| `scaleY`     | `number` | Vertical scale multiplier                |
+| `opacity`    | `number` | Opacity (`0.0` – `1.0`)                  |
+| `angle`      | `number` | Rotation in degrees                      |
+| `blur`       | `number` | Blur amount                              |
+| `brightness` | `number` | Brightness multiplier                    |
+| `mirror`     | `number` | Mirror effect (`0` or `1`)               |
+| `motionBlur` | `number` | Motion blur amount                       |
+
+---
 
 ## Managing Animations
 
 ### Adding Multiple Animations
-
-Stack animations for complex effects:
 
 ```ts
 core.clip.update(clipId, {
@@ -295,7 +520,7 @@ core.clip.update(clipId, {
       id: "exit",
       type: "slideOut",
       duration: 500_000,
-      delay: 4_000_000, // Start 4 seconds in
+      delay: 4_000_000,
       params: { direction: "right", distance: 200 },
     },
   ],
@@ -304,14 +529,11 @@ core.clip.update(clipId, {
 
 ### Updating an Animation
 
-Replace a specific animation by ID:
-
 ```ts
-// Keep existing animations, replace one
 core.clip.update(clipId, {
   animations: existingAnimations.map((anim) =>
     anim.id === "entry"
-      ? { ...anim, duration: 1_000_000 } // Update duration
+      ? { ...anim, duration: 1_000_000 }
       : anim,
   ),
 });
@@ -320,48 +542,40 @@ core.clip.update(clipId, {
 ### Removing Animations
 
 ```ts
-// Remove all animations
+// Remove all
 core.clip.update(clipId, { animations: [] });
 
-// Remove specific animation by ID
-const currentAnims = core.store.getState().clips[clipId].animations || [];
+// Remove one by ID
+const currentAnims = core.store.getState().clips[clipId].animations ?? [];
 core.clip.update(clipId, {
   animations: currentAnims.filter((a) => a.id !== "entry"),
 });
 ```
 
-## Looping Animations
-
-Create infinitely looping animations:
+### Looping
 
 ```ts
 core.clip.update(clipId, {
-  animations: [
-    {
-      id: "pulse",
-      type: "keyframes",
-      duration: 1_000_000,
-      iterCount: Infinity,
-      keyframes: {
-        "0%": { scale: 1 },
-        "50%": { scale: 1.1 },
-        "100%": { scale: 1 },
-      },
+  animations: [{
+    id: "pulse",
+    type: "keyframes",
+    duration: 1_000_000,
+    iterCount: Infinity,
+    params: {
+      "0%":   { scale: 1 },
+      "50%":  { scale: 1.1 },
+      "100%": { scale: 1 },
     },
-  ],
+  }],
 });
 ```
 
-## Batch Animation Operations
-
-Apply animations to multiple clips at once:
+### Batch Apply to Multiple Clips
 
 ```ts
 import { nanoid } from "@openvideo/core";
 
-// Fade in all selected clips
-const state = core.store.getState();
-const selectedIds = state.selectedIds;
+const selectedIds = core.store.getState().selectedIds;
 
 core.execute({
   id: nanoid(),
@@ -369,49 +583,29 @@ core.execute({
   payload: selectedIds.map((id) => ({
     id,
     updates: {
-      animations: [
-        {
-          id: nanoid(),
-          type: "fadeIn",
-          duration: 500_000,
-        },
-      ],
+      animations: [{
+        id: nanoid(),
+        type: "circleReveal",
+        duration: 800_000,
+        easing: "easeOutCubic",
+        params: { mode: "reveal", origin: "center" },
+      }],
     },
   })),
 });
 ```
 
-## Text-Specific Animations (GSAP Stagger)
-
-For text clips, use the `stagger` animation for character-by-character effects:
-
-```ts
-core.clip.update(textClipId, {
-  animations: [
-    {
-      id: "text-reveal",
-      type: "stagger",
-      duration: 2_000_000,
-      easing: "easeOutBack",
-      params: {
-        from: "start", // "start", "center", "edges", "random"
-        amount: 0.5, // Total stagger time as fraction of duration
-        y: 50, // Characters start 50px below
-        opacity: 0, // Characters start invisible
-      },
-    },
-  ],
-});
-```
+---
 
 ## Best Practices
 
-1. **Always use microseconds**: `duration`, `delay` in μs (seconds × 1,000,000)
-2. **Give animations unique IDs**: Required for updating/removing specific animations
-3. **Use presets when possible**: Presets are optimized and consistent
-4. **Stack simple animations**: Combine fade + slide for polished effects
-5. **Time exit animations**: Use `delay` to make exit animations happen at clip end
-6. **Batch related changes**: Group animation updates with other clip changes
+1. **Always use microseconds** — `duration` and `delay` are in μs (`seconds × 1_000_000`)
+2. **Give animations unique IDs** — required for updating or removing specific animations
+3. **Combine mask + property** — `circleReveal` + `scaleIn` gives a polished cinematic feel
+4. **Use `initialProgress` to soften hard starts** — `0.15` avoids the "nothing to something" pop on expand masks
+5. **Prefer built-in shapes** — use `wipe`, `circleReveal`, `rectExpand`, `centerExpand` before reaching for a custom painter
+6. **Time exit animations with `delay`** — set `delay` to `clipDuration - animDuration` to pin an exit to the clip end
+7. **Stagger is text-only** — it decomposes characters, so it only works on `Text` / `Caption` clips
 
 ---
 
