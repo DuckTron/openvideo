@@ -87,7 +87,7 @@ export const createProjectStore = (initialState?: Partial<IProject>) => {
     muted: false,
     speed: 1,
     scale: {
-      zoom: 0.75,
+      zoom: 1.15,
       unit: 100,
       segments: 5,
       index: 0,
