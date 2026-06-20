@@ -47,24 +47,7 @@ export class GsapAnimation implements IAnimation {
   }
 
   private getTargetCount(target: any): number {
-    if (!target) return 0;
-    const { type } = this.params;
-    if (type === "character") {
-      const countLeafNodes = (node: any, isRoot: boolean = false): number => {
-        if (!node.children || node.children.length === 0) {
-          return isRoot ? 0 : 1;
-        }
-        let count = 0;
-        for (const child of node.children) {
-          count += countLeafNodes(child);
-        }
-        return count;
-      };
-      return countLeafNodes(target, true);
-    } else if (type === "word") {
-      return target.children ? target.children.length : 0;
-    }
-    return 1;
+    return this.getCurrentTargets(target).length;
   }
 
   apply(target: any, time: number): void {
@@ -156,40 +139,25 @@ export class GsapAnimation implements IAnimation {
    * Used to compare against GSAP's cached targets to detect when children are recreated.
    */
   private getCurrentTargets(target: any): any[] {
-    if (!target || !target.children) {
-      return [target];
+    if (!target) {
+      return [];
     }
 
     const { type } = this.params;
-    if (type === "character") {
-      // Find all characters (leaf nodes) recursively
-      const findCharacters = (node: any, isRoot: boolean = false): any[] => {
-        if (!node.children || node.children.length === 0) {
-          return isRoot ? [] : [node];
-        }
-        let results: any[] = [];
-        for (const child of node.children) {
-          results = results.concat(findCharacters(child));
-        }
-        return results;
-      };
-      return findCharacters(target, true);
-    } else if (type === "word") {
-      return [...(target.children || [])];
+
+    // For Text and Caption clips, the words and characters live inside the TextOnlyContainer child if it exists.
+    let textContainer = target;
+    if (target.children) {
+      const found = target.children.find((child: any) => child.label === "TextOnlyContainer");
+      if (found) {
+        textContainer = found;
+      }
     }
-    return [target];
-  }
 
-  private initTimeline(target: any): void {
-    const { from, to, stagger, type } = this.params;
-    const durationInSeconds = this.options.duration / 1e6;
-
-    // Identify animation targets based on type
-    let animTargets: any[] = [];
-
-    // PixiJS SplitBitmapText structure:
-    // Container -> Words -> Characters
-    if (target && target.children) {
+    if (type === "character" || type === "word") {
+      if (!textContainer || !textContainer.children || textContainer.children.length === 0) {
+        return [];
+      }
       if (type === "character") {
         // Find all characters (recursive)
         const findCharacters = (node: any, isRoot: boolean = false): any[] => {
@@ -202,15 +170,22 @@ export class GsapAnimation implements IAnimation {
           }
           return results;
         };
-        animTargets = findCharacters(target, true);
-      } else if (type === "word") {
-        animTargets = target.children || [];
+        return findCharacters(textContainer, true);
       } else {
-        animTargets = [target];
+        // type === "word"
+        return [...textContainer.children];
       }
-    } else {
-      animTargets = [target];
     }
+
+    return [target];
+  }
+
+  private initTimeline(target: any): void {
+    const { from, to, stagger, type } = this.params;
+    const durationInSeconds = this.options.duration / 1e6;
+
+    // Identify animation targets based on type
+    const animTargets: any[] = this.getCurrentTargets(target);
 
     // CRITICAL: Don't create the timeline if we have no targets but expected them.
     // By keeping this.timeline as null, the apply method will keep retrying every frame.

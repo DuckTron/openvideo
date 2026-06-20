@@ -108,7 +108,7 @@ export default function PanelText() {
       core.clip.add({
         type: "Text",
         name: "Text",
-        text: "Add Textjp",
+        text: "This is a text clip",
         style: {
           fontSize: 80,
           fontFamily: "Bangers-Regular",
