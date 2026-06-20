@@ -60,6 +60,57 @@ export interface AnimationTransform {
   brightness?: number; // multiplier (relative to 1.0)
   mirror?: number; // 0 or 1 (boolean via number)
   motionBlur?: number; // additive offset
+  // ─── Mask fields ─────────────────────────────────────────────────────────
+  mask?: MaskTransform;
+}
+
+/**
+ * Custom mask painter function.
+ * Called by PixiSpriteRenderer when shape === "custom".
+ * Receives a cleared Graphics object; draw your shape into it using Pixi's
+ * Graphics API. Fill with white (0xffffff) — alpha determines mask opacity.
+ *
+ * @param g        The cleared Graphics object to draw into
+ * @param width    Clip's logical width in pixels
+ * @param height   Clip's logical height in pixels
+ * @param progress Normalized reveal progress 0→1
+ */
+export type MaskPainter = (
+  g: { rect: any; circle: any; ellipse: any; fill: any; poly: any; [key: string]: any },
+  width: number,
+  height: number,
+  progress: number,
+) => void;
+
+export interface MaskTransform {
+  /** Mask shape. Use "custom" and provide a `painter` for arbitrary paths. */
+  shape: "rect" | "circle" | "ellipse" | "custom";
+  /**
+   * Normalized progress 0–1 controlling how much of the clip is revealed.
+   * 0 = fully hidden, 1 = fully visible.
+   */
+  progress: number;
+  /** For rect: which edge the wipe sweeps from. For circle/ellipse: ignored. */
+  direction?: "left" | "right" | "top" | "bottom";
+  /** For angled wipe: rotation of the mask edge in degrees (0 = vertical sweep) */
+  angle?: number;
+  /** Origin point for expand masks (circle/ellipse/rectExpand). Default: "center" */
+  origin?: "center" | "topLeft" | "topRight" | "bottomLeft" | "bottomRight";
+  /** Soft edge width in pixels. 0 = hard edge. */
+  feather?: number;
+  /**
+   * Normalized starting size of the mask (0–1). Default: 0.
+   * e.g. 0.2 means the mask starts at 20% size and grows to 100%.
+   * The painter receives a `progress` value already remapped from
+   * initialProgress→1 so individual painters don't need to handle this.
+   */
+  initialProgress?: number;
+  /**
+   * Custom painter for shape === "custom".
+   * Draw any path into the provided Graphics object.
+   * The renderer calls this instead of its built-in shape dispatch.
+   */
+  painter?: MaskPainter;
 }
 
 export interface KeyframeData {

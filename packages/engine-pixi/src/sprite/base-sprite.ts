@@ -427,7 +427,8 @@ export abstract class BaseSprite<
       brightness: 1,
       mirror: 0,
       motionBlur: 0,
-    };
+      __lastSpriteTime: time,
+    } as any;
 
     // 1. Process new modular animations
     for (const anim of this.animations) {
@@ -448,6 +449,9 @@ export abstract class BaseSprite<
         this.renderTransform.brightness! *= transform.brightness;
       if (transform.mirror !== undefined)
         this.renderTransform.mirror = Math.max(this.renderTransform.mirror || 0, transform.mirror);
+
+      // Mask: last animation with a mask wins (overwrite, not accumulate)
+      if (transform.mask !== undefined) this.renderTransform.mask = transform.mask;
 
       if (target && anim.apply) {
         anim.apply(target, time);
