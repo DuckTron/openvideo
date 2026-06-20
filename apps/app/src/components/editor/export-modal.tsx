@@ -221,7 +221,7 @@ export const SAMPLE_RATES = [
 // Shared UI primitives
 // ---------------------------------------------------------------------------
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+export function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4">
       <span className="text-xs text-muted-foreground shrink-0">{label}</span>

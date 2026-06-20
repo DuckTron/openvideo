@@ -5,8 +5,15 @@ import { useProjectStore } from "@/stores/project-store";
 import { usePanelStore } from "@/stores/panel-store";
 import { Button } from "@/components/ui/button";
 import { LogoIcons } from "@/components/shared/logos";
-import { ExportModal } from "./export-modal";
-import { RiSideBarLine } from "@remixicon/react";
+import { ExportPopover } from "./export-popover";
+import { TaskbarPopover } from "./taskbar-popover";
+import {
+  RiArchiveDrawerLine,
+  RiDownloadLine,
+  RiNotification3Line,
+  RiNotificationBadgeLine,
+  RiSideBarLine,
+} from "@remixicon/react";
 import { RiLockLine, RiArrowDownSLine } from "@remixicon/react";
 import { core } from "@/lib/project";
 
@@ -52,13 +59,18 @@ export default function Header() {
 
         {/* Right Column: Aspect Ratio and Export Button */}
         <div className="flex items-center justify-end gap-2">
+          {/* Taskbar Button */}
+          <TaskbarPopover>
+            <RiArchiveDrawerLine className="size-4" />
+            <span className="sr-only">Tasks</span>
+          </TaskbarPopover>
+
           {/* Export Button */}
-          <Button
-            onClick={() => setIsExportOpen(true)}
-            className="h-7 text-xs font-semibold px-3  rounded-md flex items-center gap-2"
-          >
-            <span>Export</span>
-          </Button>
+          <ExportPopover open={isExportOpen} onOpenChange={setIsExportOpen}>
+            <Button className="h-7 text-xs font-semibold px-3 rounded-md flex items-center gap-2">
+              <span>Export</span>
+            </Button>
+          </ExportPopover>
 
           {!isCopilotVisible && (
             <Button
@@ -73,9 +85,6 @@ export default function Header() {
           )}
         </div>
       </div>
-
-      {/* Export Modal managed locally in Header */}
-      <ExportModal open={isExportOpen} onOpenChange={setIsExportOpen} />
     </div>
   );
 }
