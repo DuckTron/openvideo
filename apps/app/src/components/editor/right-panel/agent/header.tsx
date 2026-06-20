@@ -13,7 +13,7 @@ export function AgentHeader({
   onNewChat,
 }: AgentHeaderProps) {
   return (
-    <div className="flex items-center gap-2  py-2 shrink-0">
+    <div className="flex items-center gap-2  px-4 py-2 shrink-0">
       <Button variant="secondary" className="flex-1 justify-between font-medium">
         <span className="truncate">{conversationLabel}</span>
         <RiArrowDownSLine className="size-4 shrink-0 text-muted-foreground" />
