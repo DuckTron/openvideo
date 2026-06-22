@@ -7,6 +7,138 @@ import { AnimationOptions, AnimationTransform, IAnimation } from "./types";
 gsap.registerPlugin(PixiPlugin);
 PixiPlugin.registerPIXI(PIXI);
 
+// List of properties that should be handled by PixiPlugin
+const pixiProps = [
+  "scale",
+  "scaleX",
+  "scaleY",
+  "rotation",
+  "skewX",
+  "skewY",
+  "skew",
+  "pivotX",
+  "pivotY",
+  "pivot",
+  "anchorX",
+  "anchorY",
+  "anchor",
+  "blur",
+  "brightness",
+  "contrast",
+  "grayscale",
+  "hueRotate",
+  "invert",
+  "saturate",
+  "threshold",
+  "matrix",
+];
+
+const hasPixiProp = (obj: any) => obj && Object.keys(obj).some((key) => pixiProps.includes(key));
+
+const prepareVars = (vars: any) => {
+  if (!hasPixiProp(vars)) return vars;
+  const newVars: any = { ...vars };
+  const pixiVars: any = {};
+  pixiProps.forEach((prop) => {
+    if (prop in newVars) {
+      pixiVars[prop] = newVars[prop];
+      delete newVars[prop];
+    }
+  });
+  newVars.pixi = pixiVars;
+  return newVars;
+};
+
+function resolveValue(val: any, baseVal: number): number {
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    if (val.startsWith("+=")) {
+      return baseVal + parseFloat(val.substring(2));
+    }
+    if (val.startsWith("-=")) {
+      return baseVal - parseFloat(val.substring(2));
+    }
+  }
+  const parsed = parseFloat(val);
+  return isNaN(parsed) ? baseVal : parsed;
+}
+
+function resolveVars(vars: any, baseSource: Record<string, any>): Record<string, any> {
+  const resolved: Record<string, any> = {};
+  if (!vars) return resolved;
+  for (const key of Object.keys(vars)) {
+    if (
+      ["immediateRender", "ease", "duration", "stagger", "repeat", "yoyo", "keyframes"].includes(
+        key,
+      )
+    ) {
+      resolved[key] = vars[key];
+      continue;
+    }
+    const baseVal = baseSource[key] ?? 0;
+    resolved[key] = resolveValue(vars[key], baseVal);
+  }
+
+  if (vars.keyframes) {
+    if (Array.isArray(vars.keyframes)) {
+      resolved.keyframes = vars.keyframes.map((frame: any) => resolveVars(frame, baseSource));
+    } else if (typeof vars.keyframes === "object") {
+      const resolvedKf: Record<string, any> = {};
+      for (const [kfKey, frame] of Object.entries(vars.keyframes)) {
+        if (frame && typeof frame === "object") {
+          resolvedKf[kfKey] = resolveVars(frame, baseSource);
+        } else {
+          resolvedKf[kfKey] = frame;
+        }
+      }
+      resolved.keyframes = resolvedKf;
+    }
+  }
+
+  return resolved;
+}
+
+function getAnimatedKeys(from: any, to: any): string[] {
+  const keys = new Set<string>();
+  const excludeKeys = [
+    "immediateRender",
+    "ease",
+    "duration",
+    "stagger",
+    "repeat",
+    "yoyo",
+    "keyframes",
+  ];
+  if (from) {
+    for (const key of Object.keys(from)) {
+      if (!excludeKeys.includes(key)) keys.add(key);
+    }
+  }
+  if (to) {
+    for (const key of Object.keys(to)) {
+      if (!excludeKeys.includes(key)) keys.add(key);
+    }
+    if (to.keyframes) {
+      if (Array.isArray(to.keyframes)) {
+        for (const frame of to.keyframes) {
+          for (const key of Object.keys(frame)) {
+            if (!excludeKeys.includes(key)) keys.add(key);
+          }
+        }
+      } else if (typeof to.keyframes === "object") {
+        for (const frame of Object.values(to.keyframes)) {
+          if (frame && typeof frame === "object") {
+            for (const key of Object.keys(frame)) {
+              if (!excludeKeys.includes(key)) keys.add(key);
+            }
+          }
+        }
+      }
+    }
+  }
+  return Array.from(keys);
+}
+
 export interface GsapAnimationParams {
   /**
    * Animation presets or custom GSAP vars
@@ -25,6 +157,7 @@ export class GsapAnimation implements IAnimation {
 
   private timeline: gsap.core.Timeline | null = null;
   private lastTarget: any = null;
+  private originalProperties = new Map<any, Record<string, any>>();
 
   constructor(params: GsapAnimationParams, options: AnimationOptions, type: string = "gsap") {
     this.id = options.id || `gsap_${Math.random().toString(36).substr(2, 9)}`;
@@ -46,8 +179,26 @@ export class GsapAnimation implements IAnimation {
     return {};
   }
 
-  private getTargetCount(target: any): number {
-    return this.getCurrentTargets(target).length;
+  get isOutAnimation(): boolean {
+    return (
+      (this.options as any).mode === "out" ||
+      (this.params as any).metaMode === "out" ||
+      (this.params as any).mode === "out" ||
+      this.id.toLowerCase().includes("out")
+    );
+  }
+
+  restoreOriginals(): void {
+    this.originalProperties.forEach((orig, t) => {
+      if (t && !t.destroyed) {
+        try {
+          const pixiOrig = prepareVars(orig);
+          gsap.set(t, pixiOrig);
+        } catch (e) {
+          // ignore
+        }
+      }
+    });
   }
 
   apply(target: any, time: number): void {
@@ -55,53 +206,22 @@ export class GsapAnimation implements IAnimation {
     const offsetTime = time - delay;
 
     // Check if we need to re-initialize the timeline
-    let needsReinit = this.lastTarget !== target || !this.timeline;
+    let needsReinit =
+      this.lastTarget !== target || !this.timeline || this.originalProperties.size === 0;
 
     // Get current actual targets from the container for comparison
     const currentActualTargets = this.getCurrentTargets(target);
 
-    // If target is the same, check if its children (the things we are animating)
-    // have been destroyed and recreated (e.g. by TextClip refresh)
-    // OR if the timeline was previously empty (no targets were found yet)
-    if (!needsReinit && this.timeline) {
-      const tweens = this.timeline.getChildren();
-      if (tweens.length === 0) {
-        // No tweens? Check if we expected children and now have them
-        if (target && target.children && target.children.length > 0) {
-          needsReinit = true;
-        }
+    if (!needsReinit) {
+      if (this.originalProperties.size !== currentActualTargets.length) {
+        needsReinit = true;
       } else {
-        // Check if existing targets are destroyed or removed
-        const tween = tweens[0] as any;
-        const gsapTargets = typeof tween.targets === "function" ? tween.targets() : [];
-
-        // Check if the number of targets has changed (e.g. word -> characters)
-        const currentCount = this.getTargetCount(target);
-        if (gsapTargets.length !== currentCount) {
-          needsReinit = true;
-        } else if (gsapTargets && gsapTargets.length > 0 && currentActualTargets.length > 0) {
-          // If the target is the container itself, but we expected children, re-init
-          if (gsapTargets[0] === target && target.children && target.children.length > 0) {
+        // Check if target references have changed or any target is destroyed
+        for (const t of currentActualTargets) {
+          if (!this.originalProperties.has(t) || t.destroyed || !t.parent) {
             needsReinit = true;
-          } else {
-            // Check if ANY of the old targets is destroyed or if the actual targets have changed
-            // This handles the case where children are destroyed and recreated during style updates
-            for (let i = 0; i < gsapTargets.length; i++) {
-              const oldTarget = gsapTargets[i];
-              if (oldTarget.destroyed || !oldTarget.parent) {
-                needsReinit = true;
-                break;
-              }
-              // Also check if the target reference has changed (new objects created)
-              if (i < currentActualTargets.length && oldTarget !== currentActualTargets[i]) {
-                needsReinit = true;
-                break;
-              }
-            }
+            break;
           }
-        } else if (target && target.children && target.children.length > 0) {
-          // Tweens exist but targets are empty? (Safe to check)
-          needsReinit = true;
         }
       }
     }
@@ -113,25 +233,51 @@ export class GsapAnimation implements IAnimation {
 
     if (!this.timeline) return;
 
-    if (offsetTime < 0) {
-      this.timeline.pause(0);
-      return;
-    }
-
-    // Convert microseconds to seconds
-    // (Used for GSAP timeline, but we now use progress)
-
     // Handle iteration and clamping
     const cycleDuration =
       this.options.iterCount === Infinity ? duration : duration / this.options.iterCount;
 
+    let progress: number;
     if (this.options.iterCount !== Infinity && offsetTime >= duration) {
-      this.timeline.progress(1);
-      return;
+      progress = 1;
+    } else if (offsetTime < 0) {
+      if (this.isOutAnimation) {
+        return; // exit animations do not apply anything before their start time
+      }
+      progress = 0;
+    } else {
+      progress = (offsetTime % cycleDuration) / cycleDuration;
     }
 
-    const progress = (offsetTime % cycleDuration) / cycleDuration;
     this.timeline.progress(progress);
+
+    // Apply manual boundary values for staggered elements to prevent GSAP revert issues
+    const timelineTime = progress * this.timeline.duration();
+    const animTargets = this.getCurrentTargets(target);
+    const durationInSeconds = duration / 1e6;
+    const { from, to, stagger } = this.params;
+    const staggerVal = typeof stagger === "number" ? stagger : 0;
+
+    animTargets.forEach((t, i) => {
+      const tStart = i * staggerVal;
+      const tEnd = tStart + durationInSeconds;
+
+      if (timelineTime < tStart) {
+        // Force the starting values
+        const orig = this.originalProperties.get(t) || {};
+        const resolvedFrom = resolveVars(from, orig);
+        const pixiFrom = prepareVars(resolvedFrom);
+        gsap.set(t, pixiFrom);
+      } else if (timelineTime > tEnd) {
+        // Force the ending values
+        const orig = this.originalProperties.get(t) || {};
+        const resolvedFrom = resolveVars(from, orig);
+        const baseForTo = { ...orig, ...resolvedFrom };
+        const resolvedTo = resolveVars(to, baseForTo);
+        const pixiTo = prepareVars(resolvedTo);
+        gsap.set(t, pixiTo);
+      }
+    });
   }
 
   /**
@@ -201,6 +347,10 @@ export class GsapAnimation implements IAnimation {
     if (this.timeline) {
       this.timeline.kill();
     }
+    // Restore original properties of old targets before clearing
+    this.restoreOriginals();
+    this.originalProperties.clear();
+
     this.timeline = gsap.timeline({ paused: true });
     animTargets.forEach((t) => {
       if (t.anchor) {
@@ -227,57 +377,42 @@ export class GsapAnimation implements IAnimation {
       }
     });
 
-    // List of properties that should be handled by PixiPlugin
-    const pixiProps = [
-      "scale",
-      "scaleX",
-      "scaleY",
-      "rotation",
-      "skewX",
-      "skewY",
-      "skew",
-      "pivotX",
-      "pivotY",
-      "pivot",
-      "anchorX",
-      "anchorY",
-      "anchor",
-      "blur",
-      "brightness",
-      "contrast",
-      "grayscale",
-      "hueRotate",
-      "invert",
-      "saturate",
-      "threshold",
-      "matrix",
-    ];
-
-    const hasPixiProp = (obj: any) =>
-      obj && Object.keys(obj).some((key) => pixiProps.includes(key));
-
-    const prepareVars = (vars: any) => {
-      if (!hasPixiProp(vars)) return vars;
-      const newVars: any = { ...vars };
-      const pixiVars: any = {};
-      pixiProps.forEach((prop) => {
-        if (prop in newVars) {
-          pixiVars[prop] = newVars[prop];
-          delete newVars[prop];
+    // Populate original properties for new targets
+    const animKeys = getAnimatedKeys(from, to);
+    animTargets.forEach((t) => {
+      const orig: Record<string, any> = {};
+      t.__ovOriginalProperties = t.__ovOriginalProperties || {};
+      animKeys.forEach((key) => {
+        if (t.__ovOriginalProperties[key] === undefined) {
+          t.__ovOriginalProperties[key] = gsap.getProperty(t, key);
         }
+        orig[key] = t.__ovOriginalProperties[key];
       });
-      newVars.pixi = pixiVars;
-      return newVars;
-    };
+      this.originalProperties.set(t, orig);
+    });
 
-    const finalFrom = prepareVars(from);
-    const finalTo = prepareVars(to);
+    const staggerVal = typeof stagger === "number" ? stagger : 0;
 
-    this.timeline.fromTo(animTargets, finalFrom, {
-      duration: durationInSeconds,
-      stagger: stagger || 0,
-      ease: this.options.easing as any,
-      ...finalTo,
+    // Add individual tweens to timeline
+    animTargets.forEach((t, i) => {
+      const orig = this.originalProperties.get(t) || {};
+      const resolvedFrom = resolveVars(from, orig);
+      const baseForTo = { ...orig, ...resolvedFrom };
+      const resolvedTo = resolveVars(to, baseForTo);
+
+      const finalFrom = prepareVars(resolvedFrom);
+      const finalTo = prepareVars(resolvedTo);
+
+      const isOut = this.isOutAnimation;
+      this.timeline!.add(
+        gsap.fromTo(t, finalFrom, {
+          duration: durationInSeconds,
+          ease: this.options.easing as any,
+          immediateRender: !isOut,
+          ...finalTo,
+        }),
+        i * staggerVal,
+      );
     });
   }
 
@@ -286,5 +421,8 @@ export class GsapAnimation implements IAnimation {
       this.timeline.kill();
       this.timeline = null;
     }
+    // Restore original properties of targets before clearing
+    this.restoreOriginals();
+    this.originalProperties.clear();
   }
 }

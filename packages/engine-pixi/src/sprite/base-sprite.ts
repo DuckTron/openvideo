@@ -430,6 +430,15 @@ export abstract class BaseSprite<
       __lastSpriteTime: time,
     } as any;
 
+    // Pre-restore target elements to their original properties to ensure clean state transitions
+    if (target) {
+      for (const anim of this.animations) {
+        if (anim.type === "stagger" && (anim as any).restoreOriginals) {
+          (anim as any).restoreOriginals(target);
+        }
+      }
+    }
+
     // 1. Process new modular animations
     for (const anim of this.animations) {
       const transform = anim.getTransform(time);
