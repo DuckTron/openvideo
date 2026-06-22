@@ -469,6 +469,47 @@ const UI_PRESETS: PresetDefinition[] = [
   },
 ];
 
+function reverseKeyframes(
+  keyframes: Record<string, Partial<AnimationProps>>,
+): Record<string, Partial<AnimationProps>> {
+  const reversed: Record<string, Partial<AnimationProps>> = {};
+  Object.entries(keyframes).forEach(([key, val]) => {
+    const match = key.match(/(\d+)%/);
+    if (match) {
+      const pct = parseInt(match[1]);
+      const newPct = 100 - pct;
+      reversed[`${newPct}%`] = val;
+    } else {
+      reversed[key] = val;
+    }
+  });
+  return reversed;
+}
+
+function getCanonicalKeyframesString(keyframes: Record<string, Partial<AnimationProps>>): string {
+  const sortedKeys = Object.keys(keyframes)
+    .filter((k) => k.endsWith("%") || k === "from" || k === "to")
+    .sort((a, b) => {
+      const aNum = parseInt(a) || 0;
+      const bNum = parseInt(b) || 0;
+      return aNum - bNum;
+    });
+
+  const canonical: Record<string, any> = {};
+  sortedKeys.forEach((k) => {
+    const props = (keyframes[k] || {}) as any;
+    const sortedProps: Record<string, any> = {};
+    Object.keys(props)
+      .sort()
+      .forEach((p) => {
+        sortedProps[p] = props[p];
+      });
+    canonical[k] = sortedProps;
+  });
+
+  return JSON.stringify(canonical);
+}
+
 function getPresetIdAndMode(
   animation: any,
   clipDuration: number,
@@ -479,6 +520,13 @@ function getPresetIdAndMode(
     return {
       presetId: animation.options.presetId,
       mode: animation.options.mode || "in",
+    };
+  }
+
+  if (animation.params?.presetId) {
+    return {
+      presetId: animation.params.presetId,
+      mode: animation.params.mode || "in",
     };
   }
 
@@ -503,21 +551,46 @@ function getPresetIdAndMode(
   const mode = isOut ? "out" : "in";
 
   if (t === "keyframes") {
-    const presetsToCheck = ["fade", "zoom", "slide", "blur", "pulse"];
-    for (const pId of presetsToCheck) {
-      const coreKey = pId === "pulse" ? "pulse" : `${pId}${mode === "in" ? "In" : "Out"}`;
-      const template = getPresetKeyframes(coreKey);
-      if (JSON.stringify(template) === JSON.stringify(params)) {
-        return { presetId: pId, mode };
+    for (const preset of UI_PRESETS) {
+      if (
+        preset.category === "combo" ||
+        (preset.category === "transition" && !(preset.inType in GSAP_PRESETS)) ||
+        (preset.category === "text" && !(preset.inType in GSAP_PRESETS))
+      ) {
+        const coreKey = preset.hasInOut
+          ? mode === "in"
+            ? preset.inType
+            : preset.outType || preset.inType
+          : preset.inType;
+
+        let template = getPresetKeyframes(coreKey);
+
+        if (mode === "out" && preset.inType === preset.outType) {
+          template = reverseKeyframes(template);
+        }
+
+        if (getCanonicalKeyframesString(template) === getCanonicalKeyframesString(params)) {
+          return { presetId: preset.id, mode };
+        }
       }
     }
   }
 
   if (t === "stagger") {
     for (const [presetKey, config] of Object.entries(GSAP_PRESETS)) {
+      let templateParams = config.params;
+
+      if (mode === "out") {
+        templateParams = {
+          ...templateParams,
+          from: config.params.to,
+          to: config.params.from,
+        };
+      }
+
       if (
-        config.params?.type === params.type &&
-        JSON.stringify(config.params?.from) === JSON.stringify(params.from)
+        templateParams?.type === params.type &&
+        JSON.stringify(templateParams?.from) === JSON.stringify(params.from)
       ) {
         const matchingDef = UI_PRESETS.find((p) => p.inType === presetKey);
         if (matchingDef) {
@@ -741,9 +814,11 @@ export function AnimationPropertiesPicker() {
     let presetKey = "";
     let isMask = false;
     let isStagger = false;
+    let isKeyframe = false;
+    let def: PresetDefinition | undefined;
 
     if (activeTab === "presets" && selectedPreset) {
-      const def = UI_PRESETS.find((p) => p.id === selectedPreset);
+      def = UI_PRESETS.find((p) => p.id === selectedPreset);
       if (def) {
         presetKey = def.hasInOut
           ? selectedMode === "in"
@@ -769,6 +844,8 @@ export function AnimationPropertiesPicker() {
       isMask = true;
     } else if (presetKey && presetKey in GSAP_PRESETS) {
       isStagger = true;
+    } else if (activeTab === "presets" && presetKey) {
+      isKeyframe = true;
     }
 
     const options: any = {
@@ -795,9 +872,17 @@ export function AnimationPropertiesPicker() {
     } else if (isStagger) {
       const staggerPreset = GSAP_PRESETS[presetKey];
       finalParams = structuredClone(staggerPreset.params);
+      if (selectedMode === "out") {
+        const temp = finalParams.from;
+        finalParams.from = finalParams.to;
+        finalParams.to = temp;
+      }
       finalParams.stagger = presetParams.stagger ?? finalParams.stagger ?? 0.05;
-    } else if (activeTab === "presets" && presetKey) {
+    } else if (isKeyframe && presetKey) {
       finalParams = getPresetKeyframes(presetKey);
+      if (selectedMode === "out" && def && def.inType === def.outType) {
+        finalParams = reverseKeyframes(finalParams);
+      }
     } else {
       finalParams = structuredClone(keyframes);
     }
@@ -808,6 +893,11 @@ export function AnimationPropertiesPicker() {
           finalParams[key].mirror = mirrorEnabled ? 1 : 0;
         }
       });
+    }
+
+    if (activeTab === "presets" && selectedPreset) {
+      finalParams.presetId = selectedPreset;
+      finalParams.mode = selectedMode;
     }
 
     return { type, options, finalParams };
