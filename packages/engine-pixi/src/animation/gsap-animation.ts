@@ -63,39 +63,98 @@ function resolveValue(val: any, baseVal: number): number {
   return isNaN(parsed) ? baseVal : parsed;
 }
 
-function resolveVars(vars: any, baseSource: Record<string, any>): Record<string, any> {
-  const resolved: Record<string, any> = {};
-  if (!vars) return resolved;
-  for (const key of Object.keys(vars)) {
+function resolveVars(
+  from: any,
+  to: any,
+  baseSource: Record<string, any>,
+  isOut: boolean,
+): { resolvedFrom: Record<string, any>; resolvedTo: Record<string, any> } {
+  const resolvedFrom: Record<string, any> = {};
+  const resolvedTo: Record<string, any> = {};
+
+  const keys = new Set([...Object.keys(from || {}), ...Object.keys(to || {})]);
+
+  for (const key of keys) {
     if (
       ["immediateRender", "ease", "duration", "stagger", "repeat", "yoyo", "keyframes"].includes(
         key,
       )
     ) {
-      resolved[key] = vars[key];
+      if (from && key in from) resolvedFrom[key] = from[key];
+      if (to && key in to) resolvedTo[key] = to[key];
       continue;
     }
+
     const baseVal = baseSource[key] ?? 0;
-    resolved[key] = resolveValue(vars[key], baseVal);
+
+    if (isOut) {
+      // For exit (out) animations:
+      // If the property has a relative value in 'from', it represents the offset.
+      // We want to start at the rest value (baseVal) and end at the offset value (baseVal + offset).
+      const fromVal = from ? from[key] : undefined;
+      const toVal = to ? to[key] : undefined;
+
+      const isFromRelative =
+        typeof fromVal === "string" && (fromVal.startsWith("+=") || fromVal.startsWith("-="));
+      const isToRelative =
+        typeof toVal === "string" && (toVal.startsWith("+=") || toVal.startsWith("-="));
+
+      if (isFromRelative) {
+        resolvedFrom[key] = baseVal;
+        const offset = resolveValue(fromVal, 0);
+        resolvedTo[key] = baseVal + offset;
+      } else if (isToRelative) {
+        resolvedFrom[key] = fromVal !== undefined ? resolveValue(fromVal, baseVal) : baseVal;
+        const offset = resolveValue(toVal, 0);
+        resolvedTo[key] = resolvedFrom[key] + offset;
+      } else {
+        resolvedFrom[key] = fromVal !== undefined ? resolveValue(fromVal, baseVal) : baseVal;
+        resolvedTo[key] = toVal !== undefined ? resolveValue(toVal, baseVal) : baseVal;
+      }
+    } else {
+      // For entrance (in) animations:
+      // Resolve from relative to baseSource, and to relative to resolvedFrom.
+      const fromVal = from ? from[key] : undefined;
+      const toVal = to ? to[key] : undefined;
+
+      resolvedFrom[key] = fromVal !== undefined ? resolveValue(fromVal, baseVal) : baseVal;
+      const baseForTo = resolvedFrom[key];
+      resolvedTo[key] = toVal !== undefined ? resolveValue(toVal, baseForTo) : baseVal;
+    }
   }
 
-  if (vars.keyframes) {
-    if (Array.isArray(vars.keyframes)) {
-      resolved.keyframes = vars.keyframes.map((frame: any) => resolveVars(frame, baseSource));
-    } else if (typeof vars.keyframes === "object") {
+  // Handle keyframes
+  if (to && to.keyframes) {
+    if (Array.isArray(to.keyframes)) {
+      resolvedTo.keyframes = to.keyframes.map((frame: any) => {
+        const { resolvedTo: frameResolved } = resolveVars(
+          null,
+          frame,
+          { ...baseSource, ...resolvedFrom },
+          isOut,
+        );
+        return frameResolved;
+      });
+    } else if (typeof to.keyframes === "object") {
       const resolvedKf: Record<string, any> = {};
-      for (const [kfKey, frame] of Object.entries(vars.keyframes)) {
+      for (const [kfKey, frame] of Object.entries(to.keyframes)) {
         if (frame && typeof frame === "object") {
-          resolvedKf[kfKey] = resolveVars(frame, baseSource);
+          const { resolvedTo: frameResolved } = resolveVars(
+            null,
+            frame,
+            { ...baseSource, ...resolvedFrom },
+            isOut,
+          );
+          resolvedKf[kfKey] = frameResolved;
         } else {
           resolvedKf[kfKey] = frame;
         }
       }
-      resolved.keyframes = resolvedKf;
+      resolvedTo.keyframes = resolvedKf;
     }
   }
 
-  return resolved;
+  return { resolvedFrom, resolvedTo };
 }
 
 function getAnimatedKeys(from: any, to: any): string[] {
@@ -201,6 +260,10 @@ export class GsapAnimation implements IAnimation {
     });
   }
 
+  public getTargetCount(target: any): number {
+    return this.getCurrentTargets(target).length;
+  }
+
   apply(target: any, time: number): void {
     const { duration, delay } = this.options;
     const offsetTime = time - delay;
@@ -262,18 +325,17 @@ export class GsapAnimation implements IAnimation {
       const tStart = i * staggerVal;
       const tEnd = tStart + durationInSeconds;
 
+      const isOut = this.isOutAnimation;
       if (timelineTime < tStart) {
         // Force the starting values
         const orig = this.originalProperties.get(t) || {};
-        const resolvedFrom = resolveVars(from, orig);
+        const { resolvedFrom } = resolveVars(from, to, orig, isOut);
         const pixiFrom = prepareVars(resolvedFrom);
         gsap.set(t, pixiFrom);
       } else if (timelineTime > tEnd) {
         // Force the ending values
         const orig = this.originalProperties.get(t) || {};
-        const resolvedFrom = resolveVars(from, orig);
-        const baseForTo = { ...orig, ...resolvedFrom };
-        const resolvedTo = resolveVars(to, baseForTo);
+        const { resolvedTo } = resolveVars(from, to, orig, isOut);
         const pixiTo = prepareVars(resolvedTo);
         gsap.set(t, pixiTo);
       }
@@ -393,17 +455,16 @@ export class GsapAnimation implements IAnimation {
 
     const staggerVal = typeof stagger === "number" ? stagger : 0;
 
+    const isOut = this.isOutAnimation;
+
     // Add individual tweens to timeline
     animTargets.forEach((t, i) => {
       const orig = this.originalProperties.get(t) || {};
-      const resolvedFrom = resolveVars(from, orig);
-      const baseForTo = { ...orig, ...resolvedFrom };
-      const resolvedTo = resolveVars(to, baseForTo);
+      const { resolvedFrom, resolvedTo } = resolveVars(from, to, orig, isOut);
 
       const finalFrom = prepareVars(resolvedFrom);
       const finalTo = prepareVars(resolvedTo);
 
-      const isOut = this.isOutAnimation;
       this.timeline!.add(
         gsap.fromTo(t, finalFrom, {
           duration: durationInSeconds,

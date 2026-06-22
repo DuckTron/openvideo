@@ -430,9 +430,14 @@ export abstract class BaseSprite<
       __lastSpriteTime: time,
     } as any;
 
+    // Sort animations chronologically by delay to ensure correct application order (e.g. entrance before exit)
+    const sortedAnims = [...this.animations].sort(
+      (a, b) => (a.options?.delay ?? 0) - (b.options?.delay ?? 0),
+    );
+
     // Pre-restore target elements to their original properties to ensure clean state transitions
     if (target) {
-      for (const anim of this.animations) {
+      for (const anim of sortedAnims) {
         if (anim.type === "stagger" && (anim as any).restoreOriginals) {
           (anim as any).restoreOriginals(target);
         }
@@ -440,7 +445,7 @@ export abstract class BaseSprite<
     }
 
     // 1. Process new modular animations
-    for (const anim of this.animations) {
+    for (const anim of sortedAnims) {
       const transform = anim.getTransform(time);
       if (transform.x !== undefined) this.renderTransform.x! += transform.x;
       if (transform.y !== undefined) this.renderTransform.y! += transform.y;

@@ -265,14 +265,17 @@ describe("GsapAnimation boundary values and stagger correctness", () => {
       { duration: 1000000, delay: 4000000 }, // 4s to 5s
     );
 
-    // Mock BaseSprite animations array
-    const animations = [animIn, animOut];
+    // Mock BaseSprite animations array in arbitrary order (exit before entrance) to test sorting robustness
+    const animations = [animOut, animIn];
 
     const runAnimations = (time: number) => {
+      const sorted = [...animations].sort(
+        (a, b) => (a.options?.delay ?? 0) - (b.options?.delay ?? 0),
+      );
       // Restore step
-      animations.forEach((anim) => anim.restoreOriginals());
+      sorted.forEach((anim) => anim.restoreOriginals());
       // Apply step
-      animations.forEach((anim) => anim.apply(root, time));
+      sorted.forEach((anim) => anim.apply(root, time));
     };
 
     // 1. Before animIn starts (e.g. time = -500ms): should be in animIn's starting state (alpha: 0, y: 150)
@@ -305,19 +308,19 @@ describe("GsapAnimation boundary values and stagger correctness", () => {
     // 4. During animOut (e.g. time = 4.5s, progress = 0.5):
     // animOut timeline duration = 1.1s (1.0 duration + 0.1 stagger)
     // timelineTime = 0.55s
-    // child1 (starts at 0.0s): inside active window (eased progress = 0.55 / 1.0 = 0.55) -> alpha: 0.45, y: 77.5
-    // child2 (starts at 0.1s): inside active window (eased progress = 0.45 / 1.0 = 0.45) -> alpha: 0.55, y: 72.5
+    // child1 (starts at 0.0s): inside active window (eased progress = 0.55 / 1.0 = 0.55) -> alpha: 0.45, y: 72.5
+    // child2 (starts at 0.1s): inside active window (eased progress = 0.45 / 1.0 = 0.45) -> alpha: 0.55, y: 77.5
     runAnimations(4500000);
     expect(child1.alpha).toBeCloseTo(0.45, 2);
-    expect(child1.y).toBeCloseTo(77.5, 1);
+    expect(child1.y).toBeCloseTo(72.5, 1);
     expect(child2.alpha).toBeCloseTo(0.55, 2);
-    expect(child2.y).toBeCloseTo(72.5, 1);
+    expect(child2.y).toBeCloseTo(77.5, 1);
 
-    // 5. After animOut (e.g. time = 6s): should be in animOut's ending state (alpha: 0, y: 100)
+    // 5. After animOut (e.g. time = 6s): should be in animOut's ending state (alpha: 0, y: 50)
     runAnimations(6000000);
     expect(child1.alpha).toBe(0);
-    expect(child1.y).toBe(100);
+    expect(child1.y).toBe(50);
     expect(child2.alpha).toBe(0);
-    expect(child2.y).toBe(100);
+    expect(child2.y).toBe(50);
   });
 });
