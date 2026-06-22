@@ -22,7 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { NumberInput } from "@/components/ui/number-input";
-import { RiAddLine, RiDeleteBinLine, RiCloseLine } from "@remixicon/react";
+import { RiAddLine, RiDeleteBinLine, RiCloseLine, RiArrowLeftLine } from "@remixicon/react";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,6 +40,496 @@ import * as Popover from "@radix-ui/react-popover";
 
 type PropertyKey = keyof typeof ANIMATABLE_PROPERTIES;
 
+interface PresetDefinition {
+  id: string;
+  label: string;
+  category: "transition" | "text" | "combo";
+  hasInOut: boolean;
+  inType: string;
+  outType?: string;
+}
+
+const UI_PRESETS: PresetDefinition[] = [
+  // Transitions
+  {
+    id: "fade",
+    label: "Fade",
+    category: "transition",
+    hasInOut: true,
+    inType: "fadeIn",
+    outType: "fadeOut",
+  },
+  {
+    id: "zoom",
+    label: "Zoom",
+    category: "transition",
+    hasInOut: true,
+    inType: "zoomIn",
+    outType: "zoomOut",
+  },
+  {
+    id: "slide",
+    label: "Slide",
+    category: "transition",
+    hasInOut: true,
+    inType: "slideIn",
+    outType: "slideOut",
+  },
+  {
+    id: "blur",
+    label: "Blur",
+    category: "transition",
+    hasInOut: true,
+    inType: "blurIn",
+    outType: "blurOut",
+  },
+  {
+    id: "wipe",
+    label: "Wipe",
+    category: "transition",
+    hasInOut: true,
+    inType: "wipeIn",
+    outType: "wipeOut",
+  },
+  {
+    id: "circleReveal",
+    label: "Circle Reveal",
+    category: "transition",
+    hasInOut: true,
+    inType: "circleRevealIn",
+    outType: "circleRevealOut",
+  },
+  {
+    id: "rectExpand",
+    label: "Rect Expand",
+    category: "transition",
+    hasInOut: true,
+    inType: "rectExpandIn",
+    outType: "rectExpandOut",
+  },
+  {
+    id: "angleWipe",
+    label: "Angle Wipe",
+    category: "transition",
+    hasInOut: true,
+    inType: "angleWipeIn",
+    outType: "angleWipeOut",
+  },
+  {
+    id: "centerExpand",
+    label: "Center Expand",
+    category: "transition",
+    hasInOut: true,
+    inType: "centerExpandIn",
+    outType: "centerExpandOut",
+  },
+  {
+    id: "pulse",
+    label: "Pulse",
+    category: "transition",
+    hasInOut: true,
+    inType: "pulse",
+    outType: "pulse",
+  },
+
+  // Text Animations
+  {
+    id: "popCaption",
+    label: "Pop",
+    category: "text",
+    hasInOut: true,
+    inType: "popCaption",
+    outType: "popCaption",
+  },
+  {
+    id: "bounceCaption",
+    label: "Bounce",
+    category: "text",
+    hasInOut: true,
+    inType: "bounceCaption",
+    outType: "bounceCaption",
+  },
+  {
+    id: "scaleCaption",
+    label: "Scale",
+    category: "text",
+    hasInOut: true,
+    inType: "scaleCaption",
+    outType: "scaleCaption",
+  },
+  {
+    id: "slideLeftCaption",
+    label: "Slide Left",
+    category: "text",
+    hasInOut: true,
+    inType: "slideLeftCaption",
+    outType: "slideLeftCaption",
+  },
+  {
+    id: "slideRightCaption",
+    label: "Slide Right",
+    category: "text",
+    hasInOut: true,
+    inType: "slideRightCaption",
+    outType: "slideRightCaption",
+  },
+  {
+    id: "slideUpCaption",
+    label: "Slide Up",
+    category: "text",
+    hasInOut: true,
+    inType: "slideUpCaption",
+    outType: "slideUpCaption",
+  },
+  {
+    id: "slideDownCaption",
+    label: "Slide Down",
+    category: "text",
+    hasInOut: true,
+    inType: "slideDownCaption",
+    outType: "slideDownCaption",
+  },
+  {
+    id: "slideFadeByWord",
+    label: "Slide Fade By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "slideFadeByWord",
+    outType: "slideFadeByWord",
+  },
+  {
+    id: "upDownCaption",
+    label: "Up Down",
+    category: "text",
+    hasInOut: true,
+    inType: "upDownCaption",
+    outType: "upDownCaption",
+  },
+  {
+    id: "upLeftCaption",
+    label: "Up Left",
+    category: "text",
+    hasInOut: true,
+    inType: "upLeftCaption",
+    outType: "upLeftCaption",
+  },
+  {
+    id: "charFadeIn",
+    label: "Char Fade",
+    category: "text",
+    hasInOut: true,
+    inType: "charFadeIn",
+    outType: "charFadeIn",
+  },
+  {
+    id: "charSlideUp",
+    label: "Char Slide Up",
+    category: "text",
+    hasInOut: true,
+    inType: "charSlideUp",
+    outType: "charSlideUp",
+  },
+  {
+    id: "charTypewriter",
+    label: "Char Typewriter",
+    category: "text",
+    hasInOut: true,
+    inType: "charTypewriter",
+    outType: "charTypewriter",
+  },
+  {
+    id: "fadeByWord",
+    label: "Fade By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "fadeByWord",
+    outType: "fadeByWord",
+  },
+  {
+    id: "popByWord",
+    label: "Pop By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "popByWord",
+    outType: "popByWord",
+  },
+  {
+    id: "scaleFadeByWord",
+    label: "Scale Fade By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "scaleFadeByWord",
+    outType: "scaleFadeByWord",
+  },
+  {
+    id: "bounceByWord",
+    label: "Bounce By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "bounceByWord",
+    outType: "bounceByWord",
+  },
+  {
+    id: "rotateInByWord",
+    label: "Rotate In By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "rotateInByWord",
+    outType: "rotateInByWord",
+  },
+  {
+    id: "slideRightByWord",
+    label: "Slide Right By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "slideRightByWord",
+    outType: "slideRightByWord",
+  },
+  {
+    id: "slideLeftByWord",
+    label: "Slide Left By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "slideLeftByWord",
+    outType: "slideLeftByWord",
+  },
+  {
+    id: "fadeRotateByWord",
+    label: "Fade Rotate By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "fadeRotateByWord",
+    outType: "fadeRotateByWord",
+  },
+  {
+    id: "skewByWord",
+    label: "Skew By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "skewByWord",
+    outType: "skewByWord",
+  },
+  {
+    id: "waveByWord",
+    label: "Wave By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "waveByWord",
+    outType: "waveByWord",
+  },
+  {
+    id: "blurInByWord",
+    label: "Blur In By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "blurInByWord",
+    outType: "blurInByWord",
+  },
+  {
+    id: "dropSoftByWord",
+    label: "Drop Soft By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "dropSoftByWord",
+    outType: "dropSoftByWord",
+  },
+  {
+    id: "elasticPopByWord",
+    label: "Elastic Pop By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "elasticPopByWord",
+    outType: "elasticPopByWord",
+  },
+  {
+    id: "flipUpByWord",
+    label: "Flip Up By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "flipUpByWord",
+    outType: "flipUpByWord",
+  },
+  {
+    id: "spinInByWord",
+    label: "Spin In By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "spinInByWord",
+    outType: "spinInByWord",
+  },
+  {
+    id: "stretchInByWord",
+    label: "Stretch In By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "stretchInByWord",
+    outType: "stretchInByWord",
+  },
+  {
+    id: "revealZoomByWord",
+    label: "Reveal Zoom By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "revealZoomByWord",
+    outType: "revealZoomByWord",
+  },
+  {
+    id: "floatWaveByWord",
+    label: "Float Wave By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "floatWaveByWord",
+    outType: "floatWaveByWord",
+  },
+
+  // Combos
+  {
+    id: "comboZoom1",
+    label: "Combo Zoom 1",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboZoom1",
+  },
+  {
+    id: "comboZoom2",
+    label: "Combo Zoom 2",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboZoom2",
+  },
+  {
+    id: "comboPendulum1",
+    label: "Combo Pendulum 1",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboPendulum1",
+  },
+  {
+    id: "comboPendulum2",
+    label: "Combo Pendulum 2",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboPendulum2",
+  },
+  {
+    id: "comboRightDistort",
+    label: "Combo Right Distort",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboRightDistort",
+  },
+  {
+    id: "comboLeftDistort",
+    label: "Combo Left Distort",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboLeftDistort",
+  },
+  {
+    id: "comboWobble",
+    label: "Combo Wobble",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboWobble",
+  },
+  {
+    id: "comboSpinningTop1",
+    label: "Combo Spinning Top 1",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboSpinningTop1",
+  },
+  {
+    id: "comboSpinningTop2",
+    label: "Combo Spinning Top 2",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboSpinningTop2",
+  },
+  {
+    id: "comboSwayOut",
+    label: "Combo Sway Out",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboSwayOut",
+  },
+  {
+    id: "comboBounce1",
+    label: "Combo Bounce 1",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboBounce1",
+  },
+  {
+    id: "comboSwayIn",
+    label: "Combo Sway In",
+    category: "combo",
+    hasInOut: false,
+    inType: "comboSwayIn",
+  },
+];
+
+function getPresetIdAndMode(
+  animation: any,
+  clipDuration: number,
+): { presetId: string; mode: "in" | "out" } {
+  if (!animation) return { presetId: "", mode: "in" };
+
+  if (animation.options?.presetId) {
+    return {
+      presetId: animation.options.presetId,
+      mode: animation.options.mode || "in",
+    };
+  }
+
+  const t = animation.type;
+  const params = animation.params || {};
+
+  const maskTypes = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
+  if (maskTypes.includes(t)) {
+    const isConceal = params.mode === "conceal";
+    return {
+      presetId: t,
+      mode: isConceal ? "out" : "in",
+    };
+  }
+
+  const currentDelayMicro = animation.options?.delay || 0;
+  const currentDurationMicro = animation.options?.duration || 0;
+  const isOut =
+    animation.type.toLowerCase().includes("out") ||
+    (currentDelayMicro > 0 &&
+      Math.abs(currentDelayMicro + currentDurationMicro - clipDuration) < 1000);
+  const mode = isOut ? "out" : "in";
+
+  if (t === "keyframes") {
+    const presetsToCheck = ["fade", "zoom", "slide", "blur", "pulse"];
+    for (const pId of presetsToCheck) {
+      const coreKey = pId === "pulse" ? "pulse" : `${pId}${mode === "in" ? "In" : "Out"}`;
+      const template = getPresetKeyframes(coreKey);
+      if (JSON.stringify(template) === JSON.stringify(params)) {
+        return { presetId: pId, mode };
+      }
+    }
+  }
+
+  if (t === "stagger") {
+    for (const [presetKey, config] of Object.entries(GSAP_PRESETS)) {
+      if (
+        config.params?.type === params.type &&
+        JSON.stringify(config.params?.from) === JSON.stringify(params.from)
+      ) {
+        const matchingDef = UI_PRESETS.find((p) => p.inType === presetKey);
+        if (matchingDef) {
+          return { presetId: matchingDef.id, mode };
+        }
+      }
+    }
+  }
+
+  return { presetId: "", mode };
+}
+
 export function AnimationPropertiesPicker() {
   const { floatingControlData, setFloatingControl } = useLayoutStore();
   const { studio } = useStudioStore();
@@ -50,158 +540,122 @@ export function AnimationPropertiesPicker() {
   const clipDuration = clip?.duration || 0;
   const typeClip = clip?.type || "";
 
-  // All mask-type presets — these emit a MaskTransform via getTransform(), not keyframes
-  const MASK_PRESETS = [
-    "wipeIn",
-    "wipeOut",
-    "circleRevealIn",
-    "circleRevealOut",
-    "rectExpandIn",
-    "rectExpandOut",
-    "angleWipeIn",
-    "angleWipeOut",
-    "centerExpandIn",
-    "centerExpandOut",
-  ];
-  const WIPE_PRESETS = MASK_PRESETS; // kept for backward-compat references below
+  const [activeTab, setActiveTab] = useState<string>("presets");
+  const [selectedPreset, setSelectedPreset] = useState<string>("");
+  const [selectedMode, setSelectedMode] = useState<"in" | "out">("in");
 
-  const [activeTab, setActiveTab] = useState<string>("in");
-  const [preset, setPreset] = useState<string>(() => {
-    if (!animation) return "";
-    const t = animation.type;
-    const mode = animation.params?.mode === "reveal" ? "In" : "Out";
-    if (t === "wipe") return `wipeIn`.replace("In", mode);
-    if (t === "circleReveal") return `circleRevealIn`.replace("In", mode);
-    if (t === "rectExpand") return `rectExpandIn`.replace("In", mode);
-    if (t === "angleWipe") return `angleWipeIn`.replace("In", mode);
-    if (t === "centerExpand") return `centerExpandIn`.replace("In", mode);
-    return t || "";
-  });
   const [presetParams, setPresetParams] = useState<any>({
     direction: "left",
     distance: 300,
     stagger: 0.05,
-    wipeDirection: (animation?.params?.direction as WipeDirection) ?? "left",
-    maskOrigin: (animation?.params?.origin as MaskTransform["origin"]) ?? "center",
-    maskAngle: (animation?.params?.angle as number) ?? 0,
-    maskAxis: (animation?.params?.axis as string) ?? "vertical",
-    maskInitialProgress: (animation?.params?.initialProgress as number) ?? 0,
+    wipeDirection: "left",
+    maskOrigin: "center",
+    maskAngle: 0,
+    maskAxis: "vertical",
+    maskInitialProgress: 0,
   });
-  const [keyframes, setKeyframes] = useState<Record<string, Partial<AnimationProps>>>(
-    animation?.params || { "0%": {}, "100%": {} },
-  );
-  const [duration, setDuration] = useState<number>(() => {
-    if (animation?.options?.duration) {
-      return animation.options.duration / 1000;
-    }
-    if (typeClip === "Caption") {
-      return (clipDuration * 0.2) / 1000;
-    }
-    return 1000;
+
+  const [keyframes, setKeyframes] = useState<Record<string, Partial<AnimationProps>>>({
+    "0%": {},
+    "100%": {},
   });
-  const [delay, setDelay] = useState<number>((animation?.options?.delay || 0) / 1000);
-  const [iterCount, setIterCount] = useState<number>(animation?.options?.iterCount || 1);
-  const [easing, setEasing] = useState<string>((animation?.options?.easing as string) || "linear");
+
+  const [duration, setDuration] = useState<number>(1000);
+  const [delay, setDelay] = useState<number>(0);
+  const [iterCount, setIterCount] = useState<number>(1);
+  const [easing, setEasing] = useState<string>("linear");
   const [mirrorEnabled, setMirrorEnabled] = useState<boolean>(false);
 
   // Initialize from animation
   useEffect(() => {
-    if (animation && animation.params) {
-      // Wipe animations have non-keyframe params — restore direction and derive preset name
-      const maskTypes = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
-      if (maskTypes.includes(animation.type)) {
-        const mode = animation.params.mode === "reveal" ? "In" : "Out";
-        const typeMap: Record<string, string> = {
-          wipe: "wipe",
-          circleReveal: "circleReveal",
-          rectExpand: "rectExpand",
-          angleWipe: "angleWipe",
-          centerExpand: "centerExpand",
-        };
-        setPreset(`${typeMap[animation.type]}${mode}`);
-        setPresetParams((prev: any) => ({
-          ...prev,
-          wipeDirection: animation.params.direction ?? "left",
-          maskOrigin: animation.params.origin ?? "center",
-          maskAngle: animation.params.angle ?? 0,
-          maskAxis: animation.params.axis ?? "vertical",
-          maskInitialProgress: animation.params.initialProgress ?? 0,
-        }));
-        setActiveTab(animation.params.mode === "conceal" ? "out" : "in");
-        return;
+    if (animation) {
+      const parsed = getPresetIdAndMode(animation, clipDuration);
+
+      if (parsed.presetId) {
+        setSelectedPreset(parsed.presetId);
+        setSelectedMode(parsed.mode);
+        setActiveTab("presets");
+      } else {
+        setSelectedPreset("");
+        setSelectedMode(parsed.mode);
+        setActiveTab(animation.type === "keyframes" ? "custom" : "presets");
       }
 
-      setKeyframes(animation.params);
-      if (animation.params.presetParams) {
-        setPresetParams(animation.params.presetParams);
+      if (animation.options?.duration) {
+        setDuration(animation.options.duration / 1000);
       }
-
-      // Check if mirror is enabled in any keyframe
-      const hasMirror = Object.values(animation.params as KeyframeData).some(
-        (p: any) => p && p.mirror > 0,
-      );
-      setMirrorEnabled(hasMirror);
-
-      // Determine active tab based on delay and type
-      const currentDelayMicro = animation.options?.delay;
-      const currentDurationMicro = animation.options?.duration;
-      const isOut =
-        animation.type.toLowerCase().includes("out") ||
-        (currentDelayMicro > 0 &&
-          Math.abs(currentDelayMicro + currentDurationMicro - clipDuration) < 1000); // within 1ms tolerance
+      setDelay((animation.options?.delay || 0) / 1000);
+      setIterCount(animation.options?.iterCount || 1);
+      setEasing(animation.options?.easing || "linear");
 
       if (animation.type === "keyframes") {
-        setActiveTab("custom");
+        setKeyframes(animation.params || { "0%": {}, "100%": {} });
+        const hasMirror = Object.values(animation.params as KeyframeData).some(
+          (p: any) => p && p.mirror > 0,
+        );
+        setMirrorEnabled(hasMirror);
       } else {
-        setActiveTab(isOut ? "out" : "in");
+        const maskTypes = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
+        if (maskTypes.includes(animation.type)) {
+          setPresetParams((prev: any) => ({
+            ...prev,
+            wipeDirection: animation.params.direction ?? "left",
+            maskOrigin: animation.params.origin ?? "center",
+            maskAngle: animation.params.angle ?? 0,
+            maskAxis: animation.params.axis ?? "vertical",
+            maskInitialProgress: animation.params.initialProgress ?? 0,
+          }));
+        } else if (animation.type === "stagger" && animation.params) {
+          setPresetParams((prev: any) => ({
+            ...prev,
+            stagger: animation.params.stagger ?? 0.05,
+          }));
+        }
       }
+    } else {
+      setSelectedPreset("");
+      setSelectedMode("in");
+      setActiveTab("presets");
+      setDuration(typeClip === "Caption" ? (clipDuration * 0.2) / 1000 : 1000);
+      setDelay(0);
+      setIterCount(1);
+      setEasing("linear");
+      setKeyframes({ "0%": {}, "100%": {} });
+      setMirrorEnabled(false);
     }
-  }, [animation, clipDuration]);
+  }, [animation, clipDuration, typeClip]);
 
-  // Removed manual click outside handling in favor of Radix Popover
-
-  // Handle Tab Change
+  // Tab Change Handler
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    if (tab === "in") {
-      setDelay(0);
-      setPreset("");
-    } else if (tab === "out") {
-      const newDelay = Math.max(0, clipDuration / 1000 - duration);
-      setDelay(newDelay);
-      setPreset("");
-    } else {
-      setPreset("");
-    }
-  };
-
-  // Keep 'Out' delay synced with duration
-  useEffect(() => {
-    if (activeTab === "out") {
-      const newDelay = Math.max(0, clipDuration / 1000 - duration);
-      setDelay(newDelay);
-    }
-  }, [duration, clipDuration, activeTab]);
-
-  // Update keyframes only when preset or params change via UI (skip in edit mode)
-  useEffect(() => {
-    // Don't overwrite keyframes when editing - use saved params
-    if (mode === "edit" && animation?.params) {
-      return;
-    }
-    if (preset !== "custom" && preset !== "") {
-      if (!(preset in GSAP_PRESETS) && !MASK_PRESETS.includes(preset)) {
-        const template = getPresetKeyframes(preset);
-        setKeyframes(template);
+    if (tab === "custom") {
+      setSelectedPreset("");
+      if (!animation || animation.type !== "keyframes") {
+        setKeyframes({ "0%": {}, "100%": {} });
       }
-    } else if (preset === "" || (preset === "custom" && Object.keys(keyframes).length === 0)) {
-      setKeyframes({ "0%": {}, "100%": {} });
+    } else {
+      setSelectedPreset("");
     }
-  }, [preset, presetParams, mode, animation]);
-
-  const handlePresetChange = (value: string) => {
-    setPreset(value);
   };
+
+  // Sync 'Out' delay with duration
+  useEffect(() => {
+    const def = UI_PRESETS.find((p) => p.id === selectedPreset);
+    const isCombo = def?.category === "combo";
+    if (activeTab === "presets" && selectedMode === "out" && !isCombo) {
+      const newDelay = Math.max(0, clipDuration / 1000 - duration);
+      setDelay(newDelay);
+    }
+  }, [duration, clipDuration, activeTab, selectedMode, selectedPreset]);
+
+  // Sync combo parameters (duration and mirror)
+  useEffect(() => {
+    const def = UI_PRESETS.find((p) => p.id === selectedPreset);
+    if (activeTab === "presets" && def?.category === "combo") {
+      setDuration(clipDuration / 1000);
+      setMirrorEnabled(true);
+    }
+  }, [clipDuration, activeTab, selectedPreset]);
 
   const handlePropertyChange = (keyframe: string, property: PropertyKey, value: number) => {
     setKeyframes((prev) => ({
@@ -238,7 +692,6 @@ export function AnimationPropertiesPicker() {
       .filter((n): n is number => n !== null)
       .sort((a, b) => a - b);
 
-    // Find the largest gap or add after last
     let newProgress = 50;
     if (existingProgress.length >= 2) {
       let maxGap = -1;
@@ -257,7 +710,6 @@ export function AnimationPropertiesPicker() {
       }
     }
 
-    // Ensure uniqueness
     while (keyframes[`${newProgress}%`] && newProgress < 100) {
       newProgress++;
     }
@@ -279,44 +731,76 @@ export function AnimationPropertiesPicker() {
   const handleRenameKeyframe = (oldKey: string, newKey: string) => {
     if (newKey === oldKey || newKey === "0%" || newKey === "100%") return;
     setKeyframes((prev) => {
-      if (prev[newKey]) return prev; // don't overwrite existing
+      if (prev[newKey]) return prev;
       const { [oldKey]: props, ...rest } = prev;
       return { ...rest, [newKey]: props };
     });
   };
 
   const buildAnimationConfig = () => {
-    const options: AnimationOptions = {
+    let presetKey = "";
+    let isMask = false;
+    let isStagger = false;
+
+    if (activeTab === "presets" && selectedPreset) {
+      const def = UI_PRESETS.find((p) => p.id === selectedPreset);
+      if (def) {
+        presetKey = def.hasInOut
+          ? selectedMode === "in"
+            ? def.inType
+            : def.outType || def.inType
+          : def.inType;
+      }
+    }
+
+    const maskPresets = [
+      "wipeIn",
+      "wipeOut",
+      "circleRevealIn",
+      "circleRevealOut",
+      "rectExpandIn",
+      "rectExpandOut",
+      "angleWipeIn",
+      "angleWipeOut",
+      "centerExpandIn",
+      "centerExpandOut",
+    ];
+    if (presetKey && maskPresets.includes(presetKey)) {
+      isMask = true;
+    } else if (presetKey && presetKey in GSAP_PRESETS) {
+      isStagger = true;
+    }
+
+    const options: any = {
       duration: duration * 1000,
       delay: delay * 1000,
       iterCount,
       easing,
+      presetId: activeTab === "presets" ? selectedPreset : undefined,
+      mode: activeTab === "presets" ? selectedMode : undefined,
     };
 
-    const isStagger = preset in GSAP_PRESETS;
-    const isMask = MASK_PRESETS.includes(preset);
-    const isWipe = isMask; // alias
-    const maskAnimType = preset.replace(/In$|Out$/, ""); // "wipe" | "circleReveal" | "rectExpand" | "angleWipe" | "centerExpand"
-    const maskMode = preset.endsWith("In") ? "reveal" : "conceal";
-    const type = isMask ? maskAnimType : isStagger ? "stagger" : "keyframes";
+    const type = isMask ? presetKey.replace(/In$|Out$/, "") : isStagger ? "stagger" : "keyframes";
 
-    const finalParams: any = isMask
-      ? {
-          direction: presetParams.wipeDirection ?? "left",
-          origin: presetParams.maskOrigin ?? "center",
-          angle: presetParams.maskAngle ?? 0,
-          axis: presetParams.maskAxis ?? "vertical",
-          initialProgress: presetParams.maskInitialProgress ?? 0,
-          mode: maskMode,
-        }
-      : isStagger
-        ? (() => {
-            const staggerPreset = GSAP_PRESETS[preset];
-            const p = structuredClone(staggerPreset.params);
-            p.stagger = presetParams.stagger ?? p.stagger ?? 0.05;
-            return p;
-          })()
-        : structuredClone(keyframes);
+    let finalParams: any = {};
+    if (isMask) {
+      finalParams = {
+        direction: presetParams.wipeDirection ?? "left",
+        origin: presetParams.maskOrigin ?? "center",
+        angle: presetParams.maskAngle ?? 0,
+        axis: presetParams.maskAxis ?? "vertical",
+        initialProgress: presetParams.maskInitialProgress ?? 0,
+        mode: presetKey.endsWith("In") ? "reveal" : "conceal",
+      };
+    } else if (isStagger) {
+      const staggerPreset = GSAP_PRESETS[presetKey];
+      finalParams = structuredClone(staggerPreset.params);
+      finalParams.stagger = presetParams.stagger ?? finalParams.stagger ?? 0.05;
+    } else if (activeTab === "presets" && presetKey) {
+      finalParams = getPresetKeyframes(presetKey);
+    } else {
+      finalParams = structuredClone(keyframes);
+    }
 
     if (!isStagger && !isMask) {
       Object.keys(finalParams).forEach((key) => {
@@ -338,7 +822,6 @@ export function AnimationPropertiesPicker() {
       clip.addAnimation(type, options, finalParams);
     }
 
-    // Sync animations from engine clip back to core store
     const updatedAnimations = clip.animations.map((anim: any) => ({
       id: anim.id,
       type: anim.type,
@@ -362,7 +845,7 @@ export function AnimationPropertiesPicker() {
         const special = SPECIAL_ANIMATIONS_CAPTIONS.includes(type);
         const targetDuration = special ? c.duration : c.duration * 0.2;
         let targetDelay = options.delay;
-        if (type.toLowerCase().includes("out") || activeTab === "out") {
+        if (type.toLowerCase().includes("out") || selectedMode === "out") {
           targetDelay = Math.max(0, c.duration - targetDuration);
         }
 
@@ -371,7 +854,6 @@ export function AnimationPropertiesPicker() {
           { ...options, duration: targetDuration, delay: targetDelay },
           finalParams,
         );
-        // Sync animations back to core for each caption clip
         const updatedAnimations = c.animations.map((anim: any) => ({
           id: anim.id,
           type: anim.type,
@@ -396,103 +878,16 @@ export function AnimationPropertiesPicker() {
 
   const isTextLike = typeClip === "Text" || typeClip === "Caption";
 
-  const inPresets = [
-    { label: "Fade In", value: "fadeIn" },
-    { label: "Zoom In", value: "zoomIn" },
-    { label: "Slide In", value: "slideIn" },
-    { label: "Blur In", value: "blurIn" },
-    { label: "Wipe In", value: "wipeIn" },
-    { label: "Circle Reveal", value: "circleRevealIn" },
-    { label: "Rect Expand", value: "rectExpandIn" },
-    { label: "Angle Wipe", value: "angleWipeIn" },
-    { label: "Center Expand", value: "centerExpandIn" },
-    { label: "Pulse", value: "pulse" },
-    ...(isTextLike
-      ? [
-          { label: "Pop", value: "popCaption" },
-          { label: "Bounce", value: "bounceCaption" },
-          { label: "Scale", value: "scaleCaption" },
-          { label: "Slide Left", value: "slideLeftCaption" },
-          { label: "Slide Right", value: "slideRightCaption" },
-          { label: "Slide Up", value: "slideUpCaption" },
-          { label: "Slide Down", value: "slideDownCaption" },
-          { label: "Slide Fade By Word", value: "slideFadeByWord" },
-          { label: "Up Down", value: "upDownCaption" },
-          { label: "Up Left", value: "upLeftCaption" },
-          { label: "Char Fade In", value: "charFadeIn" },
-          { label: "Char Slide Up", value: "charSlideUp" },
-          { label: "Char Typewriter", value: "charTypewriter" },
-          { label: "Fade By Word", value: "fadeByWord" },
-          { label: "Pop By Word", value: "popByWord" },
-          { label: "Scale Fade By Word", value: "scaleFadeByWord" },
-          { label: "Bounce By Word", value: "bounceByWord" },
-          { label: "Rotate In By Word", value: "rotateInByWord" },
-          { label: "Slide Right By Word", value: "slideRightByWord" },
-          { label: "Slide Left By Word", value: "slideLeftByWord" },
-          { label: "Fade Rotate By Word", value: "fadeRotateByWord" },
-          { label: "Skew By Word", value: "skewByWord" },
-          { label: "Wave By Word", value: "waveByWord" },
-          { label: "Blur In By Word", value: "blurInByWord" },
-          { label: "Drop Soft By Word", value: "dropSoftByWord" },
-          { label: "Elastic Pop By Word", value: "elasticPopByWord" },
-          { label: "Flip Up By Word", value: "flipUpByWord" },
-          { label: "Spin In By Word", value: "spinInByWord" },
-          { label: "Stretch In By Word", value: "stretchInByWord" },
-          { label: "Reveal Zoom By Word", value: "revealZoomByWord" },
-          { label: "Float Wave By Word", value: "floatWaveByWord" },
-        ]
-      : []),
-  ];
+  const transitionPresets = UI_PRESETS.filter((p) => p.category === "transition");
+  const textPresets = UI_PRESETS.filter((p) => p.category === "text");
+  const comboPresets = UI_PRESETS.filter((p) => p.category === "combo");
 
-  const outPresets = [
-    { label: "Fade Out", value: "fadeOut" },
-    { label: "Zoom Out", value: "zoomOut" },
-    { label: "Slide Out", value: "slideOut" },
-    { label: "Blur Out", value: "blurOut" },
-    { label: "Wipe Out", value: "wipeOut" },
-    { label: "Circle Conceal", value: "circleRevealOut" },
-    { label: "Rect Shrink", value: "rectExpandOut" },
-    { label: "Angle Wipe Out", value: "angleWipeOut" },
-    { label: "Center Shrink", value: "centerExpandOut" },
-    { label: "Pulse", value: "pulse" },
-  ];
+  const selectedPresetDef = UI_PRESETS.find((p) => p.id === selectedPreset);
 
-  const comboPresets = [
-    { label: "Combo Zoom 1", value: "comboZoom1" },
-    { label: "Combo Zoom 2", value: "comboZoom2" },
-    { label: "Combo Pendulum 1", value: "comboPendulum1" },
-    { label: "Combo Pendulum 2", value: "comboPendulum2" },
-    { label: "Combo Right Distort", value: "comboRightDistort" },
-    { label: "Combo Left Distort", value: "comboLeftDistort" },
-    { label: "Combo Wobble", value: "comboWobble" },
-    { label: "Combo Spinning Top 1", value: "comboSpinningTop1" },
-    { label: "Combo Spinning Top 2", value: "comboSpinningTop2" },
-    { label: "Combo Sway Out", value: "comboSwayOut" },
-    { label: "Combo Bounce 1", value: "comboBounce1" },
-    { label: "Combo Sway In", value: "comboSwayIn" },
-  ];
-
-  useEffect(() => {
-    let newDuration = 1000;
-    let mirror = false;
-    if (activeTab === "combo") {
-      newDuration = clipDuration / 1000;
-      mirror = true;
-    } else {
-      if (animation?.options?.duration) {
-        newDuration = animation.options.duration / 1000;
-      } else if (typeClip === "Caption") {
-        newDuration = (clipDuration * 0.2) / 1000;
-      }
-      if (animation?.params) {
-        mirror = Object.values(animation.params as KeyframeData).some(
-          (p: any) => p && p.mirror > 0,
-        );
-      }
-    }
-    setDuration(newDuration);
-    setMirrorEnabled(mirror);
-  }, [clipDuration, activeTab, animation, typeClip]);
+  const maskPresets = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
+  const isSelectedMask = selectedPreset && maskPresets.includes(selectedPreset);
+  const isSelectedStagger =
+    selectedPresetDef?.category === "text" && selectedPresetDef.inType in GSAP_PRESETS;
 
   return (
     <Popover.Root open={!!clipId} onOpenChange={(open) => !open && setFloatingControl("")}>
@@ -503,7 +898,6 @@ export function AnimationPropertiesPicker() {
         sideOffset={8}
         className="z-[200] w-80 border bg-background p-0 shadow-xl rounded-lg overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]"
         onInteractOutside={(e) => {
-          // Prevent closing when interacting with portals (Select dropdowns)
           const target = e.target as HTMLElement;
           if (
             target.closest("[data-radix-portal]") ||
@@ -529,264 +923,387 @@ export function AnimationPropertiesPicker() {
             </div>
 
             {/* Tabs */}
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 h-7 mb-2">
+                <TabsTrigger value="presets" className="text-xs">
+                  Presets
+                </TabsTrigger>
+                <TabsTrigger value="custom" className="text-xs">
+                  Custom
+                </TabsTrigger>
+              </TabsList>
 
-            {typeClip === "Caption" ? (
-              <div className="flex flex-col gap-2">
-                <PresetOptions
-                  preset={preset}
-                  activeTab={activeTab}
-                  inPresets={inPresets}
-                  outPresets={outPresets}
-                  comboPresets={comboPresets}
-                  handlePresetChange={handlePresetChange}
-                />
-                <EasingOptions easing={easing} setEasing={setEasing} />
-              </div>
-            ) : (
-              <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 h-7">
-                  <TabsTrigger value="in" className="text-xs">
-                    In
-                  </TabsTrigger>
-                  <TabsTrigger value="out" className="text-xs">
-                    Out
-                  </TabsTrigger>
-                  <TabsTrigger value="combo" className="text-xs">
-                    Combo
-                  </TabsTrigger>
-                </TabsList>
+              {activeTab === "presets" && (
+                <div className="flex flex-col gap-3">
+                  {!selectedPreset ? (
+                    /* Preset Grid View */
+                    <div className="flex flex-col gap-4">
+                      {/* Transitions */}
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Transitions
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {transitionPresets.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setSelectedPreset(p.id)}
+                              className="flex items-center justify-center p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 text-xs text-foreground transition-all border border-transparent hover:border-border font-medium text-center min-h-9"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
-                <div className="mt-2 flex flex-col gap-2">
-                  {/* Preset Selector */}
-                  <PresetOptions
-                    preset={preset}
-                    activeTab={activeTab}
-                    inPresets={inPresets}
-                    outPresets={outPresets}
-                    comboPresets={comboPresets}
-                    handlePresetChange={handlePresetChange}
-                  />
-
-                  {/* Mask Animation Params */}
-                  {MASK_PRESETS.includes(preset) && (
-                    <div className="grid grid-cols-1 gap-1.5 p-2 bg-secondary/20 rounded-md">
-                      {/* Direction — rect wipes only */}
-                      {(preset === "wipeIn" || preset === "wipeOut") && (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-muted-foreground">Direction</label>
-                          <Select
-                            value={presetParams.wipeDirection}
-                            onValueChange={(val) =>
-                              setPresetParams((prev: any) => ({
-                                ...prev,
-                                wipeDirection: val as WipeDirection,
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="z-[250]">
-                              <SelectItem value="left">Left → Right</SelectItem>
-                              <SelectItem value="right">Right → Left</SelectItem>
-                              <SelectItem value="top">Top → Bottom</SelectItem>
-                              <SelectItem value="bottom">Bottom → Top</SelectItem>
-                            </SelectContent>
-                          </Select>
+                      {/* Text Animations */}
+                      {isTextLike && textPresets.length > 0 && (
+                        <div className="flex flex-col gap-1.5">
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Text Animations
+                          </span>
+                          <div className="grid grid-cols-2 gap-1.5">
+                            {textPresets.map((p) => (
+                              <button
+                                key={p.id}
+                                onClick={() => setSelectedPreset(p.id)}
+                                className="flex items-center justify-center p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 text-xs text-foreground transition-all border border-transparent hover:border-border font-medium text-center min-h-9"
+                              >
+                                {p.label}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       )}
-                      {/* Angle — angleWipe only */}
-                      {(preset === "angleWipeIn" || preset === "angleWipeOut") && (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-muted-foreground">
-                            Angle ({presetParams.maskAngle}°)
+
+                      {/* Combos */}
+                      <div className="flex flex-col gap-1.5">
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          Continuous / Combo
+                        </span>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {comboPresets.map((p) => (
+                            <button
+                              key={p.id}
+                              onClick={() => setSelectedPreset(p.id)}
+                              className="flex items-center justify-center p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 text-xs text-foreground transition-all border border-transparent hover:border-border font-medium text-center min-h-9"
+                            >
+                              {p.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Preset Details View */
+                    <div className="flex flex-col gap-4">
+                      {/* Back Button and Selected Preset Header */}
+                      <div className="flex items-center justify-between pb-2 border-b">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedPreset("")}
+                          className="h-7 text-xs gap-1 px-2 -ml-2 hover:bg-secondary/20"
+                        >
+                          <RiArrowLeftLine className="size-3.5" />
+                          Back
+                        </Button>
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          {selectedPresetDef?.label}
+                        </span>
+                      </div>
+
+                      {/* Mode: In / Out (Hidden for Combos) */}
+                      {selectedPresetDef?.hasInOut && (
+                        <div className="flex items-center justify-between py-1 border-b pb-3">
+                          <span className="text-xs font-medium text-muted-foreground">Mode</span>
+                          <div className="flex bg-muted p-0.5 rounded-lg border">
+                            <button
+                              onClick={() => setSelectedMode("in")}
+                              className={cn(
+                                "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                selectedMode === "in"
+                                  ? "bg-background text-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              In
+                            </button>
+                            <button
+                              onClick={() => setSelectedMode("out")}
+                              className={cn(
+                                "px-3 py-1 text-xs font-semibold rounded-md transition-all",
+                                selectedMode === "out"
+                                  ? "bg-background text-foreground shadow-sm"
+                                  : "text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              Out
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Mask Preset Parameters */}
+                      {isSelectedMask && (
+                        <div className="grid grid-cols-1 gap-1.5 p-2 bg-secondary/20 rounded-md">
+                          {selectedPreset === "wipe" && (
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-muted-foreground">Direction</label>
+                              <Select
+                                value={presetParams.wipeDirection}
+                                onValueChange={(val) =>
+                                  setPresetParams((prev: any) => ({
+                                    ...prev,
+                                    wipeDirection: val as WipeDirection,
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="z-[250]">
+                                  <SelectItem value="left">Left → Right</SelectItem>
+                                  <SelectItem value="right">Right → Left</SelectItem>
+                                  <SelectItem value="top">Top → Bottom</SelectItem>
+                                  <SelectItem value="bottom">Bottom → Top</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {selectedPreset === "angleWipe" && (
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-muted-foreground">
+                                Angle ({presetParams.maskAngle}°)
+                              </label>
+                              <Slider
+                                value={[presetParams.maskAngle ?? 0]}
+                                min={0}
+                                max={360}
+                                step={1}
+                                onValueChange={([val]) =>
+                                  setPresetParams((prev: any) => ({ ...prev, maskAngle: val }))
+                                }
+                                className="flex-1"
+                              />
+                            </div>
+                          )}
+
+                          {selectedPreset === "centerExpand" && (
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-muted-foreground">Axis</label>
+                              <Select
+                                value={presetParams.maskAxis ?? "vertical"}
+                                onValueChange={(val) =>
+                                  setPresetParams((prev: any) => ({ ...prev, maskAxis: val }))
+                                }
+                              >
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="z-[250]">
+                                  <SelectItem value="vertical">Vertical (top + bottom)</SelectItem>
+                                  <SelectItem value="horizontal">
+                                    Horizontal (left + right)
+                                  </SelectItem>
+                                  <SelectItem value="both">Both</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          {(selectedPreset === "circleReveal" ||
+                            selectedPreset === "rectExpand") && (
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-muted-foreground">Origin</label>
+                              <Select
+                                value={presetParams.maskOrigin ?? "center"}
+                                onValueChange={(val) =>
+                                  setPresetParams((prev: any) => ({
+                                    ...prev,
+                                    maskOrigin: val as MaskTransform["origin"],
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="z-[250]">
+                                  <SelectItem value="center">Center</SelectItem>
+                                  <SelectItem value="topLeft">Top Left</SelectItem>
+                                  <SelectItem value="topRight">Top Right</SelectItem>
+                                  <SelectItem value="bottomLeft">Bottom Left</SelectItem>
+                                  <SelectItem value="bottomRight">Bottom Right</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
+
+                          <div className="flex items-center gap-2 mt-1">
+                            <label className="text-[10px] text-muted-foreground shrink-0 w-20">
+                              Initial {Math.round((presetParams.maskInitialProgress ?? 0) * 100)}%
+                            </label>
+                            <Slider
+                              value={[presetParams.maskInitialProgress ?? 0]}
+                              min={0}
+                              max={0.9}
+                              step={0.01}
+                              onValueChange={([val]) =>
+                                setPresetParams((prev: any) => ({
+                                  ...prev,
+                                  maskInitialProgress: val,
+                                }))
+                              }
+                              className="flex-1"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Slide Preset Specific Options */}
+                      {selectedPreset === "slide" && (
+                        <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-muted-foreground">Direction</label>
+                            <Select
+                              value={presetParams.direction}
+                              onValueChange={(val) =>
+                                setPresetParams((prev: any) => ({
+                                  ...prev,
+                                  direction: val,
+                                }))
+                              }
+                            >
+                              <SelectTrigger className="h-7 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="z-[250]">
+                                <SelectItem value="left">Left</SelectItem>
+                                <SelectItem value="right">Right</SelectItem>
+                                <SelectItem value="top">Top</SelectItem>
+                                <SelectItem value="bottom">Bottom</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <label className="text-[10px] text-muted-foreground">
+                              Distance (px)
+                            </label>
+                            <NumberInput
+                              value={presetParams.distance}
+                              onChange={(val) =>
+                                setPresetParams((prev: any) => ({
+                                  ...prev,
+                                  distance: val,
+                                }))
+                              }
+                              className="h-7 text-xs"
+                            />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Stagger Preset Specific Options */}
+                      {isSelectedStagger && (
+                        <div className="flex items-center gap-2 p-2 bg-secondary/20 rounded-md">
+                          <label className="text-[10px] text-muted-foreground shrink-0 w-14">
+                            Stagger {presetParams.stagger}s
                           </label>
                           <Slider
-                            value={[presetParams.maskAngle ?? 0]}
+                            value={[presetParams.stagger || 0.05]}
                             min={0}
-                            max={360}
-                            step={1}
+                            max={0.5}
+                            step={0.01}
                             onValueChange={([val]) =>
-                              setPresetParams((prev: any) => ({ ...prev, maskAngle: val }))
+                              setPresetParams((prev: any) => ({ ...prev, stagger: val }))
                             }
                             className="flex-1"
                           />
                         </div>
                       )}
-                      {/* Axis — centerExpand only */}
-                      {(preset === "centerExpandIn" || preset === "centerExpandOut") && (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-muted-foreground">Axis</label>
-                          <Select
-                            value={presetParams.maskAxis ?? "vertical"}
-                            onValueChange={(val) =>
-                              setPresetParams((prev: any) => ({ ...prev, maskAxis: val }))
-                            }
+
+                      {/* Timings */}
+                      <div className="flex flex-col gap-2">
+                        <label className="text-xs font-semibold">Timing</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-muted-foreground">Duration (ms)</span>
+                            <NumberInput value={duration} onChange={setDuration} className="h-8" />
+                          </div>
+                          <div
+                            className={cn(
+                              "flex flex-col gap-1",
+                              selectedMode === "out" &&
+                                selectedPresetDef?.category !== "combo" &&
+                                "opacity-50 pointer-events-none",
+                            )}
                           >
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="z-[250]">
-                              <SelectItem value="vertical">Vertical (top + bottom)</SelectItem>
-                              <SelectItem value="horizontal">Horizontal (left + right)</SelectItem>
-                              <SelectItem value="both">Both</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <span className="text-[10px] text-muted-foreground">Delay (ms)</span>
+                            <NumberInput value={delay} onChange={setDelay} className="h-8" />
+                          </div>
+                          <div className="flex flex-col gap-1">
+                            <span className="text-[10px] text-muted-foreground">Iterations</span>
+                            <NumberInput
+                              value={iterCount}
+                              onChange={setIterCount}
+                              className="h-8"
+                            />
+                          </div>
                         </div>
-                      )}
-                      {/* Origin — expand masks */}
-                      {(preset === "circleRevealIn" ||
-                        preset === "circleRevealOut" ||
-                        preset === "rectExpandIn" ||
-                        preset === "rectExpandOut") && (
-                        <div className="flex flex-col gap-1">
-                          <label className="text-[10px] text-muted-foreground">Origin</label>
-                          <Select
-                            value={presetParams.maskOrigin ?? "center"}
-                            onValueChange={(val) =>
-                              setPresetParams((prev: any) => ({
-                                ...prev,
-                                maskOrigin: val as MaskTransform["origin"],
-                              }))
-                            }
-                          >
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="z-[250]">
-                              <SelectItem value="center">Center</SelectItem>
-                              <SelectItem value="topLeft">Top Left</SelectItem>
-                              <SelectItem value="topRight">Top Right</SelectItem>
-                              <SelectItem value="bottomLeft">Bottom Left</SelectItem>
-                              <SelectItem value="bottomRight">Bottom Right</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {/* Initial Size — all mask presets */}
-                  {MASK_PRESETS.includes(preset) && (
-                    <div className="flex items-center gap-2 p-2 bg-secondary/20 rounded-md">
-                      <label className="text-[10px] text-muted-foreground shrink-0 w-20">
-                        Initial {Math.round((presetParams.maskInitialProgress ?? 0) * 100)}%
-                      </label>
-                      <Slider
-                        value={[presetParams.maskInitialProgress ?? 0]}
-                        min={0}
-                        max={0.9}
-                        step={0.01}
-                        onValueChange={([val]) =>
-                          setPresetParams((prev: any) => ({ ...prev, maskInitialProgress: val }))
-                        }
-                        className="flex-1"
-                      />
-                    </div>
-                  )}
+                      </div>
 
-                  {/* Preset Parameters (Slide Only) */}
-                  {(preset === "slideIn" || preset === "slideOut") && (
-                    <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
+                      {/* Easing */}
                       <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-muted-foreground">Direction</label>
-                        <Select
-                          value={presetParams.direction}
-                          onValueChange={(val) =>
-                            setPresetParams((prev: any) => ({
-                              ...prev,
-                              direction: val,
-                            }))
-                          }
-                        >
-                          <SelectTrigger className="h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="z-[250]">
-                            <SelectItem value="left">Left</SelectItem>
-                            <SelectItem value="right">Right</SelectItem>
-                            <SelectItem value="top">Top</SelectItem>
-                            <SelectItem value="bottom">Bottom</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <label className="text-[10px] text-muted-foreground">Distance (px)</label>
-                        <NumberInput
-                          value={presetParams.distance}
-                          onChange={(val) =>
-                            setPresetParams((prev: any) => ({
-                              ...prev,
-                              distance: val,
-                            }))
-                          }
-                          className="h-7 text-xs"
-                        />
+                        <label className="text-xs font-semibold">Easing</label>
+                        <EasingOptions easing={easing} setEasing={setEasing} />
                       </div>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {/* Stagger */}
-                  {preset in GSAP_PRESETS && (
-                    <div className="flex items-center gap-2 p-2 bg-secondary/20 rounded-md">
-                      <label className="text-[10px] text-muted-foreground shrink-0 w-14">
-                        Stagger {presetParams.stagger}s
-                      </label>
-                      <Slider
-                        value={[presetParams.stagger || 0.05]}
-                        min={0}
-                        max={0.5}
-                        step={0.01}
-                        onValueChange={([val]) =>
-                          setPresetParams((prev: any) => ({ ...prev, stagger: val }))
+              {activeTab === "custom" && (
+                <div className="flex flex-col gap-4">
+                  {/* Keyframe Stop List */}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-semibold">Keyframes</label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleAddKeyframe}
+                        className="h-7 gap-1 text-xs"
+                      >
+                        <RiAddLine className="size-3" />
+                        Add Stop
+                      </Button>
+                    </div>
+                    {sortedKeyframes.map((keyframe) => (
+                      <KeyframeItem
+                        key={keyframe}
+                        keyframe={keyframe}
+                        properties={keyframes[keyframe] || {}}
+                        onPropertyChange={(prop, val) => handlePropertyChange(keyframe, prop, val)}
+                        onPropertyToggle={(prop, enabled) =>
+                          handlePropertyToggle(keyframe, prop, enabled)
                         }
-                        className="flex-1"
+                        onRemove={() => handleRemoveKeyframe(keyframe)}
+                        onRename={(newKey) => handleRenameKeyframe(keyframe, newKey)}
+                        canRemove={keyframe !== "0%" && keyframe !== "100%"}
                       />
+                    ))}
+                  </div>
+
+                  {/* Mirror */}
+                  {typeClip !== "Text" && (
+                    <div className="flex items-center justify-between px-2 py-1.5 bg-secondary/20 rounded-md">
+                      <span className="text-[10px] text-muted-foreground">Mirror</span>
+                      <Switch checked={mirrorEnabled} onCheckedChange={setMirrorEnabled} />
                     </div>
                   )}
 
-                  {!(preset in GSAP_PRESETS) && !MASK_PRESETS.includes(preset) && (
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-semibold">Keyframes</label>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleAddKeyframe}
-                          className="h-7 gap-1 text-xs"
-                        >
-                          <RiAddLine className="size-3" />
-                          Add Stop
-                        </Button>
-                      </div>
-                      {sortedKeyframes.map((keyframe) => (
-                        <KeyframeItem
-                          key={keyframe}
-                          keyframe={keyframe}
-                          properties={keyframes[keyframe] || {}}
-                          onPropertyChange={(prop, val) =>
-                            handlePropertyChange(keyframe, prop, val)
-                          }
-                          onPropertyToggle={(prop, enabled) =>
-                            handlePropertyToggle(keyframe, prop, enabled)
-                          }
-                          onRemove={() => handleRemoveKeyframe(keyframe)}
-                          onRename={(newKey) => handleRenameKeyframe(keyframe, newKey)}
-                          canRemove={keyframe !== "0%" && keyframe !== "100%"}
-                        />
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Mirror Effect */}
-                  {typeClip !== "Text" &&
-                    !(preset in GSAP_PRESETS) &&
-                    !MASK_PRESETS.includes(preset) && (
-                      <div className="flex items-center justify-between px-2 py-1.5 bg-secondary/20 rounded-md">
-                        <span className="text-[10px] text-muted-foreground">Mirror</span>
-                        <Switch checked={mirrorEnabled} onCheckedChange={setMirrorEnabled} />
-                      </div>
-                    )}
-
+                  {/* Timings */}
                   <div className="flex flex-col gap-2">
                     <label className="text-xs font-semibold">Timing</label>
                     <div className="grid grid-cols-3 gap-2">
@@ -794,12 +1311,7 @@ export function AnimationPropertiesPicker() {
                         <span className="text-[10px] text-muted-foreground">Duration (ms)</span>
                         <NumberInput value={duration} onChange={setDuration} className="h-8" />
                       </div>
-                      <div
-                        className={cn(
-                          "flex flex-col gap-1",
-                          activeTab === "out" && "opacity-50 pointer-events-none",
-                        )}
-                      >
+                      <div className="flex flex-col gap-1">
                         <span className="text-[10px] text-muted-foreground">Delay (ms)</span>
                         <NumberInput value={delay} onChange={setDelay} className="h-8" />
                       </div>
@@ -810,15 +1322,17 @@ export function AnimationPropertiesPicker() {
                     </div>
                   </div>
 
+                  {/* Easing */}
                   <div className="flex flex-col gap-1">
                     <label className="text-xs font-semibold">Easing</label>
                     <EasingOptions easing={easing} setEasing={setEasing} />
                   </div>
                 </div>
-              </Tabs>
-            )}
+              )}
+            </Tabs>
 
-            <div className="flex gap-2 pt-2 border-t">
+            {/* Bottom Actions */}
+            <div className="flex gap-2 pt-2 border-t mt-auto">
               <Button variant="outline" onClick={() => setFloatingControl("")} className="flex-1">
                 Cancel
               </Button>
@@ -826,8 +1340,9 @@ export function AnimationPropertiesPicker() {
                 onClick={typeClip === "Caption" ? handleApplyToAllCaptions : handleSave}
                 className="flex-1"
                 disabled={
-                  !preset &&
-                  !Object.values(keyframes).some((frame) => Object.keys(frame).length > 0)
+                  activeTab === "presets"
+                    ? !selectedPreset
+                    : !Object.values(keyframes).some((frame) => Object.keys(frame).length > 0)
                 }
               >
                 {mode === "add" ? "Add" : "Save"}
@@ -1003,52 +1518,6 @@ const EasingOptions = ({
           <SelectItem value="easeInOutCubic">Ease In Out Cubic</SelectItem>
           <SelectItem value="easeInBack">Ease In Back</SelectItem>
           <SelectItem value="easeOutBack">Ease Out Back</SelectItem>
-        </SelectContent>
-      </Select>
-    </div>
-  );
-};
-
-const PresetOptions = ({
-  preset,
-  activeTab,
-  inPresets,
-  outPresets,
-  comboPresets,
-  handlePresetChange,
-}: {
-  preset: string;
-  activeTab: string;
-  inPresets: { label: string; value: string }[];
-  outPresets: { label: string; value: string }[];
-  comboPresets: { label: string; value: string }[];
-  handlePresetChange: (preset: string) => void;
-}) => {
-  return (
-    <div className="flex flex-col gap-1">
-      <Select value={preset} onValueChange={handlePresetChange}>
-        <SelectTrigger className="w-full h-7 text-xs">
-          <SelectValue placeholder="Select a preset" />
-        </SelectTrigger>
-        <SelectContent className="z-[250] max-h-60">
-          {activeTab === "in" &&
-            inPresets.map((p) => (
-              <SelectItem key={p.value} value={p.value}>
-                {p.label}
-              </SelectItem>
-            ))}
-          {activeTab === "out" &&
-            outPresets.map((p) => (
-              <SelectItem key={p.value} value={p.value}>
-                {p.label}
-              </SelectItem>
-            ))}
-          {activeTab === "combo" &&
-            comboPresets.map((p) => (
-              <SelectItem key={p.value} value={p.value}>
-                {p.label}
-              </SelectItem>
-            ))}
         </SelectContent>
       </Select>
     </div>
