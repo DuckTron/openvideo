@@ -158,36 +158,12 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "scaleCaption",
   },
   {
-    id: "slideLeftCaption",
-    label: "Slide Left",
+    id: "slideCaption",
+    label: "Slide",
     category: "text",
     hasInOut: true,
     inType: "slideLeftCaption",
     outType: "slideLeftCaption",
-  },
-  {
-    id: "slideRightCaption",
-    label: "Slide Right",
-    category: "text",
-    hasInOut: true,
-    inType: "slideRightCaption",
-    outType: "slideRightCaption",
-  },
-  {
-    id: "slideUpCaption",
-    label: "Slide Up",
-    category: "text",
-    hasInOut: true,
-    inType: "slideUpCaption",
-    outType: "slideUpCaption",
-  },
-  {
-    id: "slideDownCaption",
-    label: "Slide Down",
-    category: "text",
-    hasInOut: true,
-    inType: "slideDownCaption",
-    outType: "slideDownCaption",
   },
   {
     id: "slideFadeByWord",
@@ -551,7 +527,38 @@ function getPresetIdAndMode(
   const mode = isOut ? "out" : "in";
 
   if (t === "keyframes") {
+    // 1. Special check for Transition Slide
+    const hasOpacity =
+      params["0%"]?.hasOwnProperty("opacity") || params["100%"]?.hasOwnProperty("opacity");
+    const hasSlideCoords =
+      params["0%"]?.hasOwnProperty("x") ||
+      params["0%"]?.hasOwnProperty("y") ||
+      params["100%"]?.hasOwnProperty("x") ||
+      params["100%"]?.hasOwnProperty("y");
+    if (hasOpacity && hasSlideCoords && !params["0%"]?.hasOwnProperty("blur")) {
+      return { presetId: "slide", mode };
+    }
+
+    // 2. Special check for Text Slide
+    const textSlideKeys = [
+      "slideLeftCaption",
+      "slideRightCaption",
+      "slideUpCaption",
+      "slideDownCaption",
+    ];
+    for (const key of textSlideKeys) {
+      let template = getPresetKeyframes(key);
+      if (mode === "out") {
+        template = reverseKeyframes(template);
+      }
+      if (getCanonicalKeyframesString(template) === getCanonicalKeyframesString(params)) {
+        return { presetId: "slideCaption", mode };
+      }
+    }
+
+    // 3. Fallback check for all other keyframe presets
     for (const preset of UI_PRESETS) {
+      if (preset.id === "slide" || preset.id === "slideCaption") continue;
       if (
         preset.category === "combo" ||
         (preset.category === "transition" && !(preset.inType in GSAP_PRESETS)) ||
@@ -667,6 +674,82 @@ export function AnimationPropertiesPicker() {
           (p: any) => p && p.mirror > 0,
         );
         setMirrorEnabled(hasMirror);
+
+        // If it is a Transition Slide, restore direction and distance!
+        const parsed = getPresetIdAndMode(animation, clipDuration);
+        if (parsed.presetId === "slide") {
+          const params = animation.params || {};
+          let dir = "left";
+          let dist = 300;
+          if (parsed.mode === "in") {
+            const startX = params["0%"]?.x ?? 0;
+            const startY = params["0%"]?.y ?? 0;
+            if (startX < 0) {
+              dir = "left";
+              dist = Math.abs(startX);
+            } else if (startX > 0) {
+              dir = "right";
+              dist = Math.abs(startX);
+            } else if (startY < 0) {
+              dir = "top";
+              dist = Math.abs(startY);
+            } else if (startY > 0) {
+              dir = "bottom";
+              dist = Math.abs(startY);
+            }
+          } else {
+            const endX = params["100%"]?.x ?? 0;
+            const endY = params["100%"]?.y ?? 0;
+            if (endX < 0) {
+              dir = "left";
+              dist = Math.abs(endX);
+            } else if (endX > 0) {
+              dir = "right";
+              dist = Math.abs(endX);
+            } else if (endY < 0) {
+              dir = "top";
+              dist = Math.abs(endY);
+            } else if (endY > 0) {
+              dir = "bottom";
+              dist = Math.abs(endY);
+            }
+          }
+          setPresetParams((prev: any) => ({
+            ...prev,
+            direction: dir,
+            distance: dist,
+          }));
+        }
+
+        // If it is a Text Slide, restore direction!
+        if (parsed.presetId === "slideCaption") {
+          let dir = "left";
+          const directions = ["left", "right", "top", "bottom"];
+          const mapping: Record<string, string> = {
+            left: "slideLeftCaption",
+            right: "slideRightCaption",
+            top: "slideUpCaption",
+            bottom: "slideDownCaption",
+          };
+          for (const d of directions) {
+            const coreKey = mapping[d];
+            let template = getPresetKeyframes(coreKey);
+            if (parsed.mode === "out") {
+              template = reverseKeyframes(template);
+            }
+            if (
+              getCanonicalKeyframesString(template) ===
+              getCanonicalKeyframesString(animation.params)
+            ) {
+              dir = d;
+              break;
+            }
+          }
+          setPresetParams((prev: any) => ({
+            ...prev,
+            direction: dir,
+          }));
+        }
       } else {
         const maskTypes = ["wipe", "circleReveal", "rectExpand", "angleWipe", "centerExpand"];
         if (maskTypes.includes(animation.type)) {
@@ -820,11 +903,22 @@ export function AnimationPropertiesPicker() {
     if (activeTab === "presets" && selectedPreset) {
       def = UI_PRESETS.find((p) => p.id === selectedPreset);
       if (def) {
-        presetKey = def.hasInOut
-          ? selectedMode === "in"
-            ? def.inType
-            : def.outType || def.inType
-          : def.inType;
+        if (selectedPreset === "slideCaption") {
+          const dir = presetParams.direction ?? "left";
+          const mapping: Record<string, string> = {
+            left: "slideLeftCaption",
+            right: "slideRightCaption",
+            top: "slideUpCaption",
+            bottom: "slideDownCaption",
+          };
+          presetKey = mapping[dir] || "slideLeftCaption";
+        } else {
+          presetKey = def.hasInOut
+            ? selectedMode === "in"
+              ? def.inType
+              : def.outType || def.inType
+            : def.inType;
+        }
       }
     }
 
@@ -879,9 +973,41 @@ export function AnimationPropertiesPicker() {
       }
       finalParams.stagger = presetParams.stagger ?? finalParams.stagger ?? 0.05;
     } else if (isKeyframe && presetKey) {
-      finalParams = getPresetKeyframes(presetKey);
-      if (selectedMode === "out" && def && def.inType === def.outType) {
-        finalParams = reverseKeyframes(finalParams);
+      if (selectedPreset === "slide") {
+        const dist = presetParams.distance ?? 300;
+        const dir = presetParams.direction ?? "left";
+        if (selectedMode === "in") {
+          finalParams = {
+            "0%": {
+              x: dir === "left" ? -dist : dir === "right" ? dist : 0,
+              y: dir === "top" ? -dist : dir === "bottom" ? dist : 0,
+              opacity: 0,
+            },
+            "100%": {
+              x: 0,
+              y: 0,
+              opacity: 1,
+            },
+          };
+        } else {
+          finalParams = {
+            "0%": {
+              x: 0,
+              y: 0,
+              opacity: 1,
+            },
+            "100%": {
+              x: dir === "left" ? -dist : dir === "right" ? dist : 0,
+              y: dir === "top" ? -dist : dir === "bottom" ? dist : 0,
+              opacity: 0,
+            },
+          };
+        }
+      } else {
+        finalParams = getPresetKeyframes(presetKey);
+        if (selectedMode === "out" && def && def.inType === def.outType) {
+          finalParams = reverseKeyframes(finalParams);
+        }
       }
     } else {
       finalParams = structuredClone(keyframes);
@@ -1251,8 +1377,8 @@ export function AnimationPropertiesPicker() {
                         </div>
                       )}
 
-                      {/* Slide Preset Specific Options */}
-                      {selectedPreset === "slide" && (
+                      {/* Slide Preset Specific Options (Transition or Text) */}
+                      {(selectedPreset === "slide" || selectedPreset === "slideCaption") && (
                         <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
                           <div className="flex flex-col gap-1">
                             <label className="text-[10px] text-muted-foreground">Direction</label>
@@ -1276,21 +1402,23 @@ export function AnimationPropertiesPicker() {
                               </SelectContent>
                             </Select>
                           </div>
-                          <div className="flex flex-col gap-1">
-                            <label className="text-[10px] text-muted-foreground">
-                              Distance (px)
-                            </label>
-                            <NumberInput
-                              value={presetParams.distance}
-                              onChange={(val) =>
-                                setPresetParams((prev: any) => ({
-                                  ...prev,
-                                  distance: val,
-                                }))
-                              }
-                              className="h-7 text-xs"
-                            />
-                          </div>
+                          {selectedPreset === "slide" && (
+                            <div className="flex flex-col gap-1">
+                              <label className="text-[10px] text-muted-foreground">
+                                Distance (px)
+                              </label>
+                              <NumberInput
+                                value={presetParams.distance}
+                                onChange={(val) =>
+                                  setPresetParams((prev: any) => ({
+                                    ...prev,
+                                    distance: val,
+                                  }))
+                                }
+                                className="h-7 text-xs"
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
 
