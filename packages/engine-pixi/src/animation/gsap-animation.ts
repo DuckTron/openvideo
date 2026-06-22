@@ -198,6 +198,48 @@ function getAnimatedKeys(from: any, to: any): string[] {
   return Array.from(keys);
 }
 
+function getPixiProperty(t: any, key: string): number {
+  if (key === "scale" || key === "scaleX") {
+    return t.scale?.x ?? 1;
+  }
+  if (key === "scaleY") {
+    return t.scale?.y ?? 1;
+  }
+  if (key === "anchor" || key === "anchorX") {
+    return t.anchor?.x ?? 0;
+  }
+  if (key === "anchorY") {
+    return t.anchor?.y ?? 0;
+  }
+  if (key === "pivot" || key === "pivotX") {
+    return t.pivot?.x ?? 0;
+  }
+  if (key === "pivotY") {
+    return t.pivot?.y ?? 0;
+  }
+  if (key === "skew" || key === "skewX") {
+    return ((t.skew?.x ?? 0) * 180) / Math.PI;
+  }
+  if (key === "skewY") {
+    return ((t.skew?.y ?? 0) * 180) / Math.PI;
+  }
+  if (key === "rotation") {
+    return t.angle ?? 0;
+  }
+
+  const val = gsap.getProperty(t, key);
+  if (typeof val === "number") {
+    return val;
+  }
+  if (val && typeof val === "object") {
+    if ("x" in val && typeof (val as any).x === "number") {
+      return (val as any).x;
+    }
+  }
+  const parsed = parseFloat(val as any);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
 export interface GsapAnimationParams {
   /**
    * Animation presets or custom GSAP vars
@@ -253,6 +295,7 @@ export class GsapAnimation implements IAnimation {
         try {
           const pixiOrig = prepareVars(orig);
           gsap.set(t, pixiOrig);
+          delete t.__ovAnchorAdjusted;
         } catch (e) {
           // ignore
         }
@@ -284,6 +327,20 @@ export class GsapAnimation implements IAnimation {
           if (!this.originalProperties.has(t) || t.destroyed || !t.parent) {
             needsReinit = true;
             break;
+          }
+          // If a target now has a valid size but we haven't adjusted its anchor yet, we must re-initialize
+          const hasAnchor = !!t.anchor;
+          const hasPivot = !t.anchor && t.pivot && t.getLocalBounds;
+          if (hasAnchor && !t.__ovAnchorAdjusted && t.width > 0 && t.height > 0) {
+            needsReinit = true;
+            break;
+          }
+          if (hasPivot && !t.__ovAnchorAdjusted) {
+            const bounds = t.getLocalBounds();
+            if (bounds.width > 0 && bounds.height > 0) {
+              needsReinit = true;
+              break;
+            }
           }
         }
       }
@@ -416,25 +473,35 @@ export class GsapAnimation implements IAnimation {
     this.timeline = gsap.timeline({ paused: true });
     animTargets.forEach((t) => {
       if (t.anchor) {
-        if (t.anchor.x !== 0.5 || t.anchor.y !== 0.5) {
-          const oldX = t.anchor.x;
-          const oldY = t.anchor.y;
-          t.anchor.set(0.5, 0.5);
-          const w = t.width / (t.scale?.x || 1);
-          const h = t.height / (t.scale?.y || 1);
-          t.x += (0.5 - oldX) * w * (t.scale?.x || 1);
-          t.y += (0.5 - oldY) * h * (t.scale?.y || 1);
+        if (!t.__ovAnchorAdjusted) {
+          if (t.width > 0 && t.height > 0) {
+            if (t.anchor.x !== 0.5 || t.anchor.y !== 0.5) {
+              const oldX = t.anchor.x;
+              const oldY = t.anchor.y;
+              t.anchor.set(0.5, 0.5);
+              const w = t.width / (t.scale?.x || 1);
+              const h = t.height / (t.scale?.y || 1);
+              t.x += (0.5 - oldX) * w * (t.scale?.x || 1);
+              t.y += (0.5 - oldY) * h * (t.scale?.y || 1);
+            }
+            t.__ovAnchorAdjusted = true;
+          }
         }
       } else if (t.pivot && t.getLocalBounds) {
-        const bounds = t.getLocalBounds();
-        const cx = bounds.x + bounds.width / 2;
-        const cy = bounds.y + bounds.height / 2;
-        if (t.pivot.x !== cx || t.pivot.y !== cy) {
-          const oldX = t.pivot.x;
-          const oldY = t.pivot.y;
-          t.pivot.set(cx, cy);
-          t.x += (cx - oldX) * (t.scale?.x || 1);
-          t.y += (cy - oldY) * (t.scale?.y || 1);
+        if (!t.__ovAnchorAdjusted) {
+          const bounds = t.getLocalBounds();
+          const cx = bounds.x + bounds.width / 2;
+          const cy = bounds.y + bounds.height / 2;
+          if (bounds.width > 0 && bounds.height > 0) {
+            if (t.pivot.x !== cx || t.pivot.y !== cy) {
+              const oldX = t.pivot.x;
+              const oldY = t.pivot.y;
+              t.pivot.set(cx, cy);
+              t.x += (cx - oldX) * (t.scale?.x || 1);
+              t.y += (cy - oldY) * (t.scale?.y || 1);
+            }
+            t.__ovAnchorAdjusted = true;
+          }
         }
       }
     });
@@ -446,7 +513,7 @@ export class GsapAnimation implements IAnimation {
       t.__ovOriginalProperties = t.__ovOriginalProperties || {};
       animKeys.forEach((key) => {
         if (t.__ovOriginalProperties[key] === undefined) {
-          t.__ovOriginalProperties[key] = gsap.getProperty(t, key);
+          t.__ovOriginalProperties[key] = getPixiProperty(t, key);
         }
         orig[key] = t.__ovOriginalProperties[key];
       });

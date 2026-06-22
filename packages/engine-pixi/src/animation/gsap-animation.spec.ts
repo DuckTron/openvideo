@@ -323,4 +323,41 @@ describe("GsapAnimation boundary values and stagger correctness", () => {
     expect(child2.alpha).toBe(0);
     expect(child2.y).toBe(50);
   });
+
+  it("should handle scale animation without stack overflow", () => {
+    const root = new Container();
+    const textOnlyContainer = new Container();
+    textOnlyContainer.label = "TextOnlyContainer";
+    root.addChild(textOnlyContainer);
+
+    const child = new Container();
+    child.alpha = 1;
+    (child as any).anchor = {
+      x: 0,
+      y: 0,
+      set(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+      },
+    };
+    (child as any).scale = { x: 1, y: 1 };
+    (child as any).width = 100;
+    (child as any).height = 50;
+    textOnlyContainer.addChild(child);
+
+    const anim = new GsapAnimation(
+      {
+        type: "character",
+        from: { alpha: 0, scale: 0.5 },
+        to: { alpha: 1, scale: 1 },
+        stagger: 0.05,
+      },
+      { duration: 1000000 },
+    );
+
+    anim.apply(root, 0);
+
+    expect(child.alpha).toBe(0);
+    expect((child as any).scale.x).toBe(0.5);
+  });
 });
