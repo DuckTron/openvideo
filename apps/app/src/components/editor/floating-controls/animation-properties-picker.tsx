@@ -502,7 +502,7 @@ function getPresetIdAndMode(
   if (animation.params?.presetId) {
     return {
       presetId: animation.params.presetId,
-      mode: animation.params.mode || "in",
+      mode: animation.params.metaMode || animation.params.mode || "in",
     };
   }
 
@@ -1023,7 +1023,7 @@ export function AnimationPropertiesPicker() {
 
     if (activeTab === "presets" && selectedPreset) {
       finalParams.presetId = selectedPreset;
-      finalParams.mode = selectedMode;
+      finalParams.metaMode = selectedMode;
     }
 
     return { type, options, finalParams };

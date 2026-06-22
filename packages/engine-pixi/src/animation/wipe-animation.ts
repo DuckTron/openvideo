@@ -73,6 +73,16 @@ export class WipeAnimation implements IAnimation {
 
     const offsetTime = time - delay;
 
+    const isReveal = mode !== "conceal";
+    const isFinished = iterCount !== Infinity && offsetTime >= duration;
+
+    if (isReveal && isFinished) {
+      return {};
+    }
+    if (!isReveal && offsetTime < 0) {
+      return {};
+    }
+
     let rawProgress: number;
     if (offsetTime < 0) {
       rawProgress = 0;
