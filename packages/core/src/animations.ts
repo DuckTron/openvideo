@@ -1096,6 +1096,19 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
     params: {
       type: "word",
       from: { alpha: 0, x: "+=50" },
+      to: { alpha: 1, x: "-=50" },
+      stagger: 0.2,
+    },
+  },
+  slideMaskWord: {
+    label: "Slide Mask Word",
+    type: "stagger",
+    defaultOptions: { easing: "power2.out", iterCount: 1 },
+    params: {
+      type: "word",
+      preset: "slideMaskWord",
+      mask: true,
+      from: { alpha: 0, x: "+=50" },
       to: {
         keyframes: {
           "0%": { alpha: 1 },
@@ -1287,4 +1300,5 @@ export const SPECIAL_ANIMATIONS_CAPTIONS = [
   "appearByWord",
   "fadeByWord",
   "slideByWord",
+  "slideMaskWord",
 ];

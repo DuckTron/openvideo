@@ -194,6 +194,9 @@ export class GsapAnimation implements IAnimation {
       if (type === "character") {
         // Find all characters (recursive)
         const findCharacters = (node: any, isRoot: boolean = false): any[] => {
+          if (node && node.label === "LineMask") {
+            return [];
+          }
           if (!node.children || node.children.length === 0) {
             return isRoot ? [] : [node];
           }
@@ -206,7 +209,19 @@ export class GsapAnimation implements IAnimation {
         return findCharacters(textContainer, true);
       } else {
         // type === "word"
-        return [...textContainer.children];
+        const hasLineContainers = textContainer.children.some(
+          (child: any) => child && child.label === "LineContainer",
+        );
+        if (hasLineContainers) {
+          const results: any[] = [];
+          for (const child of textContainer.children) {
+            if (child && child.label === "LineContainer" && child.children) {
+              results.push(...child.children);
+            }
+          }
+          return results;
+        }
+        return textContainer.children;
       }
     }
 

@@ -189,6 +189,14 @@ const UI_PRESETS: PresetDefinition[] = [
     inType: "slideByWord",
     outType: "slideByWord",
   },
+  {
+    id: "slideMaskWord",
+    label: "Slide Mask Word",
+    category: "text",
+    hasInOut: true,
+    inType: "slideMaskWord",
+    outType: "slideMaskWord",
+  },
 
   {
     id: "charFade",
@@ -758,7 +766,7 @@ export function AnimationPropertiesPicker() {
               ...prev,
               stagger: animation.params.stagger ?? 0.05,
             };
-            if (parsed.presetId === "slideByWord") {
+            if (parsed.presetId === "slideByWord" || parsed.presetId === "slideMaskWord") {
               const from = animation.params.from || {};
               const to = animation.params.to || {};
               const keyframes = to.keyframes || {};
@@ -766,25 +774,42 @@ export function AnimationPropertiesPicker() {
 
               let dir = "left";
               let dist = 50;
+              const isOut = parsed.mode === "out";
 
-              let xVal = from.x !== undefined ? from.x : kf100.x;
-              let yVal = from.y !== undefined ? from.y : kf100.y;
+              let xVal = from.x !== undefined ? from.x : to.x !== undefined ? to.x : kf100.x;
+              let yVal = from.y !== undefined ? from.y : to.y !== undefined ? to.y : kf100.y;
 
               if (xVal !== undefined) {
                 const strX = String(xVal);
                 dist = Math.abs(parseFloat(strX.replace(/[^0-9.-]/g, ""))) || 50;
-                if (strX.includes("+")) {
-                  dir = "left";
-                } else if (strX.includes("-")) {
-                  dir = "right";
+                if (isOut) {
+                  if (strX.includes("-")) {
+                    dir = "left";
+                  } else {
+                    dir = "right";
+                  }
+                } else {
+                  if (strX.includes("+")) {
+                    dir = "left";
+                  } else {
+                    dir = "right";
+                  }
                 }
               } else if (yVal !== undefined) {
                 const strY = String(yVal);
                 dist = Math.abs(parseFloat(strY.replace(/[^0-9.-]/g, ""))) || 50;
-                if (strY.includes("+")) {
-                  dir = "top";
-                } else if (strY.includes("-")) {
-                  dir = "bottom";
+                if (isOut) {
+                  if (strY.includes("-")) {
+                    dir = "top";
+                  } else {
+                    dir = "bottom";
+                  }
+                } else {
+                  if (strY.includes("+")) {
+                    dir = "top";
+                  } else {
+                    dir = "bottom";
+                  }
                 }
               }
               next.direction = dir;
@@ -850,7 +875,7 @@ export function AnimationPropertiesPicker() {
           if (config?.params?.stagger !== undefined) {
             next.stagger = config.params.stagger;
           }
-          if (selectedPreset === "slideByWord") {
+          if (selectedPreset === "slideByWord" || selectedPreset === "slideMaskWord") {
             next.distance = 50;
           }
           return next;
@@ -1012,64 +1037,98 @@ export function AnimationPropertiesPicker() {
     } else if (isStagger) {
       const staggerPreset = GSAP_PRESETS[presetKey];
       finalParams = structuredClone(staggerPreset.params);
-      if (presetKey === "slideByWord") {
+      if (presetKey === "slideByWord" || presetKey === "slideMaskWord") {
         const dir = presetParams.direction ?? "left";
         const dist = presetParams.distance ?? 50;
-        if (selectedMode === "in") {
-          finalParams.from = { alpha: 0 };
-          let toX = 0;
-          let toY = 0;
-          if (dir === "left") {
-            finalParams.from.x = `+=${dist}`;
-            toX = -dist;
-          } else if (dir === "right") {
-            finalParams.from.x = `-=${dist}`;
-            toX = dist;
-          } else if (dir === "top") {
-            finalParams.from.y = `+=${dist}`;
-            toY = -dist;
-          } else if (dir === "bottom") {
-            finalParams.from.y = `-=${dist}`;
-            toY = dist;
-          }
-          finalParams.to = {
-            keyframes: {
-              "0%": { alpha: 1 },
-              "100%": {
-                ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
-                ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
+        if (presetKey === "slideMaskWord") {
+          if (selectedMode === "in") {
+            finalParams.from = { alpha: 0 };
+            let toX = 0;
+            let toY = 0;
+            if (dir === "left") {
+              finalParams.from.x = `+=${dist}`;
+              toX = -dist;
+            } else if (dir === "right") {
+              finalParams.from.x = `-=${dist}`;
+              toX = dist;
+            } else if (dir === "top") {
+              finalParams.from.y = `+=${dist}`;
+              toY = -dist;
+            } else if (dir === "bottom") {
+              finalParams.from.y = `-=${dist}`;
+              toY = dist;
+            }
+            finalParams.to = {
+              keyframes: {
+                "0%": { alpha: 1 },
+                "100%": {
+                  ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
+                  ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
+                },
               },
-            },
-            ease: "none",
-          };
+              ease: "none",
+            };
+          } else {
+            finalParams.from = { alpha: 1 };
+            let toX = 0;
+            let toY = 0;
+            if (dir === "left") {
+              toX = -dist;
+            } else if (dir === "right") {
+              toX = dist;
+            } else if (dir === "top") {
+              toY = -dist;
+            } else if (dir === "bottom") {
+              toY = dist;
+            }
+            finalParams.to = {
+              keyframes: {
+                "0%": { alpha: 1 },
+                "99.9%": { alpha: 1 },
+                "100%": {
+                  alpha: 0,
+                  ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
+                  ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
+                },
+              },
+              ease: "none",
+            };
+          }
         } else {
-          finalParams.from = { alpha: 1 };
-          let toX = 0;
-          let toY = 0;
-          if (dir === "left") {
-            toX = dist;
-          } else if (dir === "right") {
-            toX = -dist;
-          } else if (dir === "top") {
-            toY = dist;
-          } else if (dir === "bottom") {
-            toY = -dist;
+          // Standard slideByWord (fades opacity and slides)
+          if (selectedMode === "in") {
+            finalParams.from = { alpha: 0 };
+            finalParams.to = { alpha: 1 };
+            if (dir === "left") {
+              finalParams.from.x = `+=${dist}`;
+              finalParams.to.x = `-=${dist}`;
+            } else if (dir === "right") {
+              finalParams.from.x = `-=${dist}`;
+              finalParams.to.x = `+=${dist}`;
+            } else if (dir === "top") {
+              finalParams.from.y = `+=${dist}`;
+              finalParams.to.y = `-=${dist}`;
+            } else if (dir === "bottom") {
+              finalParams.from.y = `-=${dist}`;
+              finalParams.to.y = `+=${dist}`;
+            }
+          } else {
+            // Out mode: starts at alpha: 1 (neutral position) and animates to alpha: 0 (shifted position)
+            finalParams.from = { alpha: 1 };
+            finalParams.to = { alpha: 0 };
+            if (dir === "left") {
+              finalParams.to.x = `-=${dist}`;
+            } else if (dir === "right") {
+              finalParams.to.x = `+=${dist}`;
+            } else if (dir === "top") {
+              finalParams.to.y = `-=${dist}`;
+            } else if (dir === "bottom") {
+              finalParams.to.y = `+=${dist}`;
+            }
           }
-          finalParams.to = {
-            keyframes: {
-              "0%": { alpha: 1 },
-              "99.9%": { alpha: 1 },
-              "100%": {
-                alpha: 0,
-                ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
-                ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
-              },
-            },
-            ease: "none",
-          };
         }
       }
-      if (selectedMode === "out" && presetKey !== "slideByWord") {
+      if (selectedMode === "out" && presetKey !== "slideMaskWord" && presetKey !== "slideByWord") {
         const temp = finalParams.from;
         finalParams.from = finalParams.to;
         finalParams.to = temp;
@@ -1486,7 +1545,8 @@ export function AnimationPropertiesPicker() {
                       {/* Slide Preset Specific Options (Transition or Text) */}
                       {(selectedPreset === "slide" ||
                         selectedPreset === "slideCaption" ||
-                        selectedPreset === "slideByWord") && (
+                        selectedPreset === "slideByWord" ||
+                        selectedPreset === "slideMaskWord") && (
                         <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
                           <div className="flex flex-col gap-1">
                             <label className="text-[10px] text-muted-foreground">Direction</label>
@@ -1510,7 +1570,9 @@ export function AnimationPropertiesPicker() {
                               </SelectContent>
                             </Select>
                           </div>
-                          {(selectedPreset === "slide" || selectedPreset === "slideByWord") && (
+                          {(selectedPreset === "slide" ||
+                            selectedPreset === "slideByWord" ||
+                            selectedPreset === "slideMaskWord") && (
                             <div className="flex flex-col gap-1">
                               <label className="text-[10px] text-muted-foreground">
                                 Distance (px)

@@ -302,9 +302,27 @@ export abstract class BaseSprite<
 
   public set animations(v: IAnimation[]) {
     if (!Array.isArray(v)) {
+      this._animations.forEach((a) => {
+        if (a && typeof (a as any).destroy === "function") {
+          (a as any).destroy();
+        }
+      });
       this._animations = [];
       return;
     }
+
+    // Identify and destroy old animations that are being removed or replaced by new configs
+    this._animations.forEach((oldAnim) => {
+      if (oldAnim && oldAnim.id) {
+        const matchingNew = v.find((anim: any) => anim && anim.id === oldAnim.id);
+        const isReplaced = matchingNew && typeof (matchingNew as any).getTransform !== "function";
+        const isRemoved = !matchingNew;
+        if ((isRemoved || isReplaced) && typeof (oldAnim as any).destroy === "function") {
+          (oldAnim as any).destroy();
+        }
+      }
+    });
+
     this._animations = v.map((anim: any) => {
       // If it's already an instantiated animation, return it
       if (anim && typeof anim.getTransform === "function") {
@@ -524,6 +542,10 @@ export abstract class BaseSprite<
    * Remove an animation by ID
    */
   removeAnimation(id: string): void {
+    const toRemove = this.animations.find((a) => a.id === id);
+    if (toRemove && typeof (toRemove as any).destroy === "function") {
+      (toRemove as any).destroy();
+    }
     this.animations = this.animations.filter((a) => a.id !== id);
     this.emit("propsChange", { animations: this.animations } as any);
   }
@@ -532,6 +554,11 @@ export abstract class BaseSprite<
    * Clear all modular animations
    */
   clearAnimations(): void {
+    this.animations.forEach((a) => {
+      if (a && typeof (a as any).destroy === "function") {
+        (a as any).destroy();
+      }
+    });
     this.animations = [];
     this.emit("propsChange", { animations: this.animations } as any);
   }
@@ -546,6 +573,11 @@ export abstract class BaseSprite<
   updateAnimation(id: string, type: string, options: any, params?: any): void {
     const index = this.animations.findIndex((a) => a.id === id);
     if (index === -1) return;
+
+    const oldAnim = this.animations[index];
+    if (oldAnim && typeof (oldAnim as any).destroy === "function") {
+      (oldAnim as any).destroy();
+    }
 
     const newAnim = animationRegistry.create(type, { ...options, id }, params);
     this.animations[index] = newAnim;
@@ -604,6 +636,12 @@ export abstract class BaseSprite<
   }
 
   protected destroy() {
+    this.animations.forEach((a) => {
+      if (a && typeof (a as any).destroy === "function") {
+        (a as any).destroy();
+      }
+    });
+    this.animations = [];
     this.all.clear();
   }
 }
