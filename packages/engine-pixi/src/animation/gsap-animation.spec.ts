@@ -360,4 +360,58 @@ describe("GsapAnimation boundary values and stagger correctness", () => {
     expect(child.alpha).toBe(0);
     expect((child as any).scale.x).toBe(0.5);
   });
+
+  it("should correctly animate popByWord keyframes without double-popping", () => {
+    const root = new Container();
+    const textOnlyContainer = new Container();
+    textOnlyContainer.label = "TextOnlyContainer";
+    root.addChild(textOnlyContainer);
+
+    const child = new Container();
+    (child as any).anchor = {
+      x: 0,
+      y: 0,
+      set(x: number, y: number) {
+        this.x = x;
+        this.y = y;
+      },
+    };
+    (child as any).scale = { x: 1, y: 1 };
+    (child as any).width = 100;
+    (child as any).height = 50;
+    textOnlyContainer.addChild(child);
+
+    const anim = new GsapAnimation(
+      {
+        type: "word",
+        from: { scale: 0, immediateRender: true },
+        to: {
+          keyframes: { "0%": { scale: 0 }, "50%": { scale: 1.2 }, "100%": { scale: 1 } },
+          ease: "none",
+        },
+        stagger: 0.05,
+      },
+      { duration: 1000000, easing: "none" }, // 1s
+    );
+
+    // Apply at time 0: scale should be 0
+    anim.apply(root, 0);
+    expect((child as any).scale.x).toBeCloseTo(0, 4);
+
+    // Apply at time 250,000 (progress 0.25): scale should be 0.6
+    anim.apply(root, 250000);
+    expect((child as any).scale.x).toBeCloseTo(0.6, 4);
+
+    // Apply at time 500,000 (progress 0.5): scale should be 1.2
+    anim.apply(root, 500000);
+    expect((child as any).scale.x).toBeCloseTo(1.2, 4);
+
+    // Apply at time 750,000 (progress 0.75): scale should be 1.1
+    anim.apply(root, 750000);
+    expect((child as any).scale.x).toBeCloseTo(1.1, 4);
+
+    // Apply at time 1,000,000 (progress 1.0): scale should be 1
+    anim.apply(root, 1000000);
+    expect((child as any).scale.x).toBeCloseTo(1, 4);
+  });
 });

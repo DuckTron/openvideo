@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import {
   ANIMATABLE_PROPERTIES,
   AnimationProps,
-  AnimationOptions,
   KeyframeData,
   WipeDirection,
   type MaskTransform,
@@ -132,6 +131,23 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "pulse",
   },
 
+  {
+    id: "appearByWord",
+    label: "Appear",
+    category: "text",
+    hasInOut: true,
+    inType: "appearByWord",
+    outType: "appearByWord",
+  },
+  {
+    id: "fadeByWord",
+    label: "Fade By Word",
+    category: "text",
+    hasInOut: true,
+    inType: "fadeByWord",
+    outType: "fadeByWord",
+  },
+
   // Text Animations
   {
     id: "popCaption",
@@ -166,36 +182,21 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "slideLeftCaption",
   },
   {
-    id: "slideFadeByWord",
-    label: "Slide Fade By Word",
+    id: "slideByWord",
+    label: "Slide By Word",
     category: "text",
     hasInOut: true,
-    inType: "slideFadeByWord",
-    outType: "slideFadeByWord",
+    inType: "slideByWord",
+    outType: "slideByWord",
   },
+
   {
-    id: "upDownCaption",
-    label: "Up Down",
-    category: "text",
-    hasInOut: true,
-    inType: "upDownCaption",
-    outType: "upDownCaption",
-  },
-  {
-    id: "upLeftCaption",
-    label: "Up Left",
-    category: "text",
-    hasInOut: true,
-    inType: "upLeftCaption",
-    outType: "upLeftCaption",
-  },
-  {
-    id: "charFadeIn",
+    id: "charFade",
     label: "Char Fade",
     category: "text",
     hasInOut: true,
-    inType: "charFadeIn",
-    outType: "charFadeIn",
+    inType: "charFade",
+    outType: "charFade",
   },
   {
     id: "charSlideUp",
@@ -213,14 +214,7 @@ const UI_PRESETS: PresetDefinition[] = [
     inType: "charTypewriter",
     outType: "charTypewriter",
   },
-  {
-    id: "fadeByWord",
-    label: "Fade By Word",
-    category: "text",
-    hasInOut: true,
-    inType: "fadeByWord",
-    outType: "fadeByWord",
-  },
+
   {
     id: "popByWord",
     label: "Pop By Word",
@@ -246,29 +240,14 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "bounceByWord",
   },
   {
-    id: "rotateInByWord",
-    label: "Rotate In By Word",
+    id: "rotateByWord",
+    label: "Rotate By Word",
     category: "text",
     hasInOut: true,
-    inType: "rotateInByWord",
-    outType: "rotateInByWord",
+    inType: "rotateByWord",
+    outType: "rotateByWord",
   },
-  {
-    id: "slideRightByWord",
-    label: "Slide Right By Word",
-    category: "text",
-    hasInOut: true,
-    inType: "slideRightByWord",
-    outType: "slideRightByWord",
-  },
-  {
-    id: "slideLeftByWord",
-    label: "Slide Left By Word",
-    category: "text",
-    hasInOut: true,
-    inType: "slideLeftByWord",
-    outType: "slideLeftByWord",
-  },
+
   {
     id: "fadeRotateByWord",
     label: "Fade Rotate By Word",
@@ -294,12 +273,12 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "waveByWord",
   },
   {
-    id: "blurInByWord",
-    label: "Blur In By Word",
+    id: "blurByWord",
+    label: "Blur By Word",
     category: "text",
     hasInOut: true,
-    inType: "blurInByWord",
-    outType: "blurInByWord",
+    inType: "blurByWord",
+    outType: "blurByWord",
   },
   {
     id: "dropSoftByWord",
@@ -326,20 +305,20 @@ const UI_PRESETS: PresetDefinition[] = [
     outType: "flipUpByWord",
   },
   {
-    id: "spinInByWord",
-    label: "Spin In By Word",
+    id: "spinByWord",
+    label: "Spin By Word",
     category: "text",
     hasInOut: true,
-    inType: "spinInByWord",
-    outType: "spinInByWord",
+    inType: "spinByWord",
+    outType: "spinByWord",
   },
   {
-    id: "stretchInByWord",
-    label: "Stretch In By Word",
+    id: "stretchByWord",
+    label: "Stretch By Word",
     category: "text",
     hasInOut: true,
-    inType: "stretchInByWord",
-    outType: "stretchInByWord",
+    inType: "stretchByWord",
+    outType: "stretchByWord",
   },
   {
     id: "revealZoomByWord",
@@ -493,15 +472,27 @@ function getPresetIdAndMode(
   if (!animation) return { presetId: "", mode: "in" };
 
   if (animation.options?.presetId) {
+    let presetId = animation.options.presetId;
+    if (presetId === "charFadeIn") presetId = "charFade";
+    if (presetId === "rotateInByWord") presetId = "rotateByWord";
+    if (presetId === "blurInByWord") presetId = "blurByWord";
+    if (presetId === "spinInByWord") presetId = "spinByWord";
+    if (presetId === "stretchInByWord") presetId = "stretchByWord";
     return {
-      presetId: animation.options.presetId,
+      presetId,
       mode: animation.options.mode || "in",
     };
   }
 
   if (animation.params?.presetId) {
+    let presetId = animation.params.presetId;
+    if (presetId === "charFadeIn") presetId = "charFade";
+    if (presetId === "rotateInByWord") presetId = "rotateByWord";
+    if (presetId === "blurInByWord") presetId = "blurByWord";
+    if (presetId === "spinInByWord") presetId = "spinByWord";
+    if (presetId === "stretchInByWord") presetId = "stretchByWord";
     return {
-      presetId: animation.params.presetId,
+      presetId,
       mode: animation.params.metaMode || animation.params.mode || "in",
     };
   }
@@ -762,10 +753,33 @@ export function AnimationPropertiesPicker() {
             maskInitialProgress: animation.params.initialProgress ?? 0,
           }));
         } else if (animation.type === "stagger" && animation.params) {
-          setPresetParams((prev: any) => ({
-            ...prev,
-            stagger: animation.params.stagger ?? 0.05,
-          }));
+          setPresetParams((prev: any) => {
+            const next = {
+              ...prev,
+              stagger: animation.params.stagger ?? 0.05,
+            };
+            if (parsed.presetId === "slideByWord") {
+              const from = animation.params.from || {};
+              let dir = "left";
+              if (from.x !== undefined) {
+                const strX = String(from.x);
+                if (strX.includes("+")) {
+                  dir = "left";
+                } else if (strX.includes("-")) {
+                  dir = "right";
+                }
+              } else if (from.y !== undefined) {
+                const strY = String(from.y);
+                if (strY.includes("+")) {
+                  dir = "top";
+                } else if (strY.includes("-")) {
+                  dir = "bottom";
+                }
+              }
+              next.direction = dir;
+            }
+            return next;
+          });
         }
       }
     } else {
@@ -966,6 +980,23 @@ export function AnimationPropertiesPicker() {
     } else if (isStagger) {
       const staggerPreset = GSAP_PRESETS[presetKey];
       finalParams = structuredClone(staggerPreset.params);
+      if (presetKey === "slideByWord") {
+        const dir = presetParams.direction ?? "left";
+        const dist = 50;
+        if (dir === "left") {
+          finalParams.from = { x: `+=${dist}` };
+          finalParams.to = { x: `-=${dist}` };
+        } else if (dir === "right") {
+          finalParams.from = { x: `-=${dist}` };
+          finalParams.to = { x: `+=${dist}` };
+        } else if (dir === "top") {
+          finalParams.from = { y: `+=${dist}` };
+          finalParams.to = { y: `-=${dist}` };
+        } else if (dir === "bottom") {
+          finalParams.from = { y: `-=${dist}` };
+          finalParams.to = { y: `+=${dist}` };
+        }
+      }
       if (selectedMode === "out") {
         const temp = finalParams.from;
         finalParams.from = finalParams.to;
@@ -1193,22 +1224,25 @@ export function AnimationPropertiesPicker() {
                       )}
 
                       {/* Combos */}
-                      <div className="flex flex-col gap-1.5">
-                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                          Continuous / Combo
-                        </span>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          {comboPresets.map((p) => (
-                            <button
-                              key={p.id}
-                              onClick={() => setSelectedPreset(p.id)}
-                              className="flex items-center justify-center p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 text-xs text-foreground transition-all border border-transparent hover:border-border font-medium text-center min-h-9"
-                            >
-                              {p.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                      {(typeClip === "Image" || typeClip === "Video") &&
+                        comboPresets.length > 0 && (
+                          <div className="flex flex-col gap-1.5">
+                            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                              Continuous / Combo
+                            </span>
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {comboPresets.map((p) => (
+                                <button
+                                  key={p.id}
+                                  onClick={() => setSelectedPreset(p.id)}
+                                  className="flex items-center justify-center p-2 rounded-md bg-secondary/30 hover:bg-secondary/60 text-xs text-foreground transition-all border border-transparent hover:border-border font-medium text-center min-h-9"
+                                >
+                                  {p.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   ) : (
                     /* Preset Details View */
@@ -1378,7 +1412,9 @@ export function AnimationPropertiesPicker() {
                       )}
 
                       {/* Slide Preset Specific Options (Transition or Text) */}
-                      {(selectedPreset === "slide" || selectedPreset === "slideCaption") && (
+                      {(selectedPreset === "slide" ||
+                        selectedPreset === "slideCaption" ||
+                        selectedPreset === "slideByWord") && (
                         <div className="grid grid-cols-2 gap-1.5 p-2 bg-secondary/20 rounded-md">
                           <div className="flex flex-col gap-1">
                             <label className="text-[10px] text-muted-foreground">Direction</label>

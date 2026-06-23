@@ -891,18 +891,7 @@ export const ANIMATION_PRESETS: Record<string, AnimationPresetConfig> = {
     defaultOptions: { easing: "easeOutQuad", iterCount: 1 },
     keyframes: { "0%": { scale: 1.2 }, "100%": { scale: 1 } },
   },
-  upDownCaption: {
-    label: "Up Down",
-    type: "keyframes",
-    defaultOptions: { easing: "easeOutQuad", iterCount: Infinity },
-    keyframes: { "0%": { y: 0 }, "50%": { y: -300 }, "100%": { y: 0 } },
-  },
-  upLeftCaption: {
-    label: "Up Left",
-    type: "keyframes",
-    defaultOptions: { easing: "easeOutQuad", iterCount: Infinity },
-    keyframes: { "0%": { x: 0, y: 0 }, "50%": { x: -50, y: -50 }, "100%": { x: 0, y: 0 } },
-  },
+
   comboZoom1: {
     label: "Combo Zoom 1",
     type: "keyframes",
@@ -1050,13 +1039,13 @@ export const ANIMATION_PRESETS: Record<string, AnimationPresetConfig> = {
 };
 
 export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
-  charFadeIn: {
-    label: "Char Fade In",
+  charFade: {
+    label: "Char Fade",
     type: "stagger",
     defaultOptions: { easing: "back.out", iterCount: 1 },
     params: {
       type: "character",
-      from: { alpha: 0, scale: 0.5 },
+      from: { alpha: 0, scale: 1 },
       to: { alpha: 1, scale: 1 },
       stagger: 0.05,
     },
@@ -1083,21 +1072,32 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.05,
     },
   },
+  appearByWord: {
+    label: "Appear",
+    type: "stagger",
+    defaultOptions: { easing: "none", iterCount: 1 },
+    params: {
+      type: "word",
+      from: { alpha: 0 },
+      to: { alpha: 1, duration: 0.001 },
+      stagger: 0.05,
+    },
+  },
   fadeByWord: {
     label: "Fade By Word",
     type: "stagger",
     defaultOptions: { easing: "none", iterCount: 1 },
     params: { type: "word", from: { alpha: 0 }, to: { alpha: 1 }, stagger: 0.05 },
   },
-  slideFadeByWord: {
-    label: "Slide Fade By Word",
+  slideByWord: {
+    label: "Slide By Word",
     type: "stagger",
-    defaultOptions: { easing: "none", iterCount: 1 },
+    defaultOptions: { easing: "power2.out", iterCount: 1 },
     params: {
       type: "word",
-      from: { alpha: 0, x: "+=50" },
-      to: { alpha: 1, x: "-=50" },
-      stagger: 0.05,
+      from: { x: "+=50" },
+      to: { x: "-=50" },
+      stagger: 0.1,
     },
   },
   popByWord: {
@@ -1136,8 +1136,8 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.1,
     },
   },
-  rotateInByWord: {
-    label: "Rotate In By Word",
+  rotateByWord: {
+    label: "Rotate By Word",
     type: "stagger",
     defaultOptions: { easing: "power2.out", iterCount: 1 },
     params: {
@@ -1147,28 +1147,7 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.08,
     },
   },
-  slideRightByWord: {
-    label: "Slide Right By Word",
-    type: "stagger",
-    defaultOptions: { easing: "power2.out", iterCount: 1 },
-    params: {
-      type: "word",
-      from: { alpha: 0, x: "-=50" },
-      to: { alpha: 1, x: "+=50" },
-      stagger: 0.1,
-    },
-  },
-  slideLeftByWord: {
-    label: "Slide Left By Word",
-    type: "stagger",
-    defaultOptions: { easing: "power2.out", iterCount: 1 },
-    params: {
-      type: "word",
-      from: { alpha: 0, x: "+=50" },
-      to: { alpha: 1, x: "-=50" },
-      stagger: 0.1,
-    },
-  },
+
   fadeRotateByWord: {
     label: "Fade Rotate By Word",
     type: "stagger",
@@ -1202,8 +1181,8 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.12,
     },
   },
-  blurInByWord: {
-    label: "Blur In By Word",
+  blurByWord: {
+    label: "Blur By Word",
     type: "stagger",
     defaultOptions: { easing: "power2.out", iterCount: 1 },
     params: {
@@ -1246,8 +1225,8 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.1,
     },
   },
-  spinInByWord: {
-    label: "Spin In By Word",
+  spinByWord: {
+    label: "Spin By Word",
     type: "stagger",
     defaultOptions: { easing: "power3.out", iterCount: 1 },
     params: {
@@ -1257,8 +1236,8 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
       stagger: 0.09,
     },
   },
-  stretchInByWord: {
-    label: "Stretch In By Word",
+  stretchByWord: {
+    label: "Stretch By Word",
     type: "stagger",
     defaultOptions: { easing: "power2.out", iterCount: 1 },
     params: {
@@ -1299,7 +1278,7 @@ export function getPresetKeyframes(key: string): AnimationKeyframeData {
 
 export const SPECIAL_ANIMATIONS_CAPTIONS = [
   "charTypewriter",
-  "upDownCaption",
-  "upLeftCaption",
+  "appearByWord",
   "fadeByWord",
+  "slideByWord",
 ];

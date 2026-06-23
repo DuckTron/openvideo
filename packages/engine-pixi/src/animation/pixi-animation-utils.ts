@@ -29,9 +29,27 @@ export const pixiProps = [
 export const hasPixiProp = (obj: any) =>
   obj && Object.keys(obj).some((key) => pixiProps.includes(key));
 
-export const prepareVars = (vars: any) => {
-  if (!hasPixiProp(vars)) return vars;
+export const prepareVars = (vars: any): any => {
+  if (!vars) return vars;
   const newVars: any = { ...vars };
+
+  if (newVars.keyframes) {
+    if (Array.isArray(newVars.keyframes)) {
+      newVars.keyframes = newVars.keyframes.map((frame: any) => prepareVars(frame));
+    } else if (typeof newVars.keyframes === "object") {
+      const resolvedKf: Record<string, any> = {};
+      for (const [kfKey, frame] of Object.entries(newVars.keyframes)) {
+        if (frame && typeof frame === "object") {
+          resolvedKf[kfKey] = prepareVars(frame);
+        } else {
+          resolvedKf[kfKey] = frame;
+        }
+      }
+      newVars.keyframes = resolvedKf;
+    }
+  }
+
+  if (!hasPixiProp(newVars)) return newVars;
   const pixiVars: any = {};
   pixiProps.forEach((prop) => {
     if (prop in newVars) {
@@ -57,6 +75,26 @@ export function resolveValue(val: any, baseVal: number): number {
   return isNaN(parsed) ? baseVal : parsed;
 }
 
+function getKeyframeKeys(to: any): Set<string> {
+  const kfKeys = new Set<string>();
+  if (to && to.keyframes) {
+    if (Array.isArray(to.keyframes)) {
+      to.keyframes.forEach((frame: any) => {
+        if (frame && typeof frame === "object") {
+          Object.keys(frame).forEach((k) => kfKeys.add(k));
+        }
+      });
+    } else if (typeof to.keyframes === "object") {
+      Object.values(to.keyframes).forEach((frame: any) => {
+        if (frame && typeof frame === "object") {
+          Object.keys(frame).forEach((k) => kfKeys.add(k));
+        }
+      });
+    }
+  }
+  return kfKeys;
+}
+
 export function resolveVars(
   from: any,
   to: any,
@@ -67,6 +105,7 @@ export function resolveVars(
   const resolvedTo: Record<string, any> = {};
 
   const keys = new Set([...Object.keys(from || {}), ...Object.keys(to || {})]);
+  const kfKeys = getKeyframeKeys(to);
 
   for (const key of keys) {
     if (
@@ -80,6 +119,12 @@ export function resolveVars(
     }
 
     const baseVal = baseSource[key] ?? 0;
+
+    if (kfKeys.has(key)) {
+      const fromVal = from ? from[key] : undefined;
+      resolvedFrom[key] = fromVal !== undefined ? resolveValue(fromVal, baseVal) : baseVal;
+      continue;
+    }
 
     if (isOut) {
       // For exit (out) animations:

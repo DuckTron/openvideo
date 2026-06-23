@@ -16,10 +16,9 @@ interface RegenerateCaptionClipsOptions {
 
 const CUSTOM_ANIMATIONS_CAPTIONS = [
   "charTypewriter",
+  "appearByWord",
   "scaleMidCaption",
   "scaleDownCaption",
-  "upDownCaption",
-  "upLeftCaption",
   "fadeByWord",
   "slideFadeByWord",
 ];
