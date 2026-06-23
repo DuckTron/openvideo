@@ -63,6 +63,7 @@ export class GsapAnimation implements IAnimation {
         try {
           const pixiOrig = prepareVars(orig);
           gsap.set(t, pixiOrig);
+          delete t.__ovAnchorAdjusted;
         } catch (e) {
           // ignore
         }
