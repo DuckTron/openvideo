@@ -1095,9 +1095,15 @@ export const GSAP_PRESETS: Record<string, GsapPresetConfig> = {
     defaultOptions: { easing: "power2.out", iterCount: 1 },
     params: {
       type: "word",
-      from: { x: "+=50" },
-      to: { x: "-=50" },
-      stagger: 0.1,
+      from: { alpha: 0, x: "+=50" },
+      to: {
+        keyframes: {
+          "0%": { alpha: 1 },
+          "100%": { x: "-=50" },
+        },
+        ease: "none",
+      },
+      stagger: 0.2,
     },
   },
   popByWord: {

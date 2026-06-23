@@ -760,16 +760,27 @@ export function AnimationPropertiesPicker() {
             };
             if (parsed.presetId === "slideByWord") {
               const from = animation.params.from || {};
+              const to = animation.params.to || {};
+              const keyframes = to.keyframes || {};
+              const kf100 = keyframes["100%"] || {};
+
               let dir = "left";
-              if (from.x !== undefined) {
-                const strX = String(from.x);
+              let dist = 50;
+
+              let xVal = from.x !== undefined ? from.x : kf100.x;
+              let yVal = from.y !== undefined ? from.y : kf100.y;
+
+              if (xVal !== undefined) {
+                const strX = String(xVal);
+                dist = Math.abs(parseFloat(strX.replace(/[^0-9.-]/g, ""))) || 50;
                 if (strX.includes("+")) {
                   dir = "left";
                 } else if (strX.includes("-")) {
                   dir = "right";
                 }
-              } else if (from.y !== undefined) {
-                const strY = String(from.y);
+              } else if (yVal !== undefined) {
+                const strY = String(yVal);
+                dist = Math.abs(parseFloat(strY.replace(/[^0-9.-]/g, ""))) || 50;
                 if (strY.includes("+")) {
                   dir = "top";
                 } else if (strY.includes("-")) {
@@ -777,6 +788,7 @@ export function AnimationPropertiesPicker() {
                 }
               }
               next.direction = dir;
+              next.distance = dist;
             }
             return next;
           });
@@ -826,6 +838,26 @@ export function AnimationPropertiesPicker() {
       setMirrorEnabled(true);
     }
   }, [clipDuration, activeTab, selectedPreset]);
+
+  // Sync stagger and distance parameters when preset changes
+  useEffect(() => {
+    if (activeTab === "presets" && selectedPreset) {
+      const def = UI_PRESETS.find((p) => p.id === selectedPreset);
+      if (def?.category === "text" && def.inType in GSAP_PRESETS) {
+        const config = GSAP_PRESETS[def.inType];
+        setPresetParams((prev: any) => {
+          const next = { ...prev };
+          if (config?.params?.stagger !== undefined) {
+            next.stagger = config.params.stagger;
+          }
+          if (selectedPreset === "slideByWord") {
+            next.distance = 50;
+          }
+          return next;
+        });
+      }
+    }
+  }, [activeTab, selectedPreset]);
 
   const handlePropertyChange = (keyframe: string, property: PropertyKey, value: number) => {
     setKeyframes((prev) => ({
@@ -982,22 +1014,62 @@ export function AnimationPropertiesPicker() {
       finalParams = structuredClone(staggerPreset.params);
       if (presetKey === "slideByWord") {
         const dir = presetParams.direction ?? "left";
-        const dist = 50;
-        if (dir === "left") {
-          finalParams.from = { x: `+=${dist}` };
-          finalParams.to = { x: `-=${dist}` };
-        } else if (dir === "right") {
-          finalParams.from = { x: `-=${dist}` };
-          finalParams.to = { x: `+=${dist}` };
-        } else if (dir === "top") {
-          finalParams.from = { y: `+=${dist}` };
-          finalParams.to = { y: `-=${dist}` };
-        } else if (dir === "bottom") {
-          finalParams.from = { y: `-=${dist}` };
-          finalParams.to = { y: `+=${dist}` };
+        const dist = presetParams.distance ?? 50;
+        if (selectedMode === "in") {
+          finalParams.from = { alpha: 0 };
+          let toX = 0;
+          let toY = 0;
+          if (dir === "left") {
+            finalParams.from.x = `+=${dist}`;
+            toX = -dist;
+          } else if (dir === "right") {
+            finalParams.from.x = `-=${dist}`;
+            toX = dist;
+          } else if (dir === "top") {
+            finalParams.from.y = `+=${dist}`;
+            toY = -dist;
+          } else if (dir === "bottom") {
+            finalParams.from.y = `-=${dist}`;
+            toY = dist;
+          }
+          finalParams.to = {
+            keyframes: {
+              "0%": { alpha: 1 },
+              "100%": {
+                ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
+                ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
+              },
+            },
+            ease: "none",
+          };
+        } else {
+          finalParams.from = { alpha: 1 };
+          let toX = 0;
+          let toY = 0;
+          if (dir === "left") {
+            toX = dist;
+          } else if (dir === "right") {
+            toX = -dist;
+          } else if (dir === "top") {
+            toY = dist;
+          } else if (dir === "bottom") {
+            toY = -dist;
+          }
+          finalParams.to = {
+            keyframes: {
+              "0%": { alpha: 1 },
+              "99.9%": { alpha: 1 },
+              "100%": {
+                alpha: 0,
+                ...(toX !== 0 && { x: `${toX > 0 ? "+=" : "-="}${Math.abs(toX)}` }),
+                ...(toY !== 0 && { y: `${toY > 0 ? "+=" : "-="}${Math.abs(toY)}` }),
+              },
+            },
+            ease: "none",
+          };
         }
       }
-      if (selectedMode === "out") {
+      if (selectedMode === "out" && presetKey !== "slideByWord") {
         const temp = finalParams.from;
         finalParams.from = finalParams.to;
         finalParams.to = temp;
@@ -1438,7 +1510,7 @@ export function AnimationPropertiesPicker() {
                               </SelectContent>
                             </Select>
                           </div>
-                          {selectedPreset === "slide" && (
+                          {(selectedPreset === "slide" || selectedPreset === "slideByWord") && (
                             <div className="flex flex-col gap-1">
                               <label className="text-[10px] text-muted-foreground">
                                 Distance (px)
@@ -1467,7 +1539,7 @@ export function AnimationPropertiesPicker() {
                           <Slider
                             value={[presetParams.stagger || 0.05]}
                             min={0}
-                            max={0.5}
+                            max={1.5}
                             step={0.01}
                             onValueChange={([val]) =>
                               setPresetParams((prev: any) => ({ ...prev, stagger: val }))

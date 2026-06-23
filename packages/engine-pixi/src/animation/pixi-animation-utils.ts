@@ -174,6 +174,16 @@ export function resolveVars(
         );
         return frameResolved;
       });
+      if (resolvedTo.keyframes.length > 0) {
+        const lastFrame = resolvedTo.keyframes[resolvedTo.keyframes.length - 1];
+        if (lastFrame && typeof lastFrame === "object") {
+          Object.keys(lastFrame).forEach((key) => {
+            if (resolvedTo[key] === undefined) {
+              resolvedTo[key] = lastFrame[key];
+            }
+          });
+        }
+      }
     } else if (typeof to.keyframes === "object") {
       const resolvedKf: Record<string, any> = {};
       for (const [kfKey, frame] of Object.entries(to.keyframes)) {
@@ -190,6 +200,15 @@ export function resolveVars(
         }
       }
       resolvedTo.keyframes = resolvedKf;
+
+      const kf100 = resolvedKf["100%"];
+      if (kf100 && typeof kf100 === "object") {
+        Object.keys(kf100).forEach((key) => {
+          if (resolvedTo[key] === undefined) {
+            resolvedTo[key] = kf100[key];
+          }
+        });
+      }
     }
   }
 
