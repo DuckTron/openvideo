@@ -20,7 +20,7 @@ export default function AgentPanel() {
   };
 
   return (
-    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden px-4 space-y-2">
+    <div className="flex flex-col h-full text-foreground text-sm overflow-hidden space-y-2">
       <AgentHeader />
 
       <AgentMessages messages={messages} isThinking={isThinking} className="flex-1 min-h-0" />

@@ -34,7 +34,7 @@ export function AgentInput({
   };
 
   return (
-    <div className={cn("pb-3 shrink-0", className)}>
+    <div className={cn("pb-3 px-4 shrink-0", className)}>
       <InputGroup className="has-disabled:opacity-100 bg-input/30!">
         <InputGroupTextarea
           value={value}

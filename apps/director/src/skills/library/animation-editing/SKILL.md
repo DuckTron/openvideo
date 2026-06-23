@@ -380,7 +380,7 @@ Use `"type": "stagger"` and provide `params` with `type`, `from`, `to`, and `sta
 
 | Key              | Label           | Description                                            |
 | ---------------- | --------------- | ------------------------------------------------------ |
-| `charFadeIn`     | Char Fade In    | alpha + scale 0→1 per character                        |
+| `charFade`       | Char Fade       | alpha + scale 0→1 per character                        |
 | `charSlideUp`    | Char Slide Up   | alpha + y slide per character                          |
 | `charTypewriter` | Char Typewriter | Instant alpha reveal per character (typewriter effect) |
 
@@ -393,18 +393,18 @@ Use `"type": "stagger"` and provide `params` with `type`, `from`, `to`, and `sta
 | `popByWord`        | Pop By Word         | scale pop (0→1.2→1) per word             |
 | `scaleFadeByWord`  | Scale Fade By Word  | alpha + scale 0.7→1 per word             |
 | `bounceByWord`     | Bounce By Word      | alpha + y bounce per word                |
-| `rotateInByWord`   | Rotate In By Word   | alpha + rotation per word                |
+| `rotateByWord`     | Rotate By Word      | alpha + rotation per word                |
 | `slideRightByWord` | Slide Right By Word | alpha + x slide right per word           |
 | `slideLeftByWord`  | Slide Left By Word  | alpha + x slide left per word            |
 | `fadeRotateByWord` | Fade Rotate By Word | alpha + rotation 90→0 per word           |
 | `skewByWord`       | Skew By Word        | alpha + skewX 45→0 per word              |
 | `waveByWord`       | Wave By Word        | alpha + y wave per word                  |
-| `blurInByWord`     | Blur In By Word     | alpha + blur 10→0 per word               |
+| `blurByWord`       | Blur By Word        | alpha + blur 10→0 per word               |
 | `dropSoftByWord`   | Drop Soft By Word   | alpha + y drop + scaleY per word         |
 | `elasticPopByWord` | Elastic Pop By Word | alpha + scale elastic per word           |
 | `flipUpByWord`     | Flip Up By Word     | alpha + skewX per word                   |
-| `spinInByWord`     | Spin In By Word     | alpha + rotation -180→0 + scale per word |
-| `stretchInByWord`  | Stretch In By Word  | alpha + scaleX/scaleY stretch per word   |
+| `spinByWord`       | Spin By Word        | alpha + rotation -180→0 + scale per word |
+| `stretchByWord`    | Stretch By Word     | alpha + scaleX/scaleY stretch per word   |
 | `revealZoomByWord` | Reveal Zoom By Word | alpha + scale 1.4→1 per word             |
 | `floatWaveByWord`  | Float Wave By Word  | alpha + y float wave per word            |
 
@@ -522,7 +522,7 @@ The above applies a fade-in entrance AND a slow Ken Burns zoom over the full cli
 
 - User says "animate all images sliding in from alternating sides" → batch `clip.update` with alternating `x` direction
 - User says "fade in, scale and slight rotate" → custom keyframes: `{ "0%": { opacity: 0, scale: 0.85, angle: -6 }, "100%": { opacity: 1, scale: 1, angle: 0 } }`
-- User says "letter by letter fade in" → stagger with `type: "character"`, `charFadeIn` preset
+- User says "letter by letter fade in" → stagger with `type: "character"`, `charFade` preset
 - User says "word by word slide up" → stagger with `type: "word"`, `slideFadeByWord` or custom word stagger
 - User says "typewriter effect" → `charTypewriter` stagger preset
 - User says "combo zoom" or "Ken Burns" → `comboZoom1` or custom full-duration scale keyframes

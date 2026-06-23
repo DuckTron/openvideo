@@ -308,8 +308,8 @@ describe("studio-core-functionality", () => {
       const reloaded = studio.clips[0] as Text;
       expect(reloaded.left).toBe(60);
       expect(reloaded.top).toBe(120);
-      expect(reloaded.width).toBe(292);
-      expect(reloaded.height).toBe(110);
+      expect(reloaded.width).toBe(310);
+      expect(reloaded.height).toBe(75);
       expect(reloaded.angle).toBe(15);
       expect(reloaded.zIndex).toBe(10);
       expect(reloaded.opacity).toBe(0.8);

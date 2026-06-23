@@ -302,9 +302,27 @@ export abstract class BaseSprite<
 
   public set animations(v: IAnimation[]) {
     if (!Array.isArray(v)) {
+      this._animations.forEach((a) => {
+        if (a && typeof (a as any).destroy === "function") {
+          (a as any).destroy();
+        }
+      });
       this._animations = [];
       return;
     }
+
+    // Identify and destroy old animations that are being removed or replaced by new configs
+    this._animations.forEach((oldAnim) => {
+      if (oldAnim && oldAnim.id) {
+        const matchingNew = v.find((anim: any) => anim && anim.id === oldAnim.id);
+        const isReplaced = matchingNew && typeof (matchingNew as any).getTransform !== "function";
+        const isRemoved = !matchingNew;
+        if ((isRemoved || isReplaced) && typeof (oldAnim as any).destroy === "function") {
+          (oldAnim as any).destroy();
+        }
+      }
+    });
+
     this._animations = v.map((anim: any) => {
       // If it's already an instantiated animation, return it
       if (anim && typeof anim.getTransform === "function") {
@@ -430,8 +448,22 @@ export abstract class BaseSprite<
       __lastSpriteTime: time,
     } as any;
 
+    // Sort animations chronologically by delay to ensure correct application order (e.g. entrance before exit)
+    const sortedAnims = [...this.animations].sort(
+      (a, b) => (a.options?.delay ?? 0) - (b.options?.delay ?? 0),
+    );
+
+    // Pre-restore target elements to their original properties to ensure clean state transitions
+    if (target) {
+      for (const anim of sortedAnims) {
+        if (anim.type === "stagger" && (anim as any).restoreOriginals) {
+          (anim as any).restoreOriginals(target);
+        }
+      }
+    }
+
     // 1. Process new modular animations
-    for (const anim of this.animations) {
+    for (const anim of sortedAnims) {
       const transform = anim.getTransform(time);
       if (transform.x !== undefined) this.renderTransform.x! += transform.x;
       if (transform.y !== undefined) this.renderTransform.y! += transform.y;
@@ -510,6 +542,10 @@ export abstract class BaseSprite<
    * Remove an animation by ID
    */
   removeAnimation(id: string): void {
+    const toRemove = this.animations.find((a) => a.id === id);
+    if (toRemove && typeof (toRemove as any).destroy === "function") {
+      (toRemove as any).destroy();
+    }
     this.animations = this.animations.filter((a) => a.id !== id);
     this.emit("propsChange", { animations: this.animations } as any);
   }
@@ -518,6 +554,11 @@ export abstract class BaseSprite<
    * Clear all modular animations
    */
   clearAnimations(): void {
+    this.animations.forEach((a) => {
+      if (a && typeof (a as any).destroy === "function") {
+        (a as any).destroy();
+      }
+    });
     this.animations = [];
     this.emit("propsChange", { animations: this.animations } as any);
   }
@@ -532,6 +573,11 @@ export abstract class BaseSprite<
   updateAnimation(id: string, type: string, options: any, params?: any): void {
     const index = this.animations.findIndex((a) => a.id === id);
     if (index === -1) return;
+
+    const oldAnim = this.animations[index];
+    if (oldAnim && typeof (oldAnim as any).destroy === "function") {
+      (oldAnim as any).destroy();
+    }
 
     const newAnim = animationRegistry.create(type, { ...options, id }, params);
     this.animations[index] = newAnim;
@@ -590,6 +636,12 @@ export abstract class BaseSprite<
   }
 
   protected destroy() {
+    this.animations.forEach((a) => {
+      if (a && typeof (a as any).destroy === "function") {
+        (a as any).destroy();
+      }
+    });
+    this.animations = [];
     this.all.clear();
   }
 }

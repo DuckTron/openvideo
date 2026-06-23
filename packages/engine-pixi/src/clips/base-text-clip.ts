@@ -12,6 +12,7 @@ import {
   BitmapFont,
   Cache,
 } from "pixi.js";
+import gsap from "gsap";
 import { OutlineFilter } from "../filters/outline-filter";
 import { DropShadowFilter } from "pixi-filters";
 import { Log } from "../utils/log";
@@ -19,6 +20,7 @@ import { BaseClip } from "./base-clip";
 import type { IClip } from "./iclip";
 import { parseColor, resolveColor } from "../utils/color";
 import type { BaseSpriteEvents } from "../sprite/base-sprite";
+import { fontManager } from "../utils/fonts";
 
 /**
  * Shared style options used by both Text and Caption clips.
@@ -238,6 +240,34 @@ export abstract class BaseTextClip<
 
   abstract clone(): Promise<this>;
 
+  /**
+   * Returns true if any animation in the list requires a per-line mask (i.e. has params.mask === true).
+   */
+  private _hasMaskAnim(anims: any[]): boolean {
+    return anims.some((a) => a?.params?.mask === true);
+  }
+
+  /**
+   * Override the animations setter so that when the mask-mode changes
+   * (e.g. slideMaskWord → slideByWord or vice-versa), the PIXI scene graph
+   * is rebuilt via refreshText(). This removes stale LineMask graphics that
+   * would otherwise cause GSAP to access `.y` on null/destroyed nodes.
+   */
+  override get animations() {
+    return super.animations;
+  }
+
+  override set animations(v: any[]) {
+    const wasMask = this._hasMaskAnim(this.animations);
+    super.animations = v;
+    const isMask = this._hasMaskAnim(this.animations);
+
+    // If mask-mode changed, the PIXI scene graph structure is stale – rebuild it.
+    if (wasMask !== isMask && this.originalOpts && this.textStyle) {
+      void this.refreshText();
+    }
+  }
+
   override animate(time: number): void {
     super.animate(time, this.pixiTextContainer);
   }
@@ -285,6 +315,17 @@ export abstract class BaseTextClip<
     const snapshotWordWrapWidth = this.originalOpts.wordWrapWidth;
     const snapshotBackground = this.originalOpts.background;
 
+    if (this.originalOpts.fontUrl && this.originalOpts.fontFamily) {
+      try {
+        await fontManager.addFont({
+          name: this.originalOpts.fontFamily,
+          url: this.originalOpts.fontUrl,
+        });
+      } catch (err) {
+        console.warn(`[BaseTextClip] Failed to load font:`, err);
+      }
+    }
+
     if (typeof document !== "undefined") {
       await document.fonts.ready;
     }
@@ -297,6 +338,36 @@ export abstract class BaseTextClip<
     if (!this.pixiTextContainer) {
       this.pixiTextContainer = new Container();
     } else {
+      this.animations.forEach((anim) => {
+        if (anim && typeof (anim as any).destroy === "function") {
+          (anim as any).destroy();
+        }
+      });
+
+      for (const child of this.pixiTextContainer.children) {
+        if (child && !child.destroyed) {
+          const killAllTweens = (node: any) => {
+            if (node) {
+              gsap.killTweensOf(node);
+              if (node.children) {
+                for (const c of node.children) {
+                  killAllTweens(c);
+                }
+              }
+            }
+          };
+          killAllTweens(child);
+
+          if (child.children) {
+            for (const subChild of child.children) {
+              if (subChild && subChild.label === "LineContainer") {
+                subChild.mask = null;
+              }
+            }
+          }
+          child.destroy({ children: true });
+        }
+      }
       this.pixiTextContainer.removeChildren();
     }
 
@@ -353,6 +424,7 @@ export abstract class BaseTextClip<
       measuredTextHeight,
       bgPadX,
       hasBg,
+      textOnlyContainer,
     );
 
     const decorationGraphics = this._drawDecoration(lines, containerWidth, bgPadX);
@@ -437,7 +509,11 @@ export abstract class BaseTextClip<
     const textOnlyContainer = new Container();
     textOnlyContainer.label = "TextOnlyContainer";
 
-    this.wordTexts.forEach((w) => w.destroy());
+    this.wordTexts.forEach((w) => {
+      if (w && !w.destroyed) {
+        w.destroy();
+      }
+    });
     this.wordTexts = words.map((wordStr) => {
       const wordText = new SplitBitmapText({ text: wordStr, style: this.textStyle });
       textOnlyContainer.addChild(wordText);
@@ -681,6 +757,7 @@ export abstract class BaseTextClip<
     measuredTextHeight: number,
     bgPadX: number,
     hasBg: boolean,
+    textOnlyContainer: Container,
   ): { x: number; y: number; w: number; h: number }[] {
     const finalVAlign = (this.originalOpts as any).verticalAlign || "top";
     let startY = 0;
@@ -703,12 +780,40 @@ export abstract class BaseTextClip<
 
       const lineXStart = currentX;
 
+      // Group words of this line into a LineContainer
+      const lineContainer = new Container();
+      lineContainer.label = "LineContainer";
+      lineContainer.x = 0;
+      lineContainer.y = 0;
+
+      const hasMaskAnimation = this.animations.some((anim: any) => anim?.params?.mask === true);
+
+      if (hasMaskAnimation) {
+        // Draw a rectangular Graphics mask matching the line coordinates
+        const mask = new Graphics();
+        mask.label = "LineMask";
+        // Mask vertically using currentY and line.height.
+        // Horizontally, span the entire width of the container.
+        mask.rect(0, currentY, containerWidth, line.height);
+        mask.fill(0xffffff);
+        lineContainer.mask = mask;
+
+        // Add mask to textOnlyContainer
+        textOnlyContainer.addChild(mask);
+      }
+
+      // Add lineContainer to textOnlyContainer
+      textOnlyContainer.addChild(lineContainer);
+
       line.words.forEach((wordText, wordIndex) => {
         wordText.x = Math.round(currentX);
         wordText.y = Math.round(currentY + (line.height - measuredTextHeight) / 2 - 9);
         currentX +=
           (wordText.getLocalBounds().width || wordText.width) +
           (wordIndex < line.words.length - 1 ? this._spaceWidth : 0);
+
+        // Move the word into the LineContainer
+        lineContainer.addChild(wordText);
       });
 
       if (hasBg) {
@@ -1043,6 +1148,29 @@ export abstract class BaseTextClip<
 
     try {
       if (this.pixiTextContainer != null && !this.pixiTextContainer.destroyed) {
+        for (const child of this.pixiTextContainer.children) {
+          if (child && !child.destroyed) {
+            const killAllTweens = (node: any) => {
+              if (node) {
+                gsap.killTweensOf(node);
+                if (node.children) {
+                  for (const c of node.children) {
+                    killAllTweens(c);
+                  }
+                }
+              }
+            };
+            killAllTweens(child);
+
+            if (child.children) {
+              for (const subChild of child.children) {
+                if (subChild && subChild.label === "LineContainer") {
+                  subChild.mask = null;
+                }
+              }
+            }
+          }
+        }
         this.pixiTextContainer.destroy({ children: true });
       }
     } catch (_) {

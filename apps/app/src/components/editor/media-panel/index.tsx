@@ -22,7 +22,7 @@ export function MediaPanel() {
   const { activeTab, isOpen } = useMediaPanelStore();
 
   return (
-    <div className="w-[300px] shrink-0 h-full flex flex-col overflow-hidden border-r">
+    <div className="w-full h-full flex flex-col overflow-hidden border-r">
       <TabBar />
       {isOpen && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden animate-in slide-in-from-top-2 duration-200">

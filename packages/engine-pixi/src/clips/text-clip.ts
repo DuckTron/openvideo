@@ -156,6 +156,7 @@ export class Text extends BaseTextClip<ITextEvents> {
     return {
       fontSize: this.originalOpts.fontSize,
       fontFamily: this.originalOpts.fontFamily,
+      fontUrl: this.originalOpts.fontUrl,
       fontWeight: this.originalOpts.fontWeight,
       fontStyle: this.originalOpts.fontStyle,
       color: this.originalOpts.color,
@@ -336,6 +337,7 @@ export class Text extends BaseTextClip<ITextEvents> {
           : typeof style.fontFamily === "string"
             ? style.fontFamily
             : "Roboto"),
+      fontUrl: originalOpts.fontUrl,
       fontWeight: originalOpts.fontWeight ?? style.fontWeight,
       fontStyle: originalOpts.fontStyle ?? style.fontStyle,
       align:
@@ -558,6 +560,7 @@ export class Text extends BaseTextClip<ITextEvents> {
     const style: TextStyleJSON = {};
     if (this.originalOpts.fontSize !== undefined) style.fontSize = this.originalOpts.fontSize;
     if (this.originalOpts.fontFamily !== undefined) style.fontFamily = this.originalOpts.fontFamily;
+    if (this.originalOpts.fontUrl !== undefined) style.fontUrl = this.originalOpts.fontUrl;
     if (this.originalOpts.fontWeight !== undefined)
       style.fontWeight = this.originalOpts.fontWeight as any;
     if (this.originalOpts.fontStyle !== undefined) style.fontStyle = this.originalOpts.fontStyle;
@@ -629,6 +632,7 @@ export class Text extends BaseTextClip<ITextEvents> {
     const textClipOpts: ITextOpts = {};
     if (style.fontSize !== undefined) textClipOpts.fontSize = style.fontSize;
     if (style.fontFamily !== undefined) textClipOpts.fontFamily = style.fontFamily;
+    if (style.fontUrl !== undefined) textClipOpts.fontUrl = style.fontUrl;
     if (style.fontWeight !== undefined) textClipOpts.fontWeight = style.fontWeight as any;
     if (style.fontStyle !== undefined) textClipOpts.fontStyle = style.fontStyle;
     if (style.color !== undefined) textClipOpts.color = style.color;
