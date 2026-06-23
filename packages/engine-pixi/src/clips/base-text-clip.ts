@@ -20,6 +20,7 @@ import { BaseClip } from "./base-clip";
 import type { IClip } from "./iclip";
 import { parseColor, resolveColor } from "../utils/color";
 import type { BaseSpriteEvents } from "../sprite/base-sprite";
+import { fontManager } from "../utils/fonts";
 
 /**
  * Shared style options used by both Text and Caption clips.
@@ -313,6 +314,17 @@ export abstract class BaseTextClip<
     const snapshotWordWrap = this.originalOpts.wordWrap;
     const snapshotWordWrapWidth = this.originalOpts.wordWrapWidth;
     const snapshotBackground = this.originalOpts.background;
+
+    if (this.originalOpts.fontUrl && this.originalOpts.fontFamily) {
+      try {
+        await fontManager.addFont({
+          name: this.originalOpts.fontFamily,
+          url: this.originalOpts.fontUrl,
+        });
+      } catch (err) {
+        console.warn(`[BaseTextClip] Failed to load font:`, err);
+      }
+    }
 
     if (typeof document !== "undefined") {
       await document.fonts.ready;
