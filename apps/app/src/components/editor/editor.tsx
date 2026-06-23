@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { Resizable } from "@/components/editor/resizable-panel";
 import { useParams } from "next/navigation";
 import { MediaPanel } from "@/components/editor/media-panel";
 import { CanvasPanel } from "@/components/editor/canvas-panel";
@@ -97,19 +98,23 @@ export default function Editor({
       {/* Main content row: left sidebar + center + right sidebar */}
       <div className="flex-1 min-h-0 flex flex-row overflow-hidden">
         {/* Left Sidebar: Media Panel */}
-        <MediaPanel />
+        <Resizable orientation="horizontal" initialSize={300} min={180} max={520} direction="right">
+          <MediaPanel />
+        </Resizable>
 
         {/* Center: Canvas (top) + Timeline (bottom) */}
         <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
           <div className="flex-1 min-h-0 overflow-visible">
             <CanvasPanel onReady={() => setIsReady(true)} />
           </div>
-          <div className="shrink-0">
+          <Resizable orientation="vertical" initialSize={220} min={80} max={500} direction="up">
             <Timeline />
-          </div>
+          </Resizable>
         </div>
 
-        <RightPanel />
+        <Resizable orientation="horizontal" initialSize={280} min={180} max={520} direction="left">
+          <RightPanel />
+        </Resizable>
       </div>
 
       {/* Floating Controls like Caption / Animation pickers */}
