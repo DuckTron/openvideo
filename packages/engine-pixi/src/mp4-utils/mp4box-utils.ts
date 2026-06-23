@@ -64,10 +64,20 @@ export function extractFileConfig(file: MP4File, info: MP4Info): ExtractedConfig
       description: esdsBox,
     };
 
+    // For Opus tracks there is no ESDS box, so use the track codec directly
+    const resolvedCodec =
+      audioInfo.codec ??
+      (aTrack.codec === "Opus" || aTrack.codec === "opus"
+        ? "opus"
+        : aTrack.codec.startsWith("mp4a")
+          ? DEFAULT_AUDIO_CONF.codec
+          : aTrack.codec);
+
     result.audioDecoderConf = {
-      codec: audioInfo.codec ?? DEFAULT_AUDIO_CONF.codec,
+      codec: resolvedCodec,
       numberOfChannels: audioInfo.numberOfChannels ?? aTrack.audio.channel_count,
       sampleRate: audioInfo.sampleRate ?? aTrack.audio.sample_rate,
+      ...(audioInfo.description ? { description: audioInfo.description } : {}),
     };
   }
 
@@ -109,6 +119,7 @@ function parseAudioInfoFromESDSBox(esds: ESDSBoxParser): {
   codec?: string;
   sampleRate?: number;
   numberOfChannels?: number;
+  description?: Uint8Array;
 } {
   const decConfDesc = esds.esd?.descs?.[0];
   if (!decConfDesc) return {};
@@ -138,6 +149,7 @@ function parseAudioInfoFromESDSBox(esds: ESDSBoxParser): {
     codec,
     sampleRate: SAMPLE_RATES[sampleRateIdx],
     numberOfChannels,
+    description: data,
   };
 }
 

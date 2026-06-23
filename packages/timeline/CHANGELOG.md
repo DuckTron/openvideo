@@ -1,5 +1,12 @@
 # @openvideo/timeline
 
+## 1.2.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @openvideo/core@1.2.0
+
 ## 1.1.4
 
 ### Patch Changes
