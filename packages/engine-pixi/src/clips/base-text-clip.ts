@@ -12,6 +12,7 @@ import {
   BitmapFont,
   Cache,
 } from "pixi.js";
+import gsap from "gsap";
 import { OutlineFilter } from "../filters/outline-filter";
 import { DropShadowFilter } from "pixi-filters";
 import { Log } from "../utils/log";
@@ -238,6 +239,34 @@ export abstract class BaseTextClip<
 
   abstract clone(): Promise<this>;
 
+  /**
+   * Returns true if any animation in the list requires a per-line mask (i.e. has params.mask === true).
+   */
+  private _hasMaskAnim(anims: any[]): boolean {
+    return anims.some((a) => a?.params?.mask === true);
+  }
+
+  /**
+   * Override the animations setter so that when the mask-mode changes
+   * (e.g. slideMaskWord → slideByWord or vice-versa), the PIXI scene graph
+   * is rebuilt via refreshText(). This removes stale LineMask graphics that
+   * would otherwise cause GSAP to access `.y` on null/destroyed nodes.
+   */
+  override get animations() {
+    return super.animations;
+  }
+
+  override set animations(v: any[]) {
+    const wasMask = this._hasMaskAnim(this.animations);
+    super.animations = v;
+    const isMask = this._hasMaskAnim(this.animations);
+
+    // If mask-mode changed, the PIXI scene graph structure is stale – rebuild it.
+    if (wasMask !== isMask && this.originalOpts && this.textStyle) {
+      void this.refreshText();
+    }
+  }
+
   override animate(time: number): void {
     super.animate(time, this.pixiTextContainer);
   }
@@ -305,6 +334,18 @@ export abstract class BaseTextClip<
 
       for (const child of this.pixiTextContainer.children) {
         if (child && !child.destroyed) {
+          const killAllTweens = (node: any) => {
+            if (node) {
+              gsap.killTweensOf(node);
+              if (node.children) {
+                for (const c of node.children) {
+                  killAllTweens(c);
+                }
+              }
+            }
+          };
+          killAllTweens(child);
+
           if (child.children) {
             for (const subChild of child.children) {
               if (subChild && subChild.label === "LineContainer") {
@@ -733,13 +774,7 @@ export abstract class BaseTextClip<
       lineContainer.x = 0;
       lineContainer.y = 0;
 
-      const hasMaskAnimation = this.animations.some((anim: any) => {
-        return (
-          anim &&
-          anim.params &&
-          (anim.params.preset === "slideMaskWord" || anim.params.mask === true)
-        );
-      });
+      const hasMaskAnimation = this.animations.some((anim: any) => anim?.params?.mask === true);
 
       if (hasMaskAnimation) {
         // Draw a rectangular Graphics mask matching the line coordinates
@@ -1102,10 +1137,24 @@ export abstract class BaseTextClip<
     try {
       if (this.pixiTextContainer != null && !this.pixiTextContainer.destroyed) {
         for (const child of this.pixiTextContainer.children) {
-          if (child && !child.destroyed && child.children) {
-            for (const subChild of child.children) {
-              if (subChild && subChild.label === "LineContainer") {
-                subChild.mask = null;
+          if (child && !child.destroyed) {
+            const killAllTweens = (node: any) => {
+              if (node) {
+                gsap.killTweensOf(node);
+                if (node.children) {
+                  for (const c of node.children) {
+                    killAllTweens(c);
+                  }
+                }
+              }
+            };
+            killAllTweens(child);
+
+            if (child.children) {
+              for (const subChild of child.children) {
+                if (subChild && subChild.label === "LineContainer") {
+                  subChild.mask = null;
+                }
               }
             }
           }
